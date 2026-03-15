@@ -412,7 +412,7 @@ async function shareProductNative(id) {
         var precio = p.publico > 0 ? COP.format(p.publico) : 'Consultar';
         var desc = embellecerDescripcion(p.desc);
         
-        var shareText = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${nombre}\n💳 *Inversión:* ${precio}\n\n`;
+        var shareText = `🪐 *Planet.shop. Todo lo que necesitas en un solo lugar. 🛒✨*\n\n🛍️ *Producto:* ${nombre}\n💳 *Inversión:* ${precio}\n\n`;
         if (desc) { shareText += `📋 *Detalles:*\n${desc}\n\n`; }
         shareText += `🤝 _Quedamos a tu entera disposición._`;
         
@@ -445,7 +445,7 @@ async function shareProductNative(id) {
 
 function shareProdWhatsApp(id) {
     var p = D.inv.find(x => x.id === id); if (!p) return;
-    var msg = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
+    var msg = `🪐 *Planet.shop. Todo lo que necesitas en un solo lugar. 🛒✨*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
     var linkFoto = fixDriveLink(p.foto);
     if(linkFoto && linkFoto.length > 10) { msg += `🖼️ *Imagen:* ${linkFoto}\n\n`; }
     var desc = embellecerDescripcion(p.desc); if (desc) { msg += `📋 *Detalles:*\n${desc}\n\n`; }
@@ -595,7 +595,7 @@ function renderCartera() {
 
 function enviarEstadoCuentaWA(idVenta) {
     var d = D.deudores.find(x => x.idVenta === idVenta); if (!d) return;
-    var msg = `🪐 *Planet.shop Todo lo que necesitas en un solo lugar*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
+    var msg = `🪐 *Planet.shop.Todo lo que necesitas en un solo lugar*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
     
     if ((d.deudaInicial || 0) > 0) {
         msg += `Te escribimos para recordarte el saldo pendiente de la *Cuota Inicial* de tu compra:\n\n📦 *Producto:* ${d.producto}\n⚠️ *Faltante Inicial:* ${COP.format(d.deudaInicial)}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\nPor favor, ayúdanos a completar este monto para formalizar tu plan.`;
