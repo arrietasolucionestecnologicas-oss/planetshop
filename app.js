@@ -2,7 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8w
 
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
-var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem;
+var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem, myModalManualItem;
 var prodEdit = null; var refEditId = null; var refSaldoActual = 0;
 var calculatedValues = { total: 0, inicial: 0, base: 0, descuento: 0 };
 var currentUserAlias = "Anonimo"; var usuarioForzoInicial = false;
@@ -121,10 +121,7 @@ async function getFileFromUrlAsync(url, defaultName) {
             const blob = await response.blob();
             return new File([blob], defaultName + ".jpg", {type: blob.type || "image/jpeg"});
         }
-    } catch(e) {
-        console.error("Fallo al convertir URL a File:", e);
-        return null;
-    }
+    } catch(e) { return null; }
 }
 
 function calcGain(idCosto, idPublico, idMargen) {
@@ -135,7 +132,6 @@ function calcGain(idCosto, idPublico, idMargen) {
         document.getElementById(idPublico).value = Math.round(ganancia); 
     }
 }
-
 function calcMargen(idCosto, idPublico, idMargen) {
     var costo = parseFloat(document.getElementById(idCosto).value) || 0;
     var publico = parseFloat(document.getElementById(idPublico).value) || 0;
@@ -145,6 +141,7 @@ function calcMargen(idCosto, idPublico, idMargen) {
     }
 }
 
+// === CONTROLADOR DE CARRITO (NO AUTO-OPEN) ===
 function toggleMobileCart() { 
     var mc = document.getElementById('mobile-cart'); 
     if(mc) { 
@@ -159,6 +156,7 @@ window.onload = function() {
   myModalLogin = new bootstrap.Modal(document.getElementById('modalLoginApp'));
   myModalRefinanciar = new bootstrap.Modal(document.getElementById('modalRefinanciar'));
   myModalEditItem = new bootstrap.Modal(document.getElementById('modalEditItem'));
+  myModalManualItem = new bootstrap.Modal(document.getElementById('modalManualItem'));
   
   var tpl = document.getElementById('tpl-cart').innerHTML;
   document.getElementById('desktop-cart-container').innerHTML = tpl;
@@ -233,13 +231,26 @@ function toggleCart(id) {
    showToast("🛒 Carrito actualizado", "info");
 }
 
-function agregarItemManual() {
-    var nombre = prompt("Nombre del Ítem:"); if (!nombre) return;
-    var precio = parseFloat(prompt("Precio Venta ($):")); if (isNaN(precio)) return;
-    var costo = parseFloat(prompt("Costo ($):")) || 0;
+// === NUEVO MODAL DE ITEM MANUAL (UX MEJORADA) ===
+function abrirModalItemManual() {
+    document.getElementById('man-nombre').value = '';
+    document.getElementById('man-publico').value = '';
+    document.getElementById('man-costo').value = '';
+    myModalManualItem.show();
+}
+
+function confirmarItemManual() {
+    var nombre = document.getElementById('man-nombre').value.trim();
+    if (!nombre) return alert("Ingrese el nombre del ítem.");
+    var precio = parseFloat(document.getElementById('man-publico').value);
+    if (isNaN(precio) || precio <= 0) return alert("Precio de venta inválido.");
+    var costo = parseFloat(document.getElementById('man-costo').value) || 0;
+
     CART.push({ id: 'MAN-'+Date.now(), nombre: nombre, cat: 'Manual', costo: costo, publico: precio, cantidad: 1, manual: true, modificadoManualmente: true, margenIndividual: costo>0?((precio/costo)-1)*100:100, descuentoIndividual: 0, precioUnitarioFinal: precio });
+    
+    myModalManualItem.hide();
     updateCartUI();
-    showToast("🛒 Ítem manual agregado", "info");
+    showToast("🛒 Ítem manual agregado", "success");
 }
 
 function abrirEditorItem(id) {
@@ -310,7 +321,7 @@ function guardarEditorItem() {
 
 function changeQty(id, delta) {
     var item = CART.find(x => x.id === id);
-    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(); }
+    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(true); }
 }
 
 function updateCartUI(keepOpen=false) {
@@ -482,11 +493,7 @@ function shareQuote() {
    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
-function copyingDato(txt) {
-    if(!txt || txt === 'undefined' || txt === '0') return alert("Dato vacío o no disponible");
-    navigator.clipboard.writeText(txt).then(() => { showToast("Copiado: " + String(txt).substring(0,10) + "..."); });
-}
-
+// === CRUD INVENTARIO (RENDERIZADO OPTIMIZADO) ===
 function agregarAlCarritoDesdeInv(id) {
     var p = D.inv.find(x => x.id === id);
     if (!p) return showToast("Producto no encontrado", "danger");
@@ -519,24 +526,25 @@ function agregarAlCarritoDesdeInv(id) {
     }
     
     updateCartUI();
-    showToast("🛍️ Agregado al carrito: " + p.nombre, "success");
+    showToast("🛒 Agregado al carrito: " + p.nombre, "success");
 }
 
 function renderInv(){ 
-    var c=document.getElementById('inv-list'); c.innerHTML='';
+    var c = document.getElementById('inv-list'); 
     var q = document.getElementById('inv-search').value.toLowerCase();
+    var htmlContent = '';
+    
     D.inv.filter(p=> p.nombre.toLowerCase().includes(q)).slice(0,50).forEach(p=>{
         var imgHtml = p.foto ? `<img src="${fixDriveLink(p.foto)}">` : `<i class="bi bi-box-seam" style="font-size:3rem; color:#eee;"></i>`;
         var precioDisplay = p.publico > 0 ? COP.format(p.publico) : 'N/A';
         
-        var btnAddCart = `<div class="btn-copy-mini text-white" style="background:var(--primary); border-color:var(--primary);" onclick="agregarAlCarritoDesdeInv('${p.id}')" title="Agregar al Carrito"><i class="fas fa-cart-plus"></i></div>`;
-        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div>`;
+        var btnAddCart = `<button class="btn btn-sm text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-1" style="background:var(--primary); border:none;" onclick="agregarAlCarritoDesdeInv('${p.id}')"><i class="fas fa-cart-plus"></i> Añadir a Carrito</button>`;
+        var btnShareNative = `<button class="btn btn-sm text-white w-100 fw-bold d-flex align-items-center justify-content-center gap-1 mt-1" style="background:#25D366; border:none;" onclick="shareProductNative('${p.id}')"><i class="fab fa-whatsapp"></i> Compartir WA</button>`;
 
-        var div = document.createElement('div');
-        div.className = 'card-catalog';
-        div.innerHTML = `<div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil-alt"></i></div></div><div class="cat-body"><div class="cat-title text-truncate" style="white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.nombre}</div><div class="cat-price">${precioDisplay}</div><small class="text-muted" style="font-size:0.7rem;">Costo: ${COP.format(p.costo)}</small></div><div class="cat-actions">${btnAddCart}${btnShareNative}</div>`;
-        c.appendChild(div);
+        htmlContent += `<div class="card-catalog"><div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil-alt"></i></div></div><div class="cat-body"><div class="cat-title text-truncate" style="white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.nombre}</div><div class="cat-price">${precioDisplay}</div><small class="text-muted" style="font-size:0.7rem;">Costo: ${COP.format(p.costo)}</small></div><div class="p-2 bg-light border-top">${btnAddCart}${btnShareNative}</div></div>`;
     });
+    
+    c.innerHTML = htmlContent;
 }
 
 function abrirModalNuevo() { 
@@ -545,6 +553,7 @@ function abrirModalNuevo() {
 }
 
 function crearProducto() {
+    if (document.activeElement) document.activeElement.blur();
     var d = { id: 'GEN-'+Date.now(), nombre: document.getElementById('new-nombre').value, categoria: document.getElementById('new-categoria').value, costo: document.getElementById('new-costo').value, publico: document.getElementById('new-publico').value, descripcion: document.getElementById('new-desc').value, proveedor: "General" };
     var f = document.getElementById('new-file-foto').files[0];
     var promise = f ? compressImage(f) : Promise.resolve(null);
