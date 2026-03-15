@@ -1,5 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz8ZEEBxxyn0b2Vg_tsxRnWkuDxtmQ1Qija0Xde4sK1Ae7Lk7q3HztNhtKyB41D_UPa2A/exec"; 
 
+
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
 var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem;
@@ -58,6 +59,37 @@ async function callAPI(action, data = null) {
     if (action !== 'obtenerDatosCompletos') { guardarEnCola(action, data); return { exito: true, offline: true }; }
     return { exito: false, error: e.toString() };
   }
+}
+
+// === COMPRESIÓN DE IMÁGENES ===
+function compressImage(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader(); reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image(); img.src = event.target.result;
+            img.onload = () => {
+                const elem = document.createElement('canvas'); const scaleFactor = maxWidth / img.width;
+                elem.width = maxWidth; elem.height = img.height * scaleFactor;
+                const ctx = elem.getContext('2d'); ctx.drawImage(img, 0, 0, elem.width, elem.height);
+                resolve(elem.toDataURL(file.type, quality));
+            }
+            img.onerror = error => reject(error);
+        }
+        reader.onerror = error => reject(error);
+    });
+}
+
+function previewFile(inputId, imgId){ 
+    var f=document.getElementById(inputId).files[0]; 
+    if(f){var r=new FileReader();r.onload=e=>{document.getElementById(imgId).src=e.target.result;document.getElementById(imgId).style.display='block';};r.readAsDataURL(f);} 
+}
+
+function fixDriveLink(url) {
+    if (!url) return "";
+    var match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (!match) { match = url.match(/\/d\/([a-zA-Z0-9_-]+)/); }
+    if (match && match[1]) { return "https://lh3.googleusercontent.com/d/" + match[1] + "=w1000"; }
+    return url.split(' ')[0];
 }
 
 window.onload = function() {
@@ -146,7 +178,6 @@ function abrirEditorItem(id) {
     document.getElementById('edit-item-id').value = item.id; document.getElementById('edit-item-nombre').value = item.nombre;
     document.getElementById('edit-item-margen').value = item.margenIndividual.toFixed(1);
     document.getElementById('edit-item-desc').value = item.descuentoIndividual || 0;
-    document.getElementById('edit-item-precio-pactado').value = '';
     calcEditorItem(); myModalEditItem.show();
 }
 
@@ -235,10 +266,11 @@ function calcCart() {
 function finalizarVenta() {
    var p = document.getElementById('desktop-cart-container');
    var cli = p.querySelector('#c-cliente').value; if(!cli) return alert("Falta Cliente");
+   var tel = p.querySelector('#c-tel').value || "";
    if(calculatedValues.total <= 0) return alert("Precio inválido");
    
    var items = CART.length>0 ? CART.map(i=>({ nombre:i.nombre, cat:i.cat, costo:i.costo, precioVenta:i.precioUnitarioFinal })) : [{nombre:p.querySelector('#c-concepto').value||"Venta", cat:"General", costo:calculatedValues.base, precioVenta:calculatedValues.total}];
-   var d = { items: items, cliente: cli, metodo: p.querySelector('#c-metodo').value, inicial: calculatedValues.inicial, cuotas: p.querySelector('#c-cuotas').value, vendedor: currentUserAlias };
+   var d = { items: items, cliente: cli, telefono: tel, metodo: p.querySelector('#c-metodo').value, inicial: calculatedValues.inicial, cuotas: p.querySelector('#c-cuotas').value, vendedor: currentUserAlias };
    
    p.querySelector('#btn-vender-main').disabled = true;
    callAPI('procesarVentaCarrito', d).then(r => {
@@ -247,15 +279,48 @@ function finalizarVenta() {
    });
 }
 
-function clearCart() { CART=[]; usuarioForzoInicial=false; [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(p=>{ if(p) { p.querySelector('#c-inicial').value=''; p.querySelector('#c-cliente').value=''; } }); updateCartUI(); }
+function clearCart() { CART=[]; usuarioForzoInicial=false; [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(p=>{ if(p) { p.querySelector('#c-inicial').value=''; p.querySelector('#c-cliente').value=''; p.querySelector('#c-tel').value=''; } }); updateCartUI(); }
+
+function embellecerDescripcion(texto) {
+    if (!texto) return "";
+    return texto.split('\n').map(l => l.trim() ? "• " + l.replace(/^[-•*🔹]\s*/, '') : "").filter(l => l !== "").join('\n');
+}
 
 function shareQuote() {
-   var cli = document.getElementById('desktop-cart-container').querySelector('#c-cliente').value || "Cliente";
+   var p = document.getElementById('desktop-cart-container');
+   var cli = p.querySelector('#c-cliente').value || "Cliente";
+   var tel = p.querySelector('#c-tel').value;
    var msg = `🪐 *Planet.shop by GamePlanet*\n\nHola *${cli}*, tu cotización:\n\n`;
-   if(CART.length>0) CART.forEach(x=> msg+=`🛍️ ${x.cantidad}x ${x.nombre}\n`); else msg+=`📦 Varios\n`;
-   if(document.getElementById('desktop-cart-container').querySelector('#c-metodo').value === "Crédito") { msg += `\n💰 Total Financiado: ${COP.format(calculatedValues.total)}\n• Inicial: ${COP.format(calculatedValues.inicial)}`; } 
+   
+   if(CART.length>0) {
+       CART.forEach(x=> {
+           var itemInv = D.inv.find(inv => inv.id === x.id); 
+           var desc = itemInv ? itemInv.desc : (x.desc || "");
+           var linkFoto = itemInv ? fixDriveLink(itemInv.foto) : "";
+           
+           msg+=`🛍️ *${x.cantidad}x ${x.nombre.toUpperCase()}*\n`;
+           if(linkFoto && linkFoto.length>10) msg += `🖼️ Ver imagen: ${linkFoto}\n`;
+           var descBonita = embellecerDescripcion(desc);
+           if (descBonita) msg += `📋 *Detalles:*\n${descBonita}\n\n`; else msg += `\n`;
+       });
+   } else { msg+=`📦 Varios\n`; }
+   
+   if(p.querySelector('#c-metodo').value === "Crédito") { msg += `\n💰 Total Financiado: ${COP.format(calculatedValues.total)}\n• Inicial: ${COP.format(calculatedValues.inicial)}`; } 
    else { msg += `\n💰 Total Contado: ${COP.format(calculatedValues.total)}`; }
-   window.open("https://wa.me/?text=" + encodeURIComponent(msg), '_blank');
+   
+   var waUrl = "https://wa.me/";
+   if(tel) { waUrl += `57${tel.replace(/\D/g,'')}`; }
+   window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
+}
+
+function shareProductNative(id) {
+    var p = D.inv.find(x => x.id === id); if (!p) return;
+    var msg = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
+    var linkFoto = fixDriveLink(p.foto);
+    if(linkFoto && linkFoto.length > 10) { msg += `🖼️ *Imagen:* ${linkFoto}\n\n`; }
+    var desc = embellecerDescripcion(p.desc); if (desc) { msg += `📋 *Detalles:*\n${desc}\n\n`; }
+    msg += `🤝 _Quedamos a tu entera disposición._`; 
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), '_blank');
 }
 
 // === CRUD INVENTARIO ===
@@ -263,36 +328,78 @@ function renderInv(){
     var c=document.getElementById('inv-list'); c.innerHTML='';
     var q = document.getElementById('inv-search').value.toLowerCase();
     D.inv.filter(p=> p.nombre.toLowerCase().includes(q)).slice(0,50).forEach(p=>{
-        c.innerHTML+=`<div class="card-catalog"><div class="cat-img-box"><div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil"></i></div></div><div class="cat-body"><div class="cat-title">${p.nombre}</div><div class="cat-price">${COP.format(p.publico)}</div></div></div>`;
+        var imgHtml = p.foto ? `<img src="${fixDriveLink(p.foto)}">` : `<i class="bi bi-box-seam" style="font-size:3rem; color:#eee;"></i>`;
+        c.innerHTML+=`<div class="card-catalog"><div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil"></i></div></div><div class="cat-body"><div class="cat-title">${p.nombre}</div><div class="cat-price">${COP.format(p.publico)}</div></div><div class="cat-actions"><div class="btn-copy-mini text-white" style="background:var(--accent); border-color:var(--accent);" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div></div></div>`;
     });
 }
-function abrirModalNuevo() { myModalNuevo.show(); }
-function crearProducto() {
-    var d = { id: 'GEN-'+Date.now(), nombre: document.getElementById('new-nombre').value, categoria: document.getElementById('new-categoria').value, costo: document.getElementById('new-costo').value, publico: document.getElementById('new-publico').value, proveedor: "General", descripcion: "" };
-    callAPI('crearProductoManual', d).then(r=> { if(r.exito) { myModalNuevo.hide(); loadData(true); } });
+
+function abrirModalNuevo() { 
+    document.getElementById('new-file-foto').value = ""; document.getElementById('img-preview-new').style.display='none';
+    myModalNuevo.show(); 
 }
+
+function crearProducto() {
+    var d = { id: 'GEN-'+Date.now(), nombre: document.getElementById('new-nombre').value, categoria: document.getElementById('new-categoria').value, costo: document.getElementById('new-costo').value, publico: document.getElementById('new-publico').value, descripcion: document.getElementById('new-desc').value, proveedor: "General" };
+    var f = document.getElementById('new-file-foto').files[0];
+    var promise = f ? compressImage(f) : Promise.resolve(null);
+    promise.then(b64 => {
+        if(b64) { d.imagenBase64 = b64.split(',')[1]; d.mimeType = f.type; d.nombreArchivo = f.name; }
+        callAPI('crearProductoManual', d).then(r=> { if(r.exito) { myModalNuevo.hide(); loadData(true); } });
+    });
+}
+
 function openEdit(id) {
     prodEdit = D.inv.find(x=>x.id===id);
     document.getElementById('inp-edit-nombre').value = prodEdit.nombre;
     document.getElementById('inp-edit-categoria').value = prodEdit.cat;
     document.getElementById('inp-edit-costo').value = prodEdit.costo;
     document.getElementById('inp-edit-publico').value = prodEdit.publico;
+    document.getElementById('inp-edit-desc').value = prodEdit.desc || "";
+    document.getElementById('inp-file-foto').value = ""; document.getElementById('img-preview-box').style.display='none'; 
+    var fixedUrl = fixDriveLink(prodEdit.foto);
+    if(fixedUrl){ document.getElementById('img-preview-box').src=fixedUrl; document.getElementById('img-preview-box').style.display='block';} 
     myModalEdit.show();
 }
+
 function guardarCambiosAvanzado() {
-    var p = { id: prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, proveedor: prodEdit.prov };
-    callAPI('guardarProductoAvanzado', p).then(r=> { myModalEdit.hide(); loadData(true); });
+    var p = { id: prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, descripcion: document.getElementById('inp-edit-desc').value, proveedor: prodEdit.prov, urlExistente: prodEdit.foto || "" };
+    var f = document.getElementById('inp-file-foto').files[0];
+    var promise = f ? compressImage(f) : Promise.resolve(null);
+    promise.then(b64 => {
+        if(b64) { p.imagenBase64 = b64.split(',')[1]; p.mimeType = f.type; p.nombreArchivo = f.name; }
+        callAPI('guardarProductoAvanzado', p).then(r=> { myModalEdit.hide(); loadData(true); });
+    });
 }
 
-// === CARTERA ===
+// === CARTERA Y COBRANZA EN WHATSAPP ===
 function renderCartera() {
     var c=document.getElementById('cartera-list'); c.innerHTML='';
     var activos = D.deudores.filter(d=>d.estado!=='Castigado');
     document.getElementById('bal-cartera').innerText = COP.format(activos.reduce((a,b)=>a+b.saldo,0));
     activos.forEach(d=>{
-        c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4"><div class="d-flex justify-content-between"><div><h6>${d.cliente}</h6><small>${d.producto}</small></div><div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div></div><div class="mt-2 text-end"><button class="btn btn-sm btn-outline-primary" onclick="abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Acordar Pago</button> <button class="btn btn-sm btn-outline-danger" onclick="callAPI('castigarCartera',{idVenta:'${d.idVenta}'}).then(()=>loadData(true))">☠️</button></div></div>`;
+        c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4"><div class="d-flex justify-content-between"><div><h6>${d.cliente}</h6><small>${d.producto}</small></div><div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div></div><div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2"><button class="btn btn-xs btn-outline-success flex-fill" onclick="enviarEstadoCuentaWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Cobrar (WA)</button><button class="btn btn-xs btn-outline-primary flex-fill" onclick="abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> <button class="btn btn-xs btn-outline-dark flex-fill" onclick="callAPI('castigarCartera',{idVenta:'${d.idVenta}'}).then(()=>loadData(true))">☠️ Castigar</button></div></div>`;
     });
 }
+
+function enviarEstadoCuentaWA(idVenta) {
+    var d = D.deudores.find(x => x.idVenta === idVenta); if (!d) return;
+    var msg = `🪐 *Planet.shop by GamePlanet*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
+    
+    if ((d.deudaInicial || 0) > 0) {
+        msg += `Te escribimos para recordarte el saldo pendiente de la *Cuota Inicial* de tu compra:\n\n📦 *Producto:* ${d.producto}\n⚠️ *Faltante Inicial:* ${COP.format(d.deudaInicial)}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\nPor favor, ayúdanos a completar este monto para formalizar tu plan.`;
+    } else {
+        var valC = parseFloat(d.valCuota) || 0;
+        msg += `Te compartimos el recordatorio de tu estado de cuenta actual:\n\n📦 *Producto:* ${d.producto}\n`;
+        if (valC > 0) { msg += `💳 *Valor de la Cuota:* ${COP.format(valC)}\n`; }
+        msg += `📅 *Próximo Pago:* ${d.fechaLimite || "Inmediato"}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\n`;
+    }
+    msg += `\n🏦 *Medios de Pago:*\nBancolombia, Nequi y Daviplata. Quedamos atentos a tu comprobante. ¡Gracias! 🤝`;
+
+    var waUrl = "https://wa.me/";
+    if(d.telefono && d.telefono.length > 5) { waUrl += `57${d.telefono.replace(/\D/g,'')}`; }
+    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
+}
+
 function abrirModalRefinanciar(id,cli,saldo){ refEditId=id; document.getElementById('ref-cliente').value=cli; document.getElementById('ref-saldo-actual').value=COP.format(saldo); myModalRefinanciar.show(); }
 function procesarRefinanciamiento(){
     callAPI('refinanciarDeuda', {idVenta: refEditId, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value}).then(r=>{ myModalRefinanciar.hide(); loadData(true); });
