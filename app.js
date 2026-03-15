@@ -1,5 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8wopyAnNh_UtKo2heQ3EcM_PUHSzyEF5WvYwNuLn1NE2ek9w/exec"; 
 
+const API_URL = "https://script.google.com/macros/s/AKfycbzWEqQQTow3irxkTU4Y3CVJshtfjo1s2m1dwSicRihQ42_fArC6L9MAuQoUPUfzzXYS/exec"; 
+
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
 var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem;
@@ -76,7 +78,7 @@ async function callAPI(action, data = null) {
   }
 }
 
-// === COMPRESIÓN DE IMÁGENES ===
+// === COMPRESIÓN Y DESCARGA DE IMÁGENES ===
 function compressImage(file, maxWidth = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader(); reader.readAsDataURL(file);
@@ -105,6 +107,27 @@ function fixDriveLink(url) {
     if (!match) { match = url.match(/\/d\/([a-zA-Z0-9_-]+)/); }
     if (match && match[1]) { return "https://lh3.googleusercontent.com/d/" + match[1] + "=w1000"; }
     return url.split(' ')[0];
+}
+
+async function getFileFromUrlAsync(url, defaultName) {
+    try {
+        if (url.startsWith('data:image')) {
+            var arr = url.split(',');
+            var mime = arr[0].match(/:(.*?);/)[1];
+            var bstr = atob(arr[1]);
+            var n = bstr.length;
+            var u8arr = new Uint8Array(n);
+            while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+            return new File([u8arr], defaultName + ".jpg", {type: mime});
+        } else {
+            const response = await fetch(url, { mode: 'cors' });
+            const blob = await response.blob();
+            return new File([blob], defaultName + ".jpg", {type: blob.type || "image/jpeg"});
+        }
+    } catch(e) {
+        console.error("Fallo al convertir URL a File:", e);
+        return null;
+    }
 }
 
 // === CALCULADORAS DE MARGEN ===
@@ -271,7 +294,6 @@ function guardarEditorItem() {
     item.modificadoManualmente = true; 
     myModalEditItem.hide(); updateCartUI(true);
 }
-// =================================================
 
 function changeQty(id, delta) {
     var item = CART.find(x => x.id === id);
@@ -358,6 +380,60 @@ function embellecerDescripcion(texto) {
     return texto.split('\n').map(l => l.trim() ? "• " + l.replace(/^[-•*🔹]\s*/, '') : "").filter(l => l !== "").join('\n');
 }
 
+// === COMPARTIR NATIVO (IMÁGENES FÍSICAS + MENÚ DEL SO) ===
+async function shareProductNative(id) {
+    var loader = document.getElementById('loader');
+    if(loader) loader.style.display = 'flex';
+    
+    try {
+        var p = D.inv.find(x => x.id === id);
+        if (!p) { if(loader) loader.style.display = 'none'; return alert("Producto no encontrado"); }
+        
+        var nombre = p.nombre.toUpperCase();
+        var precio = p.publico > 0 ? COP.format(p.publico) : 'Consultar';
+        var desc = embellecerDescripcion(p.desc);
+        
+        var shareText = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${nombre}\n💳 *Inversión:* ${precio}\n\n`;
+        if (desc) { shareText += `📋 *Detalles:*\n${desc}\n\n`; }
+        shareText += `🤝 _Quedamos a tu entera disposición._`;
+        
+        var shareData = { title: nombre, text: shareText };
+        var hasImage = false;
+        var fixedUrl = fixDriveLink(p.foto);
+        
+        if (fixedUrl && fixedUrl.length > 5) {
+            var cleanName = p.nombre.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            var file = await getFileFromUrlAsync(fixedUrl, cleanName);
+            if (file) { shareData.files = [file]; hasImage = true; }
+        }
+        
+        if(loader) loader.style.display = 'none';
+
+        if (navigator.canShare && navigator.share) {
+            if (hasImage && !navigator.canShare({ files: shareData.files })) {
+                delete shareData.files;
+            }
+            await navigator.share(shareData);
+            showToast("¡Compartido con éxito!", "success");
+        } else {
+            shareProdWhatsApp(id); // Fallback
+        }
+    } catch(error) {
+        if(loader) loader.style.display = 'none';
+        if (error.name !== 'AbortError') { shareProdWhatsApp(id); } 
+    }
+}
+
+function shareProdWhatsApp(id) {
+    var p = D.inv.find(x => x.id === id); if (!p) return;
+    var msg = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
+    var linkFoto = fixDriveLink(p.foto);
+    if(linkFoto && linkFoto.length > 10) { msg += `🖼️ *Imagen:* ${linkFoto}\n\n`; }
+    var desc = embellecerDescripcion(p.desc); if (desc) { msg += `📋 *Detalles:*\n${desc}\n\n`; }
+    msg += `🤝 _Quedamos a tu entera disposición._`; 
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), '_blank');
+}
+
 function shareQuote() {
    var p = document.getElementById('desktop-cart-container');
    var cli = p.querySelector('#c-cliente').value || "Cliente";
@@ -383,16 +459,6 @@ function shareQuote() {
    var waUrl = "https://wa.me/";
    if(tel) { waUrl += `57${tel.replace(/\D/g,'')}`; }
    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
-}
-
-function shareProductNative(id) {
-    var p = D.inv.find(x => x.id === id); if (!p) return;
-    var msg = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
-    var linkFoto = fixDriveLink(p.foto);
-    if(linkFoto && linkFoto.length > 10) { msg += `🖼️ *Imagen:* ${linkFoto}\n\n`; }
-    var desc = embellecerDescripcion(p.desc); if (desc) { msg += `📋 *Detalles:*\n${desc}\n\n`; }
-    msg += `🤝 _Quedamos a tu entera disposición._`; 
-    window.open("https://wa.me/?text=" + encodeURIComponent(msg), '_blank');
 }
 
 // === CRUD INVENTARIO ===
@@ -444,7 +510,7 @@ function renderInv(){
         var precioDisplay = p.publico > 0 ? COP.format(p.publico) : 'N/A';
         
         var btnAddCart = `<div class="btn-copy-mini text-white" style="background:var(--primary); border-color:var(--primary);" onclick="agregarAlCarritoDesdeInv('${p.id}')" title="Agregar al Carrito"><i class="fas fa-cart-plus"></i></div>`;
-        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div>`;
+        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir"><i class="fas fa-share-nodes"></i> Compartir</div>`;
 
         var div = document.createElement('div');
         div.className = 'card-catalog';
@@ -452,6 +518,7 @@ function renderInv(){
         c.appendChild(div);
     });
 }
+
 function abrirModalNuevo() { 
     document.getElementById('new-file-foto').value = ""; document.getElementById('img-preview-new').style.display='none';
     myModalNuevo.show(); 
