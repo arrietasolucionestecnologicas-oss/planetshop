@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzWEqQQTow3irxkTU4Y3CVJshtfjo1s2m1dwSicRihQ42_fArC6L9MAuQoUPUfzzXYS/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8wopyAnNh_UtKo2heQ3EcM_PUHSzyEF5WvYwNuLn1NE2ek9w/exec"; 
 
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
@@ -444,15 +444,14 @@ function renderInv(){
         var precioDisplay = p.publico > 0 ? COP.format(p.publico) : 'N/A';
         
         var btnAddCart = `<div class="btn-copy-mini text-white" style="background:var(--primary); border-color:var(--primary);" onclick="agregarAlCarritoDesdeInv('${p.id}')" title="Agregar al Carrito"><i class="fas fa-cart-plus"></i></div>`;
-        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i></div>`;
+        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div>`;
 
         var div = document.createElement('div');
         div.className = 'card-catalog';
-        div.innerHTML = `<div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil-alt"></i></div></div><div class="cat-body"><div class="cat-title text-truncate" style="white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.nombre}</div><div class="cat-price">${precioDisplay}</div><small class="text-muted" style="font-size:0.7rem;">Costo: ${COP.format(p.costo)}</small></div><div class="cat-actions"><div class="btn-copy-mini" onclick="copyingDato('${p.id}')" title="Copiar ID">ID</div><div class="btn-copy-mini" onclick="copyingDato('${p.nombre.replace(/'/g, "\\'")}')" title="Copiar Nombre">Nom</div><div class="btn-copy-mini" onclick="copyingDato('${p.publico}')" title="Copiar Precio">$$</div>${btnAddCart}${btnShareNative}</div>`;
+        div.innerHTML = `<div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil-alt"></i></div></div><div class="cat-body"><div class="cat-title text-truncate" style="white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.nombre}</div><div class="cat-price">${precioDisplay}</div><small class="text-muted" style="font-size:0.7rem;">Costo: ${COP.format(p.costo)}</small></div><div class="cat-actions">${btnAddCart}${btnShareNative}</div>`;
         c.appendChild(div);
     });
 }
-
 function abrirModalNuevo() { 
     document.getElementById('new-file-foto').value = ""; document.getElementById('img-preview-new').style.display='none';
     myModalNuevo.show(); 
