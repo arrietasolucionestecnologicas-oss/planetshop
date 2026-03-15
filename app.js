@@ -76,7 +76,6 @@ async function callAPI(action, data = null) {
   }
 }
 
-// === COMPRESIÓN Y DESCARGA DE IMÁGENES ===
 function compressImage(file, maxWidth = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader(); reader.readAsDataURL(file);
@@ -128,7 +127,6 @@ async function getFileFromUrlAsync(url, defaultName) {
     }
 }
 
-// === CALCULADORAS DE MARGEN ===
 function calcGain(idCosto, idPublico, idMargen) {
     var costo = parseFloat(document.getElementById(idCosto).value) || 0;
     var margen = parseFloat(document.getElementById(idMargen).value) || 0;
@@ -137,6 +135,7 @@ function calcGain(idCosto, idPublico, idMargen) {
         document.getElementById(idPublico).value = Math.round(ganancia); 
     }
 }
+
 function calcMargen(idCosto, idPublico, idMargen) {
     var costo = parseFloat(document.getElementById(idCosto).value) || 0;
     var publico = parseFloat(document.getElementById(idPublico).value) || 0;
@@ -146,12 +145,10 @@ function calcMargen(idCosto, idPublico, idMargen) {
     }
 }
 
-// === CONTROLADOR DE CARRITO MÓVIL ===
-function toggleMobileCart(forceOpen = false) { 
+function toggleMobileCart() { 
     var mc = document.getElementById('mobile-cart'); 
     if(mc) { 
-        if(forceOpen === true) mc.classList.add('visible'); 
-        else mc.classList.toggle('visible'); 
+        mc.classList.toggle('visible'); 
         updateCartUI(true); 
     } 
 }
@@ -187,7 +184,7 @@ function loadData(silent = false){
 }
 
 function renderData(res) {
-    D = res; D.inv = res.inventario || []; D.deudores = res.deudores || [];
+    D = res; D.inv = res.inventario || []; D.deudores = res.deudores || []; D.historial = res.historial || [];
     if(res.metricas) { document.getElementById('bal-caja').innerText = COP.format(res.metricas.saldo||0); }
     renderPos(); renderInv(); renderFin(); renderCartera();
 }
@@ -200,7 +197,6 @@ function nav(v, btn){
   localStorage.setItem('planet_view', v);
 }
 
-// === MOTOR POS / CALCULOS ===
 function renderPos(){
   var q = document.getElementById('pos-search').value.toLowerCase().trim();
   var c = document.getElementById('pos-list'); 
@@ -221,12 +217,20 @@ function toggleCart(id) {
    if(idx > -1) { CART.splice(idx,1); } 
    else { 
        var item = Object.assign({}, p); item.cantidad = 1; item.conIva = false;
-       if (item.publico > 0) { item.precioUnitarioFinal = item.publico; item.margenIndividual = item.costo > 0 ? ((item.publico/item.costo)-1)*100 : 100; item.modificadoManualmente = true; } 
-       else { var gUtil = parseFloat(document.getElementById('c-util').value)||30; item.margenIndividual = gUtil; item.precioUnitarioFinal = (item.costo||0)*(1+gUtil/100); }
+       if (item.publico > 0) { 
+           item.precioUnitarioFinal = item.publico; 
+           item.margenIndividual = item.costo > 0 ? ((item.publico/item.costo)-1)*100 : 100; 
+           item.modificadoManualmente = true; 
+       } 
+       else { 
+           var gUtil = parseFloat(document.getElementById('c-util').value)||30; 
+           item.margenIndividual = gUtil; 
+           item.precioUnitarioFinal = (item.costo||0)*(1+gUtil/100); 
+       }
        item.descuentoIndividual = 0; CART.push(item); 
    }
    updateCartUI();
-   if(window.innerWidth < 992 && CART.length > 0) toggleMobileCart(true);
+   showToast("🛒 Carrito actualizado", "info");
 }
 
 function agregarItemManual() {
@@ -234,11 +238,10 @@ function agregarItemManual() {
     var precio = parseFloat(prompt("Precio Venta ($):")); if (isNaN(precio)) return;
     var costo = parseFloat(prompt("Costo ($):")) || 0;
     CART.push({ id: 'MAN-'+Date.now(), nombre: nombre, cat: 'Manual', costo: costo, publico: precio, cantidad: 1, manual: true, modificadoManualmente: true, margenIndividual: costo>0?((precio/costo)-1)*100:100, descuentoIndividual: 0, precioUnitarioFinal: precio });
-    updateCartUI(true);
-    if(window.innerWidth < 992) toggleMobileCart(true);
+    updateCartUI();
+    showToast("🛒 Ítem manual agregado", "info");
 }
 
-// === EDICIÓN DE ÍTEM EN EL CARRITO DE VENTAS ===
 function abrirEditorItem(id) {
     var item = CART.find(x => x.id === id);
     if (!item) return;
@@ -302,12 +305,12 @@ function guardarEditorItem() {
     item.margenIndividual = parseFloat(document.getElementById('edit-item-margen').value) || 0;
     item.descuentoIndividual = parseFloat(document.getElementById('edit-item-desc').value) || 0; 
     item.modificadoManualmente = true; 
-    myModalEditItem.hide(); updateCartUI(true);
+    myModalEditItem.hide(); updateCartUI();
 }
 
 function changeQty(id, delta) {
     var item = CART.find(x => x.id === id);
-    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(true); }
+    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(); }
 }
 
 function updateCartUI(keepOpen=false) {
@@ -399,7 +402,6 @@ function embellecerDescripcion(texto) {
     return texto.split('\n').map(l => l.trim() ? "• " + l.replace(/^[-•*🔹]\s*/, '') : "").filter(l => l !== "").join('\n');
 }
 
-// === COMPARTIR NATIVO (IMÁGENES FÍSICAS + MENÚ DEL SO) ===
 async function shareProductNative(id) {
     var loader = document.getElementById('loader');
     if(loader) loader.style.display = 'flex';
@@ -412,7 +414,7 @@ async function shareProductNative(id) {
         var precio = p.publico > 0 ? COP.format(p.publico) : 'Consultar';
         var desc = embellecerDescripcion(p.desc);
         
-        var shareText = `🪐 *Planet.shop. Todo lo que necesitas en un solo lugar. 🛒✨*\n\n🛍️ *Producto:* ${nombre}\n💳 *Inversión:* ${precio}\n\n`;
+        var shareText = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${nombre}\n💳 *Inversión:* ${precio}\n\n`;
         if (desc) { shareText += `📋 *Detalles:*\n${desc}\n\n`; }
         shareText += `🤝 _Quedamos a tu entera disposición._`;
         
@@ -445,7 +447,7 @@ async function shareProductNative(id) {
 
 function shareProdWhatsApp(id) {
     var p = D.inv.find(x => x.id === id); if (!p) return;
-    var msg = `🪐 *Planet.shop. Todo lo que necesitas en un solo lugar. 🛒✨*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
+    var msg = `🪐 *Planet.shop by GamePlanet*\n\n🛍️ *Producto:* ${p.nombre.toUpperCase()}\n💳 *Inversión:* ${COP.format(p.publico)}\n\n`;
     var linkFoto = fixDriveLink(p.foto);
     if(linkFoto && linkFoto.length > 10) { msg += `🖼️ *Imagen:* ${linkFoto}\n\n`; }
     var desc = embellecerDescripcion(p.desc); if (desc) { msg += `📋 *Detalles:*\n${desc}\n\n`; }
@@ -480,7 +482,6 @@ function shareQuote() {
    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
-// === CRUD INVENTARIO ===
 function copyingDato(txt) {
     if(!txt || txt === 'undefined' || txt === '0') return alert("Dato vacío o no disponible");
     navigator.clipboard.writeText(txt).then(() => { showToast("Copiado: " + String(txt).substring(0,10) + "..."); });
@@ -519,7 +520,6 @@ function agregarAlCarritoDesdeInv(id) {
     
     updateCartUI();
     showToast("🛍️ Agregado al carrito: " + p.nombre, "success");
-    toggleMobileCart(true);
 }
 
 function renderInv(){ 
@@ -530,7 +530,7 @@ function renderInv(){
         var precioDisplay = p.publico > 0 ? COP.format(p.publico) : 'N/A';
         
         var btnAddCart = `<div class="btn-copy-mini text-white" style="background:var(--primary); border-color:var(--primary);" onclick="agregarAlCarritoDesdeInv('${p.id}')" title="Agregar al Carrito"><i class="fas fa-cart-plus"></i></div>`;
-        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir"><i class="fas fa-share-nodes"></i> Compartir</div>`;
+        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div>`;
 
         var div = document.createElement('div');
         div.className = 'card-catalog';
@@ -583,32 +583,33 @@ function guardarCambiosAvanzado() {
     });
 }
 
-// === CARTERA Y COBRANZA EN WHATSAPP ===
+// === CARTERA AVANZADA ===
 function renderCartera() {
     var c=document.getElementById('cartera-list'); c.innerHTML='';
     var activos = D.deudores.filter(d=>d.estado!=='Castigado');
     document.getElementById('bal-cartera').innerText = COP.format(activos.reduce((a,b)=>a+b.saldo,0));
     activos.forEach(d=>{
-        c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4"><div class="d-flex justify-content-between"><div><h6>${d.cliente}</h6><small>${d.producto}</small></div><div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div></div><div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2"><button class="btn btn-xs btn-outline-success flex-fill" onclick="enviarEstadoCuentaWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Cobrar (WA)</button><button class="btn btn-xs btn-outline-primary flex-fill" onclick="abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> <button class="btn btn-xs btn-outline-dark flex-fill" onclick="callAPI('castigarCartera',{idVenta:'${d.idVenta}'}).then(()=>loadData(true))">☠️ Castigar</button></div></div>`;
+        c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4"><div class="d-flex justify-content-between"><div><h6>${d.cliente}</h6><small>${d.producto}</small></div><div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div></div><div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2"><button class="btn btn-xs btn-outline-success flex-fill" onclick="enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de Cuenta</button><button class="btn btn-xs btn-outline-primary flex-fill" onclick="abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> <button class="btn btn-xs btn-outline-dark flex-fill" onclick="callAPI('castigarCartera',{idVenta:'${d.idVenta}'}).then(()=>loadData(true))">☠️ Castigar</button></div></div>`;
     });
 }
 
-function enviarEstadoCuentaWA(idVenta) {
+function enviarEstadoCuentaAvanzadoWA(idVenta) {
     var d = D.deudores.find(x => x.idVenta === idVenta); if (!d) return;
-    var msg = `🪐 *Planet.shop.Todo lo que necesitas en un solo lugar*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
+    var historial = D.historial || [];
     
-    if ((d.deudaInicial || 0) > 0) {
-        msg += `Te escribimos para recordarte el saldo pendiente de la *Cuota Inicial* de tu compra:\n\n📦 *Producto:* ${d.producto}\n⚠️ *Faltante Inicial:* ${COP.format(d.deudaInicial)}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\nPor favor, ayúdanos a completar este monto para formalizar tu plan.`;
-    } else {
-        var valC = parseFloat(d.valCuota) || 0;
-        msg += `Te compartimos el recordatorio de tu estado de cuenta actual:\n\n📦 *Producto:* ${d.producto}\n`;
-        if (valC > 0) { msg += `💳 *Valor de la Cuota:* ${COP.format(valC)}\n`; }
-        msg += `📅 *Próximo Pago:* ${d.fechaLimite || "Inmediato"}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\n`;
-    }
-    msg += `\n🏦 *Medios de Pago:*\nBancolombia, Nequi y Daviplata. Quedamos atentos a tu comprobante. ¡Gracias! 🤝`;
-
-    var waUrl = "https://wa.me/";
-    if(d.telefono && d.telefono.length > 5) { waUrl += `57${d.telefono.replace(/\D/g,'')}`; }
+    var abonosRealizados = historial.filter(h => (h.tipo === 'abono' || h.desc.includes('Inicial')) && h.desc.includes(d.cliente)).reduce((a, b) => a + b.monto, 0);
+    
+    var msg = `🪐 *PLANET SHOP - ESTADO DE CUENTA*\n\nHola *${d.cliente.trim()}*, este es el resumen de tu crédito:\n\n`;
+    msg += `📦 *Producto:* ${d.producto}\n`;
+    msg += `💰 *Valor Compra:* ${COP.format(d.saldo + abonosRealizados + (d.deudaInicial || 0))}\n`;
+    msg += `✅ *Total Abonado:* ${COP.format(abonosRealizados)}\n`;
+    msg += `📊 *Saldo Pendiente:* ${COP.format(d.saldo)}\n\n`;
+    
+    if (d.deudaInicial > 0) msg += `⚠️ *Nota:* Tienes pendiente de inicial por ${COP.format(d.deudaInicial)}\n\n`;
+    if (d.valCuota > 0) msg += `💳 *Próxima Cuota:* ${COP.format(d.valCuota)}\n📅 *Vencimiento:* ${d.fechaLimite || "Inmediato"}\n\n`;
+    
+    msg += `🏦 *Medios de Pago:* Bancolombia, Nequi y Daviplata. Quedamos atentos a tu soporte de pago. ¡Gracias! 🤝`;
+    var waUrl = "https://wa.me/" + (d.telefono ? "57"+d.telefono.replace(/\D/g,'') : "");
     window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
@@ -621,8 +622,8 @@ function procesarRefinanciamiento(){
 function renderFin(){
     var s=document.getElementById('ab-cli'); s.innerHTML='<option>Seleccione...</option>';
     D.deudores.filter(d=>d.estado!=='Castigado').forEach(d=> s.innerHTML+=`<option value="${d.idVenta}">${d.cliente} (Debe: ${COP.format(d.saldo)})</option>`);
-    document.getElementById('hist-list').innerHTML = (D.historial||[]).map(x=>`<div class="d-flex justify-content-between border-bottom py-1"><small>${x.desc}</small><strong class="${x.tipo.includes('ingreso')||x.tipo.includes('abono')?'text-success':'text-danger'}">${COP.format(x.monto)}</strong></div>`).join('');
+    document.getElementById('hist-list').innerHTML = (D.historial||[]).map(x=>`<div class="d-flex justify-content-between border-bottom py-1"><div class="lh-1"><small class="fw-bold d-block">${x.desc}</small><small class="text-muted" style="font-size:0.6rem;">${x.fecha}</small></div><strong class="${x.tipo.includes('ingreso')||x.tipo.includes('abono')?'text-success':'text-danger'}">${COP.format(x.monto)}</strong></div>`).join('');
 }
-function doAbono(){ callAPI('registrarAbono', {idVenta: document.getElementById('ab-cli').value, monto: document.getElementById('ab-monto').value}).then(()=>loadData(true)); }
+function doAbono(){ callAPI('registrarAbono', {idVenta: document.getElementById('ab-cli').value, monto: document.getElementById('ab-monto').value, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text}).then(()=>loadData(true)); }
 function doIngresoExtra(){ callAPI('registrarIngresoExtra', {desc: document.getElementById('inc-desc').value, cat: document.getElementById('inc-cat').value, monto: document.getElementById('inc-monto').value}).then(()=>loadData(true)); }
 function doGasto(){ callAPI('registrarGasto', {desc: document.getElementById('g-desc').value, cat: document.getElementById('g-cat').value, monto: document.getElementById('g-monto').value, vinculo: document.getElementById('g-vinculo').value}).then(()=>loadData(true)); }
