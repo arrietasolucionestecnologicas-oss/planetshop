@@ -56,10 +56,14 @@ async function callAPI(action, data = null) {
     const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: action, data: data }) });
     return await response.json();
   } catch (e) {
-    if (action !== 'obtenerDatosCompletos') { guardarEnCola(action, data); return { exito: true, offline: true }; }
+    if (e.message.includes('Failed to fetch') || e.name === 'TypeError') {
+        alert("⚠️ BLOQUEO DE GOOGLE (CORS) DETECTADO.\n\nEl servidor rechazó la conexión porque detectó funciones nuevas sin autorización en la URL pública.\n\nSOLUCIÓN TÉCNICA:\n1. Ve a Apps Script\n2. 'Implementar' > 'Gestionar implementaciones'\n3. Clic en el Lápiz (Editar)\n4. En 'Versión', cambia a 'Nueva versión'\n5. Clic en 'Implementar'.");
+    } else if (action !== 'obtenerDatosCompletos') { 
+        guardarEnCola(action, data); 
+        return { exito: true, offline: true }; 
+    }
     return { exito: false, error: e.toString() };
   }
-}
 
 // === COMPRESIÓN DE IMÁGENES ===
 function compressImage(file, maxWidth = 800, quality = 0.7) {
