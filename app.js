@@ -1,5 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8wopyAnNh_UtKo2heQ3EcM_PUHSzyEF5WvYwNuLn1NE2ek9w/exec"; 
-
+const API_URL = "https://script.google.com/macros/s/AKfycbzWEqQQTow3irxkTU4Y3CVJshtfjo1s2m1dwSicRihQ42_fArC6L9MAuQoUPUfzzXYS/exec"; 
 
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
@@ -20,6 +19,17 @@ function guardarIdentidad() {
     if (alias.length < 3) return alert("Mínimo 3 letras.");
     localStorage.setItem('planet_alias', alias); currentUserAlias = alias;
     myModalLogin.hide(); document.getElementById('user-display').innerText = currentUserAlias;
+}
+
+function showToast(msg, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 show mb-2`;
+    toast.role = 'alert';
+    toast.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 function updateOnlineStatus() {
@@ -386,12 +396,60 @@ function shareProductNative(id) {
 }
 
 // === CRUD INVENTARIO ===
+function copyingDato(txt) {
+    if(!txt || txt === 'undefined' || txt === '0') return alert("Dato vacío o no disponible");
+    navigator.clipboard.writeText(txt).then(() => { showToast("Copiado: " + String(txt).substring(0,10) + "..."); });
+}
+
+function agregarAlCarritoDesdeInv(id) {
+    var p = D.inv.find(x => x.id === id);
+    if (!p) return showToast("Producto no encontrado", "danger");
+    
+    var idx = CART.findIndex(x => x.id === p.id);
+    if (idx > -1) { 
+        CART[idx].cantidad++; 
+    } else { 
+        var item = Object.assign({}, p);
+        item.cantidad = 1;
+        item.conIva = false;
+        item.modificadoManualmente = false; 
+        
+        if (item.publico > 0) {
+            item.precioUnitarioFinal = item.publico; 
+            if(item.costo > 0) {
+                item.margenIndividual = ((item.publico / item.costo) - 1) * 100;
+            } else {
+                item.margenIndividual = 100;
+            }
+            item.modificadoManualmente = true; 
+        } else {
+            var globalUtil = parseFloat(document.getElementById('c-util') ? document.getElementById('c-util').value : 30) || 30;
+            item.margenIndividual = globalUtil; 
+            item.precioUnitarioFinal = (item.costo || 0) * (1 + globalUtil/100);
+        }
+        
+        item.descuentoIndividual = 0;
+        CART.push(item); 
+    }
+    
+    updateCartUI();
+    showToast("🛍️ Agregado al carrito: " + p.nombre, "success");
+}
+
 function renderInv(){ 
     var c=document.getElementById('inv-list'); c.innerHTML='';
     var q = document.getElementById('inv-search').value.toLowerCase();
     D.inv.filter(p=> p.nombre.toLowerCase().includes(q)).slice(0,50).forEach(p=>{
         var imgHtml = p.foto ? `<img src="${fixDriveLink(p.foto)}">` : `<i class="bi bi-box-seam" style="font-size:3rem; color:#eee;"></i>`;
-        c.innerHTML+=`<div class="card-catalog"><div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil"></i></div></div><div class="cat-body"><div class="cat-title">${p.nombre}</div><div class="cat-price">${COP.format(p.publico)}</div></div><div class="cat-actions"><div class="btn-copy-mini text-white" style="background:var(--accent); border-color:var(--accent);" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i> WSP</div></div></div>`;
+        var precioDisplay = p.publico > 0 ? COP.format(p.publico) : 'N/A';
+        
+        var btnAddCart = `<div class="btn-copy-mini text-white" style="background:var(--primary); border-color:var(--primary);" onclick="agregarAlCarritoDesdeInv('${p.id}')" title="Agregar al Carrito"><i class="fas fa-cart-plus"></i></div>`;
+        var btnShareNative = `<div class="btn-copy-mini text-white" style="background:#25D366; border-color:#25D366;" onclick="shareProductNative('${p.id}')" title="Compartir a WhatsApp"><i class="fas fa-share-nodes"></i></div>`;
+
+        var div = document.createElement('div');
+        div.className = 'card-catalog';
+        div.innerHTML = `<div class="cat-img-box">${imgHtml}<div class="btn-edit-float" onclick="openEdit('${p.id}')"><i class="fas fa-pencil-alt"></i></div></div><div class="cat-body"><div class="cat-title text-truncate" style="white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${p.nombre}</div><div class="cat-price">${precioDisplay}</div><small class="text-muted" style="font-size:0.7rem;">Costo: ${COP.format(p.costo)}</small></div><div class="cat-actions"><div class="btn-copy-mini" onclick="copyingDato('${p.id}')" title="Copiar ID">ID</div><div class="btn-copy-mini" onclick="copyingDato('${p.nombre.replace(/'/g, "\\'")}')" title="Copiar Nombre">Nom</div><div class="btn-copy-mini" onclick="copyingDato('${p.publico}')" title="Copiar Precio">$$</div>${btnAddCart}${btnShareNative}</div>`;
+        c.appendChild(div);
     });
 }
 
