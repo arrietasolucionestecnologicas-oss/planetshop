@@ -1,6 +1,5 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8wopyAnNh_UtKo2heQ3EcM_PUHSzyEF5WvYwNuLn1NE2ek9w/exec"; 
 
-
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
 var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem;
@@ -147,6 +146,16 @@ function calcMargen(idCosto, idPublico, idMargen) {
     }
 }
 
+// === CONTROLADOR DE CARRITO MÓVIL ===
+function toggleMobileCart(forceOpen = false) { 
+    var mc = document.getElementById('mobile-cart'); 
+    if(mc) { 
+        if(forceOpen === true) mc.classList.add('visible'); 
+        else mc.classList.toggle('visible'); 
+        updateCartUI(true); 
+    } 
+}
+
 window.onload = function() {
   myModalEdit = new bootstrap.Modal(document.getElementById('modalEdicion'));
   myModalNuevo = new bootstrap.Modal(document.getElementById('modalNuevo'));
@@ -217,6 +226,7 @@ function toggleCart(id) {
        item.descuentoIndividual = 0; CART.push(item); 
    }
    updateCartUI();
+   if(window.innerWidth < 992 && CART.length > 0) toggleMobileCart(true);
 }
 
 function agregarItemManual() {
@@ -225,6 +235,7 @@ function agregarItemManual() {
     var costo = parseFloat(prompt("Costo ($):")) || 0;
     CART.push({ id: 'MAN-'+Date.now(), nombre: nombre, cat: 'Manual', costo: costo, publico: precio, cantidad: 1, manual: true, modificadoManualmente: true, margenIndividual: costo>0?((precio/costo)-1)*100:100, descuentoIndividual: 0, precioUnitarioFinal: precio });
     updateCartUI(true);
+    if(window.innerWidth < 992) toggleMobileCart(true);
 }
 
 // === EDICIÓN DE ÍTEM EN EL CARRITO DE VENTAS ===
@@ -296,10 +307,17 @@ function guardarEditorItem() {
 
 function changeQty(id, delta) {
     var item = CART.find(x => x.id === id);
-    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(); }
+    if (item) { item.cantidad += delta; if (item.cantidad <= 0) CART.splice(CART.findIndex(x=>x.id===id), 1); updateCartUI(true); }
 }
 
 function updateCartUI(keepOpen=false) {
+   var count = CART.reduce((a, b) => a + (b.cantidad || 1), 0);
+   var btnFloat = document.getElementById('btn-float-cart');
+   if(btnFloat) {
+       btnFloat.style.display = count > 0 ? 'block' : 'none';
+       btnFloat.innerText = "🛒 " + count;
+   }
+
    var panels = [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')];
    panels.forEach(p => {
        if(!p) return;
@@ -307,6 +325,8 @@ function updateCartUI(keepOpen=false) {
        if(CART.length === 0) { listContainer.innerHTML = 'Vacío...'; p.querySelector('#c-concepto').style.display='block'; } 
        else { p.querySelector('#c-concepto').style.display='none'; listContainer.innerHTML = CART.map(x => `<div class="d-flex justify-content-between mb-1 border-bottom pb-1"><div style="flex:1"><small class="fw-bold">${x.nombre}</small><br><small>${COP.format(x.precioUnitarioFinal||0)} c/u</small></div><div><button class="btn btn-sm btn-light py-0 px-2" onclick="abrirEditorItem('${x.id}')">✏️</button><button class="btn btn-sm py-0 px-2" onclick="changeQty('${x.id}', -1)">-</button> <b>${x.cantidad}</b> <button class="btn btn-sm py-0 px-2" onclick="changeQty('${x.id}', 1)">+</button></div></div>`).join(''); }
    });
+
+   if(CART.length === 0 && !keepOpen) { var mc = document.getElementById('mobile-cart'); if(mc) mc.classList.remove('visible'); }
    calcCart();
 }
 
@@ -499,6 +519,7 @@ function agregarAlCarritoDesdeInv(id) {
     
     updateCartUI();
     showToast("🛍️ Agregado al carrito: " + p.nombre, "success");
+    toggleMobileCart(true);
 }
 
 function renderInv(){ 
@@ -552,6 +573,7 @@ function openEdit(id) {
 }
 
 function guardarCambiosAvanzado() {
+    if (document.activeElement) document.activeElement.blur();
     var p = { id: prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, descripcion: document.getElementById('inp-edit-desc').value, proveedor: prodEdit.prov, urlExistente: prodEdit.foto || "" };
     var f = document.getElementById('inp-file-foto').files[0];
     var promise = f ? compressImage(f) : Promise.resolve(null);
