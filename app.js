@@ -92,6 +92,24 @@ function fixDriveLink(url) {
     return url.split(' ')[0];
 }
 
+// === CALCULADORAS DE MARGEN ===
+function calcGain(idCosto, idPublico, idMargen) {
+    var costo = parseFloat(document.getElementById(idCosto).value) || 0;
+    var margen = parseFloat(document.getElementById(idMargen).value) || 0;
+    if(costo > 0) { 
+        var ganancia = costo * (1 + (margen/100)); 
+        document.getElementById(idPublico).value = Math.round(ganancia); 
+    }
+}
+function calcMargen(idCosto, idPublico, idMargen) {
+    var costo = parseFloat(document.getElementById(idCosto).value) || 0;
+    var publico = parseFloat(document.getElementById(idPublico).value) || 0;
+    if(costo > 0 && publico > 0) { 
+        var margen = ((publico / costo) - 1) * 100; 
+        document.getElementById(idMargen).value = margen.toFixed(1); 
+    }
+}
+
 window.onload = function() {
   myModalEdit = new bootstrap.Modal(document.getElementById('modalEdicion'));
   myModalNuevo = new bootstrap.Modal(document.getElementById('modalNuevo'));
@@ -172,23 +190,61 @@ function agregarItemManual() {
     updateCartUI(true);
 }
 
+// === EDICIÓN DE ÍTEM EN EL CARRITO DE VENTAS ===
 function abrirEditorItem(id) {
     var item = CART.find(x => x.id === id);
     if (!item) return;
-    document.getElementById('edit-item-id').value = item.id; document.getElementById('edit-item-nombre').value = item.nombre;
+    document.getElementById('edit-item-id').value = item.id; 
+    document.getElementById('edit-item-nombre').value = item.nombre;
+    document.getElementById('edit-item-costo').value = item.costo || 0;
     document.getElementById('edit-item-margen').value = item.margenIndividual.toFixed(1);
     document.getElementById('edit-item-desc').value = item.descuentoIndividual || 0;
-    calcEditorItem(); myModalEditItem.show();
+    var pactadoEl = document.getElementById('edit-item-precio-pactado');
+    if (pactadoEl) pactadoEl.value = '';
+    calcEditorItem(); 
+    myModalEditItem.show();
 }
 
 function calcEditorItem() {
     var id = document.getElementById('edit-item-id').value;
     var item = CART.find(x => x.id === id);
-    var costo = item.costo || 0;
+    if (!item) return;
+    var costo = parseFloat(document.getElementById('edit-item-costo').value) || 0;
     var margen = parseFloat(document.getElementById('edit-item-margen').value) || 0;
-    var desc = parseFloat(document.getElementById('edit-item-desc').value) || 0; 
-    var px = (costo * (1 + margen/100)) * (1 - desc/100);
-    document.getElementById('edit-item-total').innerText = COP.format(Math.max(0, px));
+    var descPrc = parseFloat(document.getElementById('edit-item-desc').value) || 0; 
+    
+    var precioLista = costo * (1 + margen/100);
+    var descuentoMonto = precioLista * (descPrc / 100);
+    var precioNeto = precioLista - descuentoMonto;
+    
+    if (precioNeto < 0) precioNeto = 0;
+    document.getElementById('edit-item-total').innerText = COP.format(Math.round(precioNeto));
+}
+
+function aplicarPrecioPactado() {
+    var costo = parseFloat(document.getElementById('edit-item-costo').value) || 0;
+    var margen = parseFloat(document.getElementById('edit-item-margen').value) || 0;
+    var precioPactado = parseFloat(document.getElementById('edit-item-precio-pactado').value) || 0;
+
+    if (precioPactado <= 0) {
+        document.getElementById('edit-item-desc').value = 0;
+        calcEditorItem();
+        return;
+    }
+
+    var precioLista = costo * (1 + margen/100);
+    if (precioLista > 0) {
+        var descuentoRequeridoMonto = precioLista - precioPactado;
+        var descuentoRequeridoPrc = (descuentoRequeridoMonto / precioLista) * 100;
+        
+        if (descuentoRequeridoPrc < 0) {
+             descuentoRequeridoPrc = 0;
+             var nuevoMargen = ((precioPactado / costo) - 1) * 100;
+             document.getElementById('edit-item-margen').value = nuevoMargen.toFixed(1);
+        }
+        document.getElementById('edit-item-desc').value = descuentoRequeridoPrc.toFixed(2);
+    }
+    calcEditorItem();
 }
 
 function guardarEditorItem() {
@@ -200,6 +256,7 @@ function guardarEditorItem() {
     item.modificadoManualmente = true; 
     myModalEditItem.hide(); updateCartUI(true);
 }
+// =================================================
 
 function changeQty(id, delta) {
     var item = CART.find(x => x.id === id);
@@ -354,6 +411,11 @@ function openEdit(id) {
     document.getElementById('inp-edit-categoria').value = prodEdit.cat;
     document.getElementById('inp-edit-costo').value = prodEdit.costo;
     document.getElementById('inp-edit-publico').value = prodEdit.publico;
+    
+    var m = 30;
+    if(prodEdit.costo > 0 && prodEdit.publico > 0) m = ((prodEdit.publico / prodEdit.costo) - 1) * 100;
+    document.getElementById('inp-edit-margen').value = m.toFixed(1);
+
     document.getElementById('inp-edit-desc').value = prodEdit.desc || "";
     document.getElementById('inp-file-foto').value = ""; document.getElementById('img-preview-box').style.display='none'; 
     var fixedUrl = fixDriveLink(prodEdit.foto);
