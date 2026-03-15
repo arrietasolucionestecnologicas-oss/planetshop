@@ -595,7 +595,7 @@ function renderCartera() {
 
 function enviarEstadoCuentaWA(idVenta) {
     var d = D.deudores.find(x => x.idVenta === idVenta); if (!d) return;
-    var msg = `🪐 *Planet.shop by GamePlanet*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
+    var msg = `🪐 *Planet.shop Todo lo que necesitas en un solo lugar*\n\nHola *${d.cliente.trim()}*, esperamos que estés muy bien. 👋\n\n`;
     
     if ((d.deudaInicial || 0) > 0) {
         msg += `Te escribimos para recordarte el saldo pendiente de la *Cuota Inicial* de tu compra:\n\n📦 *Producto:* ${d.producto}\n⚠️ *Faltante Inicial:* ${COP.format(d.deudaInicial)}\n📊 *Saldo Total Pendiente:* ${COP.format(d.saldo)}\n\nPor favor, ayúdanos a completar este monto para formalizar tu plan.`;
