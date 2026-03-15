@@ -11,12 +11,11 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
   <style>
-    /* --- TEMA: PLANET SHOP (Black, Orange, Cyan) --- */
     :root { 
-        --primary: #000000;      /* Background/Main */
-        --accent: #f39c12;       /* Orange Cart */
+        --primary: #000000; 
+        --accent: #f39c12; 
         --accent-hover: #e67e22; 
-        --cyan: #3eb5e5;         /* Planet Cyan */
+        --cyan: #3eb5e5; 
         --light: #f8f9fa; 
         --dark: #212529; 
         --bg: #f4f4f9;
@@ -26,15 +25,8 @@
 
     body { background: var(--bg); padding-bottom: 90px; font-family: 'Montserrat', sans-serif; overflow-x: hidden; color: var(--dark); }
 
-    .header { 
-        background-color: var(--primary); color: white; padding: 15px 20px; 
-        border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
-        display: flex; justify-content: space-between; align-items: center; 
-        border-bottom: 2px solid var(--accent);
-    }
-
+    .header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
     #offline-indicator { background-color: var(--accent); color: #000; text-align: center; padding: 5px; font-size: 0.8rem; font-weight: bold; display: none; }
-
     .main-layout { display: flex; gap: 20px; align-items: flex-start; padding: 15px; }
     .list-column { flex: 1; min-width: 0; }
     .panel-column { width: 350px; position: sticky; top: 10px; display: none; } 
@@ -58,9 +50,6 @@
     .cat-body { padding: 10px; flex: 1; display: flex; flex-direction: column; }
     .cat-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; color: var(--primary); height: 34px; overflow: hidden; }
     .cat-price { color: var(--accent); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
-    .cat-actions { background: #fcfcfc; padding: 5px; display: flex; justify-content: space-around; gap: 2px; border-top: 1px solid #eee; }
-    .btn-copy-mini { border: 1px solid #ddd; background: white; color: #555; border-radius: 4px; padding: 2px 0; width: 100%; font-size: 0.7rem; text-align: center; cursor: pointer; }
-    .btn-copy-mini:hover { background: var(--primary); color: var(--cyan); border-color: var(--primary); }
 
     .cotizador-panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); border-top: 4px solid var(--cyan); }
     .input-line { border:none; border-bottom: 2px solid #eee; width:100%; text-align:center; font-weight:bold; outline:none; color: var(--primary); }
@@ -79,6 +68,10 @@
     .nav-btn { background: none; border: none; color: #aaa; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; flex: 1; transition: 0.2s; }
     .nav-btn.active { color: var(--accent); transform: translateY(-2px); }
     .nav-btn.active span { font-weight: 700; color: var(--primary); }
+
+    .file-upload-wrapper { position: relative; width: 100%; height: 180px; border: 2px dashed #ccc; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa; overflow: hidden; margin-bottom: 10px; }
+    .preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; z-index: 5; display: none; background: white; }
+    .file-input-overlay { position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 100; }
 
     #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
     .btn-bi { background: rgba(255,255,255,0.1); border:1px solid rgba(62, 181, 229, 0.5); color:var(--cyan); border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; }
@@ -136,11 +129,8 @@
     <div id="view-inv" class="view-sec" style="display:none; padding:15px;">
       <div class="scroll-menu">
         <input type="text" id="inv-search" class="form-control" placeholder="🔍 Buscar Referencia..." onkeyup="renderInv()" style="width: 150px;">
-        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="renderInv()">
-            <option value="">Todos los Proveedores</option>
-        </select>
+        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="renderInv()"><option value="">Proveedores</option></select>
         <button class="btn btn-primary" onclick="abrirModalNuevo()" style="white-space: nowrap;">+ CREAR PRODUCTO</button>
-        <button class="btn btn-info" onclick="abrirModalProv()" style="white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
       </div>
       <div id="inv-list" class="catalog-grid"></div>
     </div>
@@ -172,15 +162,9 @@
         <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist" style="color:var(--primary);">Historial</a></li>
       </ul>
       <div class="tab-content">
-         <div class="tab-pane fade show active" id="f-abono">
-            <div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="doAbono()">CONFIRMAR RECAUDO</button></div>
-         </div>
-         <div class="tab-pane fade" id="f-ingreso">
-            <div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="doIngresoExtra()">REGISTRAR ENTRADA</button></div>
-         </div>
-         <div class="tab-pane fade" id="f-gasto">
-            <div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Logística</option><option>Alimentación</option><option>Inventario</option><option>Nómina</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="doGasto()">REGISTRAR EGRESO</button></div>
-         </div>
+         <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="doAbono()">CONFIRMAR RECAUDO</button></div></div>
+         <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="doIngresoExtra()">REGISTRAR ENTRADA</button></div></div>
+         <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Logística</option><option>Alimentación</option><option>Inventario</option><option>Nómina</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="doGasto()">REGISTRAR EGRESO</button></div></div>
          <div class="tab-pane fade" id="f-hist"><div class="card-k"><div id="hist-list"></div></div></div>
       </div>
     </div>
@@ -217,6 +201,7 @@
           <div class="mt-2 text-end" style="border-top: 1px dotted #ccc; padding-top:5px;"><small class="text-muted">Precio Fijo (Anular intereses)</small><input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end" style="border-color: var(--accent);" placeholder="💲 Precio Cerrado" oninput="calcCart()"></div>
        </div>
        <input id="c-cliente" class="form-control mb-2" placeholder="Cliente">
+       <input id="c-tel" type="number" class="form-control mb-2" placeholder="Teléfono Cliente (Para Estado de Cuenta WA)">
        <select id="c-metodo" class="form-select mb-2" onchange="toggleIni()"><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select>
        <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono Inicial Personalizado" disabled style="display:none;">
        <div class="d-flex gap-2 mb-2"><button class="btn btn-outline-info flex-fill fw-bold" onclick="guardarCotizacionActual()">💾 COTIZAR</button><button class="btn btn-success flex-fill fw-bold" onclick="shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button></div>
@@ -224,12 +209,30 @@
     </div>
   </template>
 
-  <div class="modal fade" id="modalEdicion" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input id="inp-edit-nombre" class="form-control mb-2"><input list="list-cats" id="inp-edit-categoria" class="form-control mb-2"><input type="number" id="inp-edit-costo" class="form-control mb-2"><input type="number" id="inp-edit-publico" class="form-control mb-2"><button class="btn btn-primary w-100" onclick="guardarCambiosAvanzado()">Guardar</button></div></div></div></div>
-  <div class="modal fade" id="modalNuevo" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input id="new-nombre" class="form-control mb-2" placeholder="Nombre"><input list="list-cats" id="new-categoria" class="form-control mb-2" placeholder="Categoria"><input type="number" id="new-costo" class="form-control mb-2" placeholder="Costo"><input type="number" id="new-publico" class="form-control mb-2" placeholder="Precio"><button class="btn btn-primary w-100" style="background-color:var(--accent)!important; border:none;" onclick="crearProducto()">Crear</button></div></div></div></div>
-  <div class="modal fade" id="modalLoginApp" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-body text-center p-5"><div style="font-size: 3rem; color: var(--cyan);"><i class="fas fa-planet-ringed"></i>🪐</div><h4 class="fw-bold mt-3">Planet Shop</h4><input type="text" id="login-alias" class="form-control text-center fw-bold mb-3 border-dark" placeholder="Tu Nombre"><button class="btn btn-dark w-100" onclick="guardarIdentidad()">ACCEDER</button></div></div></div></div>
-  <div class="modal fade" id="modalEditItem" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input type="hidden" id="edit-item-id"><input id="edit-item-nombre" class="form-control mb-2"><input type="number" id="edit-item-margen" class="form-control mb-2" oninput="calcEditorItem()"><input type="number" id="edit-item-desc" class="form-control mb-2 border-danger" oninput="calcEditorItem()"><div class="alert alert-light text-center"><strong id="edit-item-total">$0</strong></div><input type="number" class="form-control border-success mb-2" id="edit-item-precio-pactado" placeholder="Precio Pactado" oninput="aplicarPrecioPactado()"><button class="btn btn-primary w-100" onclick="guardarEditorItem()">Aplicar</button></div></div></div></div>
-  <div class="modal fade" id="modalRefinanciar" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input id="ref-cliente" class="form-control mb-2 bg-light" readonly><input id="ref-saldo-actual" class="form-control mb-2 bg-light text-danger fw-bold" readonly><input type="number" id="ref-cargo" class="form-control border-warning mb-2" value="0"><input type="number" id="ref-cuotas" class="form-control mb-2" value="1"><input type="date" id="ref-fecha" class="form-control mb-3 border-primary"><button class="btn btn-primary w-100" onclick="procesarRefinanciamiento()">Acordar Nuevo Plan</button></div></div></div></div>
+  <div class="modal fade" id="modalEdicion" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
+      <input id="inp-edit-nombre" class="form-control mb-2" placeholder="Nombre">
+      <input list="list-cats" id="inp-edit-categoria" class="form-control mb-2" placeholder="Categoria">
+      <input type="number" id="inp-edit-costo" class="form-control mb-2" placeholder="Costo">
+      <input type="number" id="inp-edit-publico" class="form-control mb-2" placeholder="Precio Venta">
+      <textarea id="inp-edit-desc" class="form-control mb-2" placeholder="Especificaciones y detalles..."></textarea>
+      <div class="file-upload-wrapper"><input type="file" id="inp-file-foto" accept="image/*" onchange="previewFile('inp-file-foto', 'img-preview-box')" class="file-input-overlay"><img id="img-preview-box" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--cyan);">📷</div><div>Tocar para cambiar foto</div></div></div>
+      <button class="btn btn-primary w-100 mt-2" onclick="guardarCambiosAvanzado()">Guardar Cambios</button>
+  </div></div></div></div>
   
+  <div class="modal fade" id="modalNuevo" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
+      <input id="new-nombre" class="form-control mb-2" placeholder="Nombre">
+      <input list="list-cats" id="new-categoria" class="form-control mb-2" placeholder="Categoria">
+      <input type="number" id="new-costo" class="form-control mb-2" placeholder="Costo Base">
+      <input type="number" id="new-publico" class="form-control mb-2" placeholder="Precio Público">
+      <textarea id="new-desc" class="form-control mb-2" placeholder="Ficha Técnica / Descripción..."></textarea>
+      <div class="file-upload-wrapper"><input type="file" id="new-file-foto" accept="image/*" onchange="previewFile('new-file-foto', 'img-preview-new')" class="file-input-overlay"><img id="img-preview-new" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--accent);">📷</div><div>Tocar para subir foto</div></div></div>
+      <button class="btn btn-primary w-100 mt-2" style="background-color:var(--accent)!important; border:none;" onclick="crearProducto()">Crear Producto</button>
+  </div></div></div></div>
+
+  <div class="modal fade" id="modalLoginApp" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-body text-center p-5"><div style="font-size: 3rem; color: var(--cyan);"><i class="fas fa-planet-ringed"></i>🪐</div><h4 class="fw-bold mt-3">Planet Shop</h4><input type="text" id="login-alias" class="form-control text-center fw-bold mb-3 border-dark" placeholder="Tu Nombre"><button class="btn btn-dark w-100" onclick="guardarIdentidad()">ACCEDER</button></div></div></div></div>
+  <div class="modal fade" id="modalRefinanciar" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input id="ref-cliente" class="form-control mb-2 bg-light" readonly><input id="ref-saldo-actual" class="form-control mb-2 bg-light text-danger fw-bold" readonly><input type="number" id="ref-cargo" class="form-control border-warning mb-2" value="0"><input type="number" id="ref-cuotas" class="form-control mb-2" value="1"><input type="date" id="ref-fecha" class="form-control mb-3 border-primary"><button class="btn btn-primary w-100" onclick="procesarRefinanciamiento()">Acordar Nuevo Plan</button></div></div></div></div>
+  <div class="modal fade" id="modalEditItem" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input type="hidden" id="edit-item-id"><input id="edit-item-nombre" class="form-control mb-2"><input type="number" id="edit-item-margen" class="form-control mb-2" oninput="calcEditorItem()"><input type="number" id="edit-item-desc" class="form-control mb-2 border-danger" oninput="calcEditorItem()"><div class="alert alert-light text-center"><strong id="edit-item-total">$0</strong></div><button class="btn btn-primary w-100" onclick="guardarEditorItem()">Aplicar</button></div></div></div></div>
+
   <datalist id="list-cats"></datalist><datalist id="list-provs-all"></datalist><datalist id="g-vinculo-list"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
