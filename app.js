@@ -64,6 +64,7 @@ async function callAPI(action, data = null) {
     }
     return { exito: false, error: e.toString() };
   }
+}
 
 // === COMPRESIÓN DE IMÁGENES ===
 function compressImage(file, maxWidth = 800, quality = 0.7) {
