@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzWEqQQTow3irxkTU4Y3CVJshtfjo1s2m1dwSicRihQ42_fArC6L9MAuQoUPUfzzXYS/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbz8ZEEBxxyn0b2Vg_tsxRnWkuDxtmQ1Qija0Xde4sK1Ae7Lk7q3HztNhtKyB41D_UPa2A/exec"; 
 
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
