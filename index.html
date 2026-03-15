@@ -109,7 +109,7 @@
       <div class="main-layout">
         <div class="list-column">
            <button class="btn btn-outline-info w-100 mb-2 fw-bold" onclick="abrirModalCotizaciones()"><i class="fas fa-folder-open"></i> VER COTIZACIONES</button>
-           <button class="btn btn-warning w-100 mb-2 fw-bold" onclick="agregarItemManual()" style="background-color: var(--accent); color: white; border: none;"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL</button>
+           <button class="btn btn-warning w-100 mb-2 fw-bold" onclick="abrirModalItemManual()" style="background-color: var(--accent); color: white; border: none;"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL</button>
            
            <div class="bg-white p-2 rounded mb-3 shadow-sm d-flex align-items-center border">
                <i class="fas fa-search text-muted ms-2 me-2"></i>
@@ -212,13 +212,11 @@
   <div class="modal fade" id="modalEdicion" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
       <input id="inp-edit-nombre" class="form-control mb-2" placeholder="Nombre">
       <input list="list-cats" id="inp-edit-categoria" class="form-control mb-2" placeholder="Categoria">
-      
       <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Unitario ($)</label><input type="number" id="inp-edit-costo" class="form-control" oninput="calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')"></div></div>
       <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
           <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="inp-edit-margen" class="form-control" oninput="calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
           <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="inp-edit-publico" class="form-control" oninput="calcMargen('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
       </div>
-
       <textarea id="inp-edit-desc" class="form-control mb-2" placeholder="Especificaciones y detalles..."></textarea>
       <div class="file-upload-wrapper"><input type="file" id="inp-file-foto" accept="image/*" onchange="previewFile('inp-file-foto', 'img-preview-box')" class="file-input-overlay"><img id="img-preview-box" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--cyan);">📷</div><div>Tocar para cambiar foto</div></div></div>
       <button class="btn btn-primary w-100 mt-2" onclick="guardarCambiosAvanzado()">Guardar Cambios</button>
@@ -227,17 +225,41 @@
   <div class="modal fade" id="modalNuevo" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
       <input id="new-nombre" class="form-control mb-2" placeholder="Nombre">
       <input list="list-cats" id="new-categoria" class="form-control mb-2" placeholder="Categoria">
-      
       <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Base ($)</label><input type="number" id="new-costo" class="form-control" oninput="calcGain('new-costo','new-publico','new-margen')"></div></div>
       <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
           <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="new-margen" class="form-control" value="30" oninput="calcGain('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
           <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="new-publico" class="form-control" oninput="calcMargen('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
       </div>
-
       <textarea id="new-desc" class="form-control mb-2" placeholder="Ficha Técnica / Descripción..."></textarea>
       <div class="file-upload-wrapper"><input type="file" id="new-file-foto" accept="image/*" onchange="previewFile('new-file-foto', 'img-preview-new')" class="file-input-overlay"><img id="img-preview-new" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--accent);">📷</div><div>Tocar para subir foto</div></div></div>
       <button class="btn btn-primary w-100 mt-2" style="background-color:var(--accent)!important; border:none;" onclick="crearProducto()">Crear Producto</button>
   </div></div></div></div>
+
+  <div class="modal fade" id="modalManualItem" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold" style="color: var(--primary);">➕ Agregar Ítem No Catalogado</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="small fw-bold">Nombre del Producto/Servicio *</label>
+          <input id="man-nombre" class="form-control mb-2" placeholder="Ej: Reparación, Domicilio, Accesorio...">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="small fw-bold">Costo Interno ($)</label>
+              <input type="number" id="man-costo" class="form-control" placeholder="Opcional">
+            </div>
+            <div class="col-6">
+              <label class="small fw-bold text-success">Precio Venta ($) *</label>
+              <input type="number" id="man-publico" class="form-control border-success" placeholder="Obligatorio">
+            </div>
+          </div>
+          <button class="btn btn-primary w-100 fw-bold" style="background-color:var(--accent)!important; border:none;" onclick="confirmarItemManual()">Añadir al Carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="modal fade" id="modalEditItem" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
