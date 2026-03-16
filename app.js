@@ -2,7 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzGnFrAB1Bn8mHuZbhvQB8w
 
 var D = {inv:[], provs:[], deud:[], hist:[], cats:[], proveedores:[], ultimasVentas:[], cotizaciones:[], pasivos:[]};
 var CART = [];
-var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem, myModalManualItem, myModalCotizaciones;
+var myModalEdit, myModalNuevo, myModalLogin, myModalRefinanciar, myModalEditItem, myModalManualItem, myModalCotizaciones, myModalProv;
 var prodEdit = null; var refEditId = null; var refSaldoActual = 0;
 var calculatedValues = { total: 0, inicial: 0, base: 0, descuento: 0 };
 var currentUserAlias = "Anonimo"; var usuarioForzoInicial = false;
@@ -170,6 +170,7 @@ window.onload = function() {
   myModalEditItem = new bootstrap.Modal(document.getElementById('modalEditItem'));
   myModalManualItem = new bootstrap.Modal(document.getElementById('modalManualItem'));
   myModalCotizaciones = new bootstrap.Modal(document.getElementById('modalCotizaciones'));
+  myModalProv = new bootstrap.Modal(document.getElementById('modalProv'));
   
   var tpl = document.getElementById('tpl-cart').innerHTML;
   document.getElementById('desktop-cart-container').innerHTML = tpl;
@@ -196,8 +197,19 @@ function loadData(silent = false){
 
 function renderData(res) {
     D = res; D.inv = res.inventario || []; D.deudores = res.deudores || []; D.historial = res.historial || []; D.cotizaciones = res.cotizaciones || [];
+    D.proveedores = res.proveedores || [];
+    
     if(res.metricas) { document.getElementById('bal-caja').innerText = COP.format(res.metricas.saldo||0); }
-    renderPos(); renderInv(); renderFin(); renderCartera();
+    
+    var dlProvs = document.getElementById('list-provs-all');
+    if(dlProvs) {
+        dlProvs.innerHTML = '';
+        D.proveedores.forEach(p => {
+            var o = document.createElement('option'); o.value = p.nombre; dlProvs.appendChild(o);
+        });
+    }
+
+    renderPos(); renderInv(); renderFin(); renderCartera(); renderProvs();
 }
 
 function nav(v, btn){
@@ -836,6 +848,34 @@ function guardarCambiosAvanzado() {
     var p = { id: prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, descripcion: document.getElementById('inp-edit-desc').value, proveedor: prodEdit.prov, urlExistente: prodEdit.foto || "" };
     var f = document.getElementById('inp-file-foto').files[0]; var promise = f ? compressImage(f) : Promise.resolve(null);
     promise.then(b64 => { if(b64) { p.imagenBase64 = b64.split(',')[1]; p.mimeType = f.type; p.nombreArchivo = f.name; } callAPI('guardarProductoAvanzado', p).then(r=> { myModalEdit.hide(); loadData(true); }); });
+}
+
+// === GESTIÓN DE PROVEEDORES ===
+function abrirModalProv() { renderProvs(); if(myModalProv) myModalProv.show(); }
+
+function renderProvs() {
+    var c = document.getElementById('list-provs'); if(!c) return;
+    c.innerHTML='';
+    D.proveedores.forEach(p => {
+        var waLink = p.tel ? `https://wa.me/57${p.tel.replace(/\D/g,'')}` : '#';
+        var btn = p.tel ? `<a href="${waLink}" target="_blank" class="btn btn-sm btn-success text-white"><i class="fab fa-whatsapp"></i></a>` : '<span class="text-muted">-</span>';
+        c.innerHTML += `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><strong>${p.nombre}</strong><br><small class="text-muted">${p.tel||'Sin numero'}</small></div><div class="d-flex gap-2">${btn}<button class="btn btn-sm btn-light border" onclick="editarProv('${p.nombre}')">✏️</button></div></div>`;
+    });
+}
+
+function guardarProvManual(){ 
+    var n = document.getElementById('new-prov-name').value; var t = document.getElementById('new-prov-tel').value; 
+    if(!n) return; 
+    callAPI('registrarProveedor', {nombre:n, tel:t}).then(r=>{ 
+        document.getElementById('new-prov-name').value=''; 
+        document.getElementById('new-prov-tel').value=''; 
+        loadData(true); 
+    }); 
+}
+
+function editarProv(nombre){ 
+    var t = prompt("Nuevo teléfono para "+nombre+":"); 
+    if(t) { callAPI('registrarProveedor', {nombre:nombre, tel:t}).then(()=>loadData(true)); } 
 }
 
 // === CARTERA AVANZADA ===
