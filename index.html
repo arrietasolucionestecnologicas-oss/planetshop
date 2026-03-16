@@ -83,6 +83,8 @@
     .text-primary { color: var(--primary) !important; }
     #btn-float-cart { background-color: var(--accent); color: var(--primary); border: none; }
     .form-control:focus { box-shadow: 0 0 0 2px var(--cyan) !important; border-color: var(--cyan) !important; }
+    
+    #modalEditItem { z-index: 6000 !important; }
   </style>
 </head>
 <body>
@@ -131,6 +133,7 @@
         <input type="text" id="inv-search" class="form-control" placeholder="🔍 Buscar Referencia..." onkeyup="renderInv()" style="width: 150px;">
         <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="renderInv()"><option value="">Proveedores</option></select>
         <button class="btn btn-primary" onclick="abrirModalNuevo()" style="white-space: nowrap;">+ CREAR PRODUCTO</button>
+        <button class="btn btn-info ms-2" onclick="abrirModalProv()" style="color:white; white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
       </div>
       <div id="inv-list" class="catalog-grid"></div>
     </div>
@@ -348,6 +351,25 @@
             <button class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
             <button class="btn btn-primary w-50 fw-bold" onclick="guardarEditorItem()">✔️ Aplicar al Carrito</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalProv" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold" style="color: var(--primary);">👥 Directorio de Proveedores</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group mb-3">
+            <input id="new-prov-name" class="form-control" placeholder="Nombre Empresa/Prov">
+            <input id="new-prov-tel" class="form-control" placeholder="Teléfono/WhatsApp">
+            <button class="btn btn-primary" onclick="guardarProvManual()">💾 Guardar</button>
+          </div>
+          <div id="list-provs" style="max-height:300px; overflow-y:auto;"></div>
         </div>
       </div>
     </div>
