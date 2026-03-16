@@ -141,7 +141,6 @@ function calcMargen(idCosto, idPublico, idMargen) {
     }
 }
 
-// === CONTROLADOR DE CARRITO Y DATOS FORMALES ===
 function toggleMobileCart(forceOpen) { 
     var mc = document.getElementById('mobile-cart'); 
     if(mc) { 
@@ -391,7 +390,24 @@ function updateCartUI(keepOpen=false) {
    calcCart();
 }
 
-function toggleIni() { usuarioForzoInicial = false; calcCart(); }
+function toggleIni() { 
+    var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart') && document.getElementById('mobile-cart').classList.contains('visible');
+    var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
+    if(!parent) return;
+    
+    var metodo = parent.querySelector('#c-metodo').value;
+    var boxVip = parent.querySelector('#box-vip');
+    
+    if(metodo !== "Crédito") { 
+        usuarioForzoInicial = false; 
+        if(boxVip) boxVip.style.display = 'none';
+        var elEx = parent.querySelector('#c-eximir');
+        if(elEx) elEx.checked = false;
+    } else {
+        if(boxVip) boxVip.style.display = 'block';
+    }
+    calcCart(); 
+}
 
 function calcCart() {
    var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible');
@@ -484,6 +500,7 @@ function calcCart() {
            if(pInpInicial) { pInpInicial.style.display='block'; pInpInicial.disabled = false; }
            p.querySelector('#res-ini').innerText = COP.format(inicial);
            p.querySelector('#res-cuota-val').innerText = COP.format(Math.max(0, (totalFinal-inicial)/cuotas));
+           if(p.querySelector('#res-cuota-txt')) p.querySelector('#res-cuota-txt').innerText = ` / ${cuotas} mes(es)`;
        } else { 
            p.querySelector('#row-cred').style.display='none'; 
            if(pInpInicial) pInpInicial.style.display='none'; 
