@@ -3,14 +3,13 @@
 // ==========================================
 import { State } from './state.js';
 import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
-import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato } from './core.js';
+import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, COP } from './core.js';
 import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales } from './ui/pos.js';
 import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
 import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
 import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual } from './ui/crm.js';
 
 // 1. INYECCIÓN AL SCOPE GLOBAL (WINDOW)
-// Expone las funciones de los módulos cerrados (ES6) al DOM estático para que funcionen los onclick.
 window.guardarIdentidad = guardarIdentidad;
 window.nav = nav;
 window.renderPos = renderPos;
@@ -90,6 +89,9 @@ window.onload = function() {
   updateOnlineStatus(loadData); 
   loadData();
 };
+
+window.addEventListener('online', () => updateOnlineStatus(loadData));
+window.addEventListener('offline', () => updateOnlineStatus());
 
 // 3. CARGA MAESTRA DE DATOS
 function loadData(silent = false){
