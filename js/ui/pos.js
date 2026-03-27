@@ -92,6 +92,17 @@ export function toggleMobileCart(forceOpen) {
     } 
 }
 
+export function toggleDatosFormales() {
+    var panels = [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')];
+    panels.forEach(parent => {
+        if(!parent) return;
+        var box = parent.querySelector('#box-datos-formales');
+        if(box) {
+            if(box.style.display === 'none') { box.style.display = 'block'; } else { box.style.display = 'none'; }
+        }
+    });
+}
+
 export function updateCartUI(keepOpen=false) {
    var count = State.cart.reduce((a, b) => a + (b.cantidad || 1), 0);
    var btnFloat = document.getElementById('btn-float-cart'); if(btnFloat) { btnFloat.style.display = count > 0 ? 'block' : 'none'; btnFloat.innerText = "🛒 " + count; }
