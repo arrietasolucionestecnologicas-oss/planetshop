@@ -1,422 +1,138 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Planet.shop | Sistema POS</title>
-  <meta name="theme-color" content="#1a365d">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+// ==========================================
+// [MOD-003] ORQUESTADOR MAESTRO (BOOTSTRAPPER)
+// ==========================================
+import { State } from './state.js';
+import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
+import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato } from './core.js';
+import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales } from './ui/pos.js';
+import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
+import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
+import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual } from './ui/crm.js';
 
-  <style>
-    :root { 
-        /* Paleta Ocean Blue */
-        --primary: #1a365d;       /* Azul Marino (Oscuro, paz y profesionalismo) */
-        --accent: #2b6cb0;        /* Azul Océano (Brillante para botones principales) */
-        --accent-hover: #1e4e8c;  /* Azul intermedio para hover */
-        --cyan: #63b3ed;          /* Azul Cielo claro (Detalles) */
-        --light: #f8f9fa; 
-        --dark: #2d3748; 
-        --bg: #f0f4f8;            /* Gris-Azulado muy suave para el fondo */
-        --s: #38a169;             /* Verde esmeralda calmado */
-        --d: #e53e3e;             /* Rojo suave */
+// 1. INYECCIÓN AL SCOPE GLOBAL (WINDOW)
+// Expone las funciones de los módulos cerrados (ES6) al DOM estático para que funcionen los onclick.
+window.guardarIdentidad = guardarIdentidad;
+window.nav = nav;
+window.renderPos = renderPos;
+window.toggleCart = toggleCart;
+window.abrirModalItemManual = abrirModalItemManual;
+window.confirmarItemManual = confirmarItemManual;
+window.abrirEditorItem = abrirEditorItem;
+window.aplicarPrecioPactado = aplicarPrecioPactado;
+window.guardarEditorItem = guardarEditorItem;
+window.toggleItemIva = toggleItemIva;
+window.changeQty = changeQty;
+window.calcCart = calcCart;
+window.toggleIni = toggleIni;
+window.finalizarVenta = finalizarVenta;
+window.clearCart = clearCart;
+window.shareProductNative = shareProductNative;
+window.shareQuote = shareQuote;
+window.guardarCotizacionActual = guardarCotizacionActual;
+window.abrirModalCotizaciones = abrirModalCotizaciones;
+window.cargarCotizacion = cargarCotizacion;
+window.eliminarCotizacion = eliminarCotizacion;
+window.generarCotizacionPDF = generarCotizacionPDF;
+window.toggleMobileCart = toggleMobileCart;
+window.toggleDatosFormales = toggleDatosFormales;
+window.agregarAlCarritoDesdeInv = agregarAlCarritoDesdeInv;
+
+window.renderInv = renderInv;
+window.abrirModalNuevo = abrirModalNuevo;
+window.crearProducto = crearProducto;
+window.openEdit = openEdit;
+window.guardarCambiosAvanzado = guardarCambiosAvanzado;
+window.calcGain = calcGain;
+window.calcMargen = calcMargen;
+window.abrirModalProv = abrirModalProv;
+window.guardarProvManual = guardarProvManual;
+window.previewFile = previewFile;
+window.copyingDato = copyingDato;
+
+window.doAbono = doAbono;
+window.doIngresoExtra = doIngresoExtra;
+window.doGasto = doGasto;
+window.abrirModalPasivos = abrirModalPasivos;
+window.procesarRefinanciamiento = procesarRefinanciamiento;
+
+window.abrirModalClientes = abrirModalClientes;
+window.renderClientes = renderClientes;
+window.guardarClienteManual = guardarClienteManual;
+
+// Anclas internas de soporte cruzado
+window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
+window.Inventory = { openEdit, editarProv };
+window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda };
+window.App = { loadData };
+
+// 2. INICIALIZACIÓN DEL SISTEMA
+window.onload = function() {
+  State.modals.edicion = new bootstrap.Modal(document.getElementById('modalEdicion'));
+  State.modals.nuevo = new bootstrap.Modal(document.getElementById('modalNuevo'));
+  State.modals.login = new bootstrap.Modal(document.getElementById('modalLoginApp'));
+  State.modals.refinanciar = new bootstrap.Modal(document.getElementById('modalRefinanciar'));
+  State.modals.editItem = new bootstrap.Modal(document.getElementById('modalEditItem'));
+  State.modals.manualItem = new bootstrap.Modal(document.getElementById('modalManualItem'));
+  State.modals.cotizaciones = new bootstrap.Modal(document.getElementById('modalCotizaciones'));
+  State.modals.prov = new bootstrap.Modal(document.getElementById('modalProv'));
+  State.modals.clientes = new bootstrap.Modal(document.getElementById('modalClientes'));
+  
+  var tpl = document.getElementById('tpl-cart').innerHTML;
+  document.getElementById('desktop-cart-container').innerHTML = tpl;
+  document.getElementById('mobile-cart').innerHTML = tpl;
+  
+  document.querySelectorAll('#c-inicial').forEach(el => { el.removeAttribute('disabled'); el.oninput = calcCart; });
+  
+  var lastView = localStorage.getItem('planet_view') || 'pos';
+  nav(lastView, document.querySelector(`.nav-btn[onclick*="'${lastView}'"]`));
+  
+  verificarIdentidad(); 
+  updateOnlineStatus(loadData); 
+  loadData();
+};
+
+// 3. CARGA MAESTRA DE DATOS
+function loadData(silent = false){
+  if(!silent && State.data.inv.length === 0) document.getElementById('loader').style.display='flex';
+  callAPI('obtenerDatosCompletos').then(res => {
+    if(res && res.inventario) { localStorage.setItem('planet_data', JSON.stringify(res)); renderData(res); }
+    document.getElementById('loader').style.display='none';
+  }).catch(() => {
+    const raw = localStorage.getItem('planet_data');
+    if(raw) renderData(JSON.parse(raw));
+    document.getElementById('loader').style.display='none';
+  });
+}
+
+function renderData(res) {
+    State.data.inv = res.inventario || []; 
+    State.data.deudores = res.deudores || []; 
+    State.data.historial = res.historial || []; 
+    State.data.cotizaciones = res.cotizaciones || [];
+    State.data.proveedores = res.proveedores || []; 
+    State.data.pasivos = res.pasivos || [];
+    State.data.clientes = res.clientes || [];
+    
+    State.data.clientesActivos = construirDirectorioClientes();
+    
+    if(res.metricas) { 
+        State.data.metricas = res.metricas;
+        document.getElementById('bal-caja').innerText = COP.format(res.metricas.saldo||0); 
+    }
+    
+    var dlCli = document.getElementById('list-clientes-rapido');
+    if(dlCli) {
+        dlCli.innerHTML = '';
+        State.data.clientesActivos.forEach(c => {
+            var o = document.createElement('option'); o.value = c.nombre; dlCli.appendChild(o);
+        });
     }
 
-    body { background: var(--bg); padding-bottom: 90px; font-family: 'Montserrat', sans-serif; overflow-x: hidden; color: var(--dark); }
+    var dlProvs = document.getElementById('list-provs-all');
+    if(dlProvs) {
+        dlProvs.innerHTML = '';
+        State.data.proveedores.forEach(p => { var o = document.createElement('option'); o.value = p.nombre; dlProvs.appendChild(o); });
+    }
 
-    .header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
-    #offline-indicator { background-color: var(--accent); color: white; text-align: center; padding: 5px; font-size: 0.8rem; font-weight: bold; display: none; }
-    .main-layout { display: flex; gap: 20px; align-items: flex-start; padding: 15px; }
-    .list-column { flex: 1; min-width: 0; }
-    .panel-column { width: 350px; position: sticky; top: 10px; display: none; } 
-    @media (min-width: 992px) { .panel-column { display: block; } }
-
-    .pos-row-lite { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
-    .pos-row-lite:hover { transform: translateX(3px); border-left-color: var(--cyan); }
-    .pos-row-lite.active { border-left-color: var(--accent); background: #eef2f7; border-right: 1px solid var(--accent); }
-    .pos-row-lite .info { flex: 1; min-width: 0; padding-right: 10px; }
-    .pos-row-lite .name { font-weight: 700; color: var(--primary); font-size: 0.95rem; margin-bottom: 2px; }
-    .pos-row-lite .price { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-align: right; white-space: nowrap; }
-    
-    .catalog-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; } }
-
-    .card-catalog { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: 0.2s; }
-    .card-catalog:hover { border-color: var(--cyan); box-shadow: 0 5px 15px rgba(99, 179, 237, 0.2); }
-    .cat-img-box { height: 120px; width: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #e2e8f0; position: relative; }
-    .cat-img-box img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-edit-float { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.95); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: var(--primary); }
-    .cat-body { padding: 10px; flex: 1; display: flex; flex-direction: column; }
-    .cat-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; color: var(--primary); height: 34px; overflow: hidden; }
-    .cat-price { color: var(--accent); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
-
-    .cotizador-panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); border-top: 4px solid var(--cyan); }
-    .input-line { border:none; border-bottom: 2px solid #e2e8f0; width:100%; text-align:center; font-weight:bold; outline:none; color: var(--primary); }
-
-    .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 5000; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.2); transform: translateY(110%); transition: transform 0.3s; max-height: 85vh; overflow-y: auto; border-top: 4px solid var(--accent); }
-    .mobile-panel.visible { transform: translateY(0); }
-
-    .card-k { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: none; }
-    .card-balance { padding: 25px; color: var(--cyan); border-radius: 20px; text-align: center; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 15px; }
-    .card-balance h1 { color: white; }
-
-    .scroll-menu { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; margin-bottom: 15px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-    .scroll-menu::-webkit-scrollbar { display: none; }
-
-    .nav-btm { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-between; padding: 8px 10px; border-top: 1px solid #e2e8f0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-    .nav-btn { background: none; border: none; color: #a0aec0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; flex: 1; transition: 0.2s; }
-    .nav-btn.active { color: var(--accent); transform: translateY(-2px); }
-    .nav-btn.active span { font-weight: 700; color: var(--primary); }
-
-    .file-upload-wrapper { position: relative; width: 100%; height: 180px; border: 2px dashed #cbd5e0; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8f9fa; overflow: hidden; margin-bottom: 10px; }
-    .preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; z-index: 5; display: none; background: white; }
-    .file-input-overlay { position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 100; }
-
-    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-    .btn-bi { background: rgba(255,255,255,0.15); border:1px solid rgba(255, 255, 255, 0.3); color:white; border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; }
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
-
-    .btn-primary, .btn-dark { background-color: var(--primary) !important; border-color: var(--primary) !important; color: white !important; }
-    .btn-primary:hover, .btn-dark:hover { background-color: var(--accent-hover) !important; border-color: var(--accent-hover) !important; color: white !important; }
-    .btn-info { background-color: var(--cyan) !important; border-color: var(--cyan) !important; color: white !important; font-weight: bold; }
-    .text-primary { color: var(--primary) !important; }
-    #btn-float-cart { background-color: var(--accent); color: white; border: none; }
-    .form-control:focus { box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3) !important; border-color: var(--cyan) !important; }
-    
-    #modalEditItem { z-index: 6000 !important; }
-  </style>
-</head>
-<body>
-
-  <div id="loader"><div class="spinner-border text-primary" role="status"></div><h6 class="mt-3 text-muted fw-bold">Conectando a Planet Shop...</h6></div>
-  <div id="toast-container"></div>
-
-  <div class="header">
-    <div>
-        <h4 class="m-0 fw-bold" style="letter-spacing: 1px;">
-            <span style="color: var(--cyan);">Planet</span><span style="color: white;">.shop</span>
-        </h4>
-        <small class="opacity-75" id="user-display" style="color: var(--cyan);">Verificando Credenciales...</small>
-    </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-bi" onclick="abrirModalClientes()"><i class="fas fa-address-book"></i> Clientes</button>
-    </div>
-  </div>
-  
-  <div id="offline-indicator">⚠️ Modo Sin Conexión - Operando Localmente</div>
-
-  <div class="container-fluid px-3">
-    <div id="view-pos" class="view-sec">
-      <div class="main-layout">
-        <div class="list-column">
-           <button class="btn btn-outline-primary w-100 mb-2 fw-bold" onclick="abrirModalCotizaciones()"><i class="fas fa-folder-open"></i> VER COTIZACIONES GUARDADAS</button>
-           <button class="btn w-100 mb-2 fw-bold" onclick="abrirModalItemManual()" style="background-color: var(--accent); color: white; border: none;"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL</button>
-           
-           <div class="bg-white p-2 rounded mb-3 shadow-sm d-flex align-items-center border">
-               <i class="fas fa-search text-muted ms-2 me-2"></i>
-               <input type="text" id="pos-search" class="form-control border-0 shadow-none" placeholder="Buscar producto en inventario..." onkeyup="renderPos()" style="font-weight:bold; color:var(--primary);">
-           </div>
-           
-           <div id="pos-placeholder" class="text-center text-muted py-5">
-               <i class="fas fa-shopping-cart fs-1 mb-2 opacity-50" style="color: var(--cyan);"></i>
-               <p>Busca o agrega ítems libres<br>para facturar.</p>
-           </div>
-           <div id="pos-list"></div>
-        </div>
-        <div class="panel-column"><div id="desktop-cart-container" class="cotizador-panel-container"></div></div>
-      </div>
-    </div>
-
-    <div id="view-inv" class="view-sec" style="display:none; padding:15px;">
-      <div class="scroll-menu">
-        <input type="text" id="inv-search" class="form-control" placeholder="🔍 Buscar Referencia..." onkeyup="renderInv()" style="width: 150px;">
-        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="renderInv()"><option value="">Proveedores</option></select>
-        <button class="btn btn-primary" onclick="abrirModalNuevo()" style="white-space: nowrap;">+ CREAR PRODUCTO</button>
-        <button class="btn" onclick="abrirModalProv()" style="background-color:var(--accent); color:white; white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
-      </div>
-      <div id="inv-list" class="catalog-grid"></div>
-    </div>
-
-    <div id="view-cartera" class="view-sec" style="display:none; padding:15px;">
-        <div class="card-balance" style="background: linear-gradient(135deg, #c53030, #9b2c2c);">
-            <small class="opacity-75" style="color:white;">Cuentas por Cobrar (Total Deuda)</small>
-            <h1 class="fw-bold display-4 my-1" id="bal-cartera">...</h1>
-        </div>
-        <h6 class="fw-bold text-muted mb-3">Cartera de Clientes Activa</h6>
-        <div id="cartera-list"></div>
-    </div>
-
-    <div id="view-fin" class="view-sec" style="display:none; padding:15px;">
-      <div class="card-balance mb-3" style="background: linear-gradient(135deg, #2b6cb0, #2c5282);">
-          <small class="opacity-75" style="color: white;">Capital Global (Patrimonio Neto)</small>
-          <h1 class="fw-bold display-4 my-1" id="bal-patrimonio" style="color: white;">...</h1>
-          <small class="text-white opacity-75" style="font-size:0.7rem;">Caja + Cuentas Cobrar + Inventario - Deudas</small>
-      </div>
-      
-      <div class="row g-2 mb-3">
-          <div class="col-6">
-              <div class="card-balance p-3 mb-0" style="background: white; border: 1px solid var(--accent);">
-                  <small class="text-muted fw-bold" style="color: var(--accent) !important;">Flujo de Caja</small>
-                  <h3 class="fw-bold m-0" id="bal-caja" style="color: var(--primary);">...</h3>
-              </div>
-          </div>
-          <div class="col-6">
-              <div class="card-balance p-3 mb-0" style="background: #fff5f5; border: 1px solid #fc8181;">
-                  <small class="text-danger fw-bold">Obligaciones (Pasivos)</small>
-                  <h3 class="fw-bold text-danger m-0" id="bal-pasivos">...</h3>
-                  <button class="btn btn-outline-danger btn-sm mt-1 py-0 px-2" onclick="abrirModalPasivos()">Pagar</button>
-              </div>
-          </div>
-      </div>
-      
-      <ul class="nav nav-pills nav-fill mb-3 bg-white rounded shadow-sm p-1">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#f-abono" style="color:var(--primary);">Recaudo</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-ingreso" style="color:var(--primary);">Ingreso</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-gasto" style="color:var(--primary);">Egreso</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist" style="color:var(--primary);">Historial</a></li>
-      </ul>
-      <div class="tab-content">
-         <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="doAbono()">CONFIRMAR RECAUDO</button></div></div>
-         <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="doIngresoExtra()">REGISTRAR ENTRADA</button></div></div>
-         <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Logística</option><option>Alimentación</option><option>Inventario</option><option>Nómina</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="doGasto()">REGISTRAR EGRESO</button></div></div>
-         <div class="tab-pane fade" id="f-hist"><div class="card-k"><div id="hist-list"></div></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="mobile-cart" class="mobile-panel cotizador-panel-container"></div>
-  <button id="btn-float-cart" class="btn shadow" style="position:fixed; bottom:80px; right:20px; width:60px; height:60px; z-index:4000; display:none; font-size:1.5rem;" onclick="toggleMobileCart(true)" title="Ver Carrito">🛒</button>
-
-  <div class="nav-btm">
-    <button class="nav-btn active" onclick="nav('pos',this)"><i class="fas fa-shopping-cart" style="color:var(--accent);"></i><span>Vender</span></button>
-    <button class="nav-btn" onclick="nav('inv',this)"><i class="fas fa-box-open"></i><span>Catálogo</span></button>
-    <button class="nav-btn" onclick="nav('cartera',this)"><i class="fas fa-hand-holding-usd text-danger"></i><span class="text-danger">Créditos</span></button>
-    <button class="nav-btn" onclick="nav('fin',this)"><i class="fas fa-chart-pie"></i><span>Caja</span></button>
-  </div>
-
-  <template id="tpl-cart">
-    <div class="cotizador-panel">
-       <div class="d-flex justify-content-between mb-2 align-items-center">
-         <h5 class="fw-bold m-0" style="color: var(--primary);">Resumen</h5>
-         <div>
-            <button class="btn btn-sm btn-light border fw-bold text-secondary me-1" onclick="toggleMobileCart(false)">🔽 Ocultar</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="clearCart()">🗑️ Vaciar</button>
-         </div>
-       </div>
-       <input id="c-concepto" class="form-control mb-2 fw-bold" placeholder="📝 Descripción manual..." style="display:none; border-left:4px solid var(--accent);">
-       
-       <div class="d-flex justify-content-between gap-2 mb-2"> 
-         <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="c-iva" onchange="calcCart()"><label class="form-check-label small fw-bold text-muted" for="c-iva">Aplicar IVA 19% global</label></div>
-       </div>
-
-       <div id="cart-items-list" class="mb-3 mt-2" style="max-height:150px; overflow-y:auto;">Vacío...</div>
-       
-       <div class="row g-2 mb-3">
-         <div class="col-3 text-center"><small>Margen %</small><input id="c-util" type="number" class="input-line" value="30" oninput="calcCart()"></div>
-         <div class="col-3 text-center"><small>Desc. %</small><input id="c-desc" type="number" class="input-line text-danger" value="0" oninput="calcCart()"></div>
-         <div class="col-3 text-center"><small>Tasa Int.%</small><input id="c-int" type="number" class="input-line" value="5" oninput="calcCart()"></div>
-         <div class="col-3 text-center"><small>Plazo (M)</small><input id="c-cuotas" type="number" class="input-line" value="1" oninput="calcCart()"></div>
-       </div>
-       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--cyan);">
-       
-       <div class="alert alert-light border text-center py-2 mb-3" style="border-color: var(--accent) !important; background-color: #f8f9fa;">
-          <div class="d-flex justify-content-between align-items-center"><span>Total:</span><div class="text-end"><strong id="res-cont" class="fs-5" style="color: var(--primary);">$0</strong></div></div>
-          <div id="row-cred" style="display:none; border-top:1px dashed var(--accent); margin-top:5px; padding-top:5px;"><div class="d-flex justify-content-between"><span>Inicial:</span><strong id="res-ini">$0</strong></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent);">Saldo:</span><strong id="res-cuota-val">$0</strong><small id="res-cuota-txt">/ mes</small></div></div>
-          <div class="mt-2 text-end" style="border-top: 1px dotted #ccc; padding-top:5px;"><small class="text-muted">Precio Fijo (Anular intereses)</small><input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end" style="border-color: var(--accent);" placeholder="💲 Precio Cerrado" oninput="calcCart()"></div>
-       </div>
-       
-       <input id="c-cliente" class="form-control mb-2" placeholder="Cliente" list="list-clientes-rapido">
-       <datalist id="list-clientes-rapido"></datalist>
-       
-       <div class="text-end mb-2"><a href="#" onclick="toggleDatosFormales(); return false;" class="small text-muted" style="text-decoration: none;">⚙️ Añadir datos formales (NIT, Tel)</a></div>
-       <div id="box-datos-formales" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
-          <input id="c-nit" class="form-control form-control-sm mb-2" placeholder="NIT / Cédula">
-          <input id="c-tel" class="form-control form-control-sm" placeholder="Teléfono / WhatsApp">
-       </div>
-
-       <select id="c-metodo" class="form-select mb-2" onchange="toggleIni()"><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select>
-       <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono Inicial Personalizado" disabled style="display:none;">
-       
-       <div id="box-vip" class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #fffdf9; border-color: var(--accent) !important; display: none;">
-           <input class="form-check-input" type="checkbox" id="c-eximir" onchange="calcCart()">
-           <label class="form-check-label small fw-bold" for="c-eximir" style="color: var(--accent-hover);">⭐ Eximir Cuota Inicial (Migración / Confianza)</label>
-       </div>
-
-       <div class="d-flex gap-2 mb-2">
-           <button class="btn btn-outline-primary flex-fill fw-bold" onclick="guardarCotizacionActual()">💾 COTIZAR</button>
-           <button class="btn btn-dark flex-fill fw-bold text-white" onclick="generarCotizacionPDF()" title="Generar PDF">📄 PDF</button>
-           <button class="btn btn-success flex-fill fw-bold" onclick="shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button>
-       </div>
-       <button id="btn-vender-main" class="btn w-100 fw-bold py-2 text-white" onclick="finalizarVenta()" style="background-color:var(--accent); border:none;">✅ FACTURAR</button>
-    </div>
-  </template>
-
-  <div class="modal fade" id="modalEdicion" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
-      <input id="inp-edit-nombre" class="form-control mb-2" placeholder="Nombre">
-      <input list="list-cats" id="inp-edit-categoria" class="form-control mb-2" placeholder="Categoria">
-      <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Unitario ($)</label><input type="number" id="inp-edit-costo" class="form-control" oninput="calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')"></div></div>
-      <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
-          <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="inp-edit-margen" class="form-control" oninput="calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
-          <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="inp-edit-publico" class="form-control" oninput="calcMargen('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
-      </div>
-      <textarea id="inp-edit-desc" class="form-control mb-2" placeholder="Especificaciones y detalles..."></textarea>
-      <div class="file-upload-wrapper"><input type="file" id="inp-file-foto" accept="image/*" onchange="previewFile('inp-file-foto', 'img-preview-box')" class="file-input-overlay"><img id="img-preview-box" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--cyan);">📷</div><div>Tocar para cambiar foto</div></div></div>
-      <button class="btn btn-primary w-100 mt-2" onclick="guardarCambiosAvanzado()">Guardar Cambios</button>
-  </div></div></div></div>
-  
-  <div class="modal fade" id="modalNuevo" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
-      <input id="new-nombre" class="form-control mb-2" placeholder="Nombre">
-      <input list="list-cats" id="new-categoria" class="form-control mb-2" placeholder="Categoria">
-      <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Base ($)</label><input type="number" id="new-costo" class="form-control" oninput="calcGain('new-costo','new-publico','new-margen')"></div></div>
-      <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
-          <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="new-margen" class="form-control" value="30" oninput="calcGain('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
-          <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="new-publico" class="form-control" oninput="calcMargen('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
-      </div>
-      <textarea id="new-desc" class="form-control mb-2" placeholder="Ficha Técnica / Descripción..."></textarea>
-      <div class="file-upload-wrapper"><input type="file" id="new-file-foto" accept="image/*" onchange="previewFile('new-file-foto', 'img-preview-new')" class="file-input-overlay"><img id="img-preview-new" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--accent);">📷</div><div>Tocar para subir foto</div></div></div>
-      <button class="btn w-100 mt-2 text-white" style="background-color:var(--accent); border:none;" onclick="crearProducto()">Crear Producto</button>
-  </div></div></div></div>
-
-  <div class="modal fade" id="modalClientes" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-address-book"></i> Directorio de Clientes</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="input-group mb-3">
-            <input id="new-cli-name" class="form-control" placeholder="Nombre del Cliente">
-            <input id="new-cli-tel" class="form-control" placeholder="Teléfono/WA">
-            <button class="btn btn-primary" onclick="guardarClienteManual()">💾 Añadir</button>
-          </div>
-          <input type="text" id="cli-search" class="form-control mb-2" placeholder="🔍 Buscar cliente..." onkeyup="renderClientes()">
-          <div id="list-clientes" style="max-height:350px; overflow-y:auto;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalCotizaciones" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-folder-open text-info"></i> Cotizaciones Guardadas</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="cotizaciones-list" style="background-color: #f8f9fa;">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalManualItem" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);">➕ Agregar Ítem No Catalogado</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <label class="small fw-bold">Nombre del Producto/Servicio *</label>
-          <input id="man-nombre" class="form-control mb-2" placeholder="Ej: Reparación, Domicilio, Accesorio...">
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <label class="small fw-bold">Costo Interno ($)</label>
-              <input type="number" id="man-costo" class="form-control" placeholder="Opcional">
-            </div>
-            <div class="col-6">
-              <label class="small fw-bold text-success">Precio Venta ($) *</label>
-              <input type="number" id="man-publico" class="form-control border-success" placeholder="Obligatorio">
-            </div>
-          </div>
-          <button class="btn w-100 fw-bold text-white" style="background-color:var(--accent); border:none;" onclick="confirmarItemManual()">Añadir al Carrito</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalEditItem" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);">✏️ Ajuste Individual de Ítem</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="edit-item-id">
-          <div class="mb-2">
-            <label class="small fw-bold">Nombre del Producto/Servicio</label>
-            <input id="edit-item-nombre" class="form-control">
-          </div>
-          <div class="row g-2 mb-2">
-            <div class="col-6">
-              <label class="small fw-bold text-muted">Costo Base</label>
-              <input type="number" id="edit-item-costo" class="form-control bg-light" readonly>
-            </div>
-            <div class="col-6">
-              <label class="small fw-bold">Margen (%)</label>
-              <input type="number" id="edit-item-margen" class="form-control border-primary" oninput="calcEditorItem()">
-            </div>
-          </div>
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <label class="small fw-bold text-danger">Descuento Unitario (%)</label>
-              <input type="number" id="edit-item-desc" class="form-control border-danger" oninput="calcEditorItem()">
-            </div>
-            <div class="col-6 d-flex align-items-end">
-                <div class="form-check form-switch w-100 p-2 bg-light rounded border">
-                    <input class="form-check-input ms-1 mt-1" type="checkbox" id="edit-item-iva" onchange="calcEditorItem()">
-                    <label class="form-check-label small fw-bold ms-2" for="edit-item-iva">Aplicar IVA</label>
-                </div>
-            </div>
-          </div>
-          <div class="alert alert-light border text-center mb-3">
-            <small class="text-muted">Precio Unitario Final (Calculado):</small><br>
-            <strong id="edit-item-total" class="fs-4" style="color: var(--accent);">$0</strong>
-          </div>
-          <div class="mb-3 border-top pt-3">
-            <label class="form-label text-success fw-bold">Precio Final Pactado ($):</label>
-            <input type="number" class="form-control border-success" id="edit-item-precio-pactado" placeholder="Ej: 150000" oninput="aplicarPrecioPactado()" style="font-weight: bold;">
-            <small class="text-muted">Calcula el descuento (%) en reversa automáticamente.</small>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-            <button class="btn btn-primary w-50 fw-bold" onclick="guardarEditorItem()">✔️ Aplicar al Carrito</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalProv" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);">👥 Directorio de Proveedores</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="input-group mb-3">
-            <input id="new-prov-name" class="form-control" placeholder="Nombre Empresa/Prov">
-            <input id="new-prov-tel" class="form-control" placeholder="Teléfono/WhatsApp">
-            <button class="btn btn-primary" onclick="guardarProvManual()">💾 Guardar</button>
-          </div>
-          <div id="list-provs" style="max-height:300px; overflow-y:auto;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalLoginApp" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-body text-center p-5"><div style="font-size: 3rem; color: var(--cyan);"><i class="fas fa-globe"></i></div><h4 class="fw-bold mt-3" style="color: var(--primary);">Planet Shop</h4><input type="text" id="login-alias" class="form-control text-center fw-bold mb-3" style="border: 2px solid var(--accent);" placeholder="Tu Nombre"><button class="btn btn-primary w-100" onclick="guardarIdentidad()">ACCEDER</button></div></div></div></div>
-  <div class="modal fade" id="modalRefinanciar" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body"><input id="ref-cliente" class="form-control mb-2 bg-light" readonly><input id="ref-saldo-actual" class="form-control mb-2 bg-light text-danger fw-bold" readonly><input type="number" id="ref-cargo" class="form-control border-warning mb-2" value="0"><input type="number" id="ref-cuotas" class="form-control mb-2" value="1"><input type="date" id="ref-fecha" class="form-control mb-3 border-primary"><button class="btn btn-primary w-100" onclick="procesarRefinanciamiento()">Acordar Nuevo Plan</button></div></div></div></div>
-
-  <datalist id="list-cats"></datalist><datalist id="list-provs-all"></datalist><datalist id="g-vinculo-list"></datalist>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+    renderPos(); renderInv(); renderFin(); renderCartera(); renderProvs(); renderClientes();
+}
