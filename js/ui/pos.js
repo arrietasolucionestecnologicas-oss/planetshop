@@ -103,6 +103,24 @@ export function toggleDatosFormales() {
     });
 }
 
+// NUEVO: Calculadora de 1er Pago (A.S.T.)
+window.updatePrimerPago = function() {
+    var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible');
+    var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
+    if(!parent) return;
+    
+    var fInput = parent.querySelector('#c-fecha');
+    var ppInput = parent.querySelector('#c-primer-pago');
+    var frec = parent.querySelector('#c-frecuencia');
+    
+    if(fInput && ppInput && frec) {
+        var d = fInput.value ? new Date(fInput.value + "T12:00:00") : new Date();
+        if(frec.value === 'Quincenal') d.setDate(d.getDate() + 15);
+        else d.setMonth(d.getMonth() + 1);
+        ppInput.value = d.toISOString().split('T')[0];
+    }
+}
+
 export function updateCartUI(keepOpen=false) {
    var count = State.cart.reduce((a, b) => a + (b.cantidad || 1), 0);
    var btnFloat = document.getElementById('btn-float-cart'); if(btnFloat) { btnFloat.style.display = count > 0 ? 'block' : 'none'; btnFloat.innerText = "🛒 " + count; }
@@ -135,9 +153,23 @@ export function toggleIni() {
     var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart') && document.getElementById('mobile-cart').classList.contains('visible');
     var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
     if(!parent) return;
-    var metodo = parent.querySelector('#c-metodo').value; var boxVip = parent.querySelector('#box-vip');
-    if(metodo !== "Crédito") { State.usuarioForzoInicial = false; if(boxVip) boxVip.style.display = 'none'; var elEx = parent.querySelector('#c-eximir'); if(elEx) elEx.checked = false; } 
-    else { if(boxVip) boxVip.style.display = 'block'; }
+    var metodo = parent.querySelector('#c-metodo').value; 
+    var boxVip = parent.querySelector('#box-vip');
+    var boxCred = parent.querySelector('#box-credito-detalles');
+    
+    if(metodo !== "Crédito") { 
+        State.usuarioForzoInicial = false; 
+        if(boxVip) boxVip.style.display = 'none'; 
+        if(boxCred) boxCred.style.display = 'none';
+        var elEx = parent.querySelector('#c-eximir'); if(elEx) elEx.checked = false; 
+    } 
+    else { 
+        if(boxVip) boxVip.style.display = 'block'; 
+        if(boxCred) {
+            boxCred.style.display = 'block';
+            window.updatePrimerPago();
+        }
+    }
     calcCart(); 
 }
 
@@ -197,7 +229,10 @@ export function calcCart() {
        if(metodo==="Crédito") {
            p.querySelector('#row-cred').style.display='block'; if(pInpInicial) { pInpInicial.style.display='block'; pInpInicial.disabled = false; }
            p.querySelector('#res-ini').innerText = COP.format(inicial); p.querySelector('#res-cuota-val').innerText = COP.format(Math.max(0, (totalFinal-inicial)/cuotas));
-           if(p.querySelector('#res-cuota-txt')) p.querySelector('#res-cuota-txt').innerText = ` / ${cuotas} mes(es)`;
+           if(p.querySelector('#res-cuota-txt')) {
+               var fTexto = p.querySelector('#c-frecuencia') ? p.querySelector('#c-frecuencia').value : "Mensual";
+               p.querySelector('#res-cuota-txt').innerText = ` / ${cuotas} Cuota(s) ${fTexto}`;
+           }
        } else { p.querySelector('#row-cred').style.display='none'; if(pInpInicial) pInpInicial.style.display='none'; }
    });
 }
@@ -209,7 +244,16 @@ export function finalizarVenta() {
    if(State.calculatedValues.total <= 0) return alert("Precio inválido");
    
    var items = State.cart.length>0 ? State.cart.map(i=>({ nombre:i.nombre, cat:i.cat, costo:i.costo, precioVenta:i.precioUnitarioFinal })) : [{nombre:parent.querySelector('#c-concepto').value||"Venta", cat:"General", costo:State.calculatedValues.base, precioVenta:State.calculatedValues.total}];
-   var d = { items: items, cliente: cli, telefono: tel, nit: nit, metodo: parent.querySelector('#c-metodo').value, inicial: State.calculatedValues.inicial, cuotas: parent.querySelector('#c-cuotas').value, vendedor: State.currentUserAlias, idCotizacion: parent.getAttribute('data-cotizacion-id') };
+   var d = { 
+       items: items, cliente: cli, telefono: tel, nit: nit, 
+       metodo: parent.querySelector('#c-metodo').value, 
+       inicial: State.calculatedValues.inicial, 
+       cuotas: parent.querySelector('#c-cuotas').value, 
+       vendedor: State.currentUserAlias, 
+       idCotizacion: parent.getAttribute('data-cotizacion-id'),
+       frecuencia: parent.querySelector('#c-frecuencia') ? parent.querySelector('#c-frecuencia').value : "Mensual",
+       primerPago: parent.querySelector('#c-primer-pago') ? parent.querySelector('#c-primer-pago').value : ""
+   };
    
    parent.querySelector('#btn-vender-main').disabled = true;
    callAPI('procesarVentaCarrito', d).then(r => {
@@ -228,6 +272,7 @@ export function clearCart() {
         var inpEximir = p.querySelector('#c-eximir'); if(inpEximir) inpEximir.checked = false;
         var inpCli = p.querySelector('#c-cliente'); if(inpCli) inpCli.value = '';
         var inpTel = p.querySelector('#c-tel'); if(inpTel) inpTel.value = '';
+        var inpFrec = p.querySelector('#c-frecuencia'); if(inpFrec) inpFrec.value = 'Mensual';
         p.removeAttribute('data-cotizacion-id');
     }); 
     updateCartUI(); 
