@@ -83,7 +83,7 @@
     .btn-info { background-color: var(--cyan) !important; border-color: var(--cyan) !important; color: white !important; font-weight: bold; }
     .text-primary { color: var(--primary) !important; }
     #btn-float-cart { background-color: var(--accent); color: white; border: none; }
-    .form-control:focus { box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3) !important; border-color: var(--cyan) !important; }
+    .form-control:focus, .form-select:focus { box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3) !important; border-color: var(--cyan) !important; }
     
     #modalEditItem { z-index: 6000 !important; }
   </style>
@@ -219,7 +219,7 @@
          <div class="col-3 text-center"><small>Tasa Int.%</small><input id="c-int" type="number" class="input-line" value="5" oninput="calcCart()"></div>
          <div class="col-3 text-center"><small>Plazo (M)</small><input id="c-cuotas" type="number" class="input-line" value="1" oninput="calcCart()"></div>
        </div>
-       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--cyan);">
+       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--cyan);" onchange="updatePrimerPago()">
        
        <div class="alert alert-light border text-center py-2 mb-3" style="border-color: var(--accent) !important; background-color: #f8f9fa;">
           <div class="d-flex justify-content-between align-items-center"><span>Total:</span><div class="text-end"><strong id="res-cont" class="fs-5" style="color: var(--primary);">$0</strong></div></div>
@@ -239,6 +239,22 @@
        <select id="c-metodo" class="form-select mb-2" onchange="toggleIni()"><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select>
        <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono Inicial Personalizado" disabled style="display:none;">
        
+       <div id="box-credito-detalles" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0; border-left: 4px solid var(--primary);">
+           <div class="row g-2">
+               <div class="col-6">
+                   <label class="small fw-bold" style="color: var(--primary);">Frecuencia Pago</label>
+                   <select id="c-frecuencia" class="form-select form-select-sm border-primary" onchange="updatePrimerPago()">
+                       <option value="Mensual">Mensual</option>
+                       <option value="Quincenal">Quincenal (15 Días)</option>
+                   </select>
+               </div>
+               <div class="col-6">
+                   <label class="small fw-bold text-success">Fecha 1er Pago</label>
+                   <input type="date" id="c-primer-pago" class="form-control form-control-sm border-success fw-bold">
+               </div>
+           </div>
+       </div>
+
        <div id="box-vip" class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #fffdf9; border-color: var(--accent) !important; display: none;">
            <input class="form-check-input" type="checkbox" id="c-eximir" onchange="calcCart()">
            <label class="form-check-label small fw-bold" for="c-eximir" style="color: var(--accent-hover);">⭐ Eximir Cuota Inicial (Migración / Confianza)</label>
