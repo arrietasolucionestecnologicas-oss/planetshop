@@ -7,7 +7,7 @@ import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, CO
 import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales } from './ui/pos.js';
 import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
 import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
-import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual } from './ui/crm.js';
+import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual, editarCliente, eliminarCliente } from './ui/crm.js';
 
 // 1. INYECCIÓN AL SCOPE GLOBAL (WINDOW)
 window.guardarIdentidad = guardarIdentidad;
@@ -62,6 +62,7 @@ window.guardarClienteManual = guardarClienteManual;
 window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
 window.Inventory = { openEdit, editarProv };
 window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda };
+window.CRM = { editarCliente, eliminarCliente };
 window.App = { loadData };
 
 // 2. INICIALIZACIÓN DEL SISTEMA
