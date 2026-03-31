@@ -31,8 +31,19 @@ export function renderClientes() {
 
     lista.forEach(cli => {
         var waLink = cli.tel ? `https://wa.me/57${cli.tel.replace(/\D/g,'')}` : '#';
-        var btn = cli.tel ? `<a href="${waLink}" target="_blank" class="btn btn-sm btn-success text-white px-2 py-1"><i class="fab fa-whatsapp"></i> Chat</a>` : '<span class="text-muted small">Sin número</span>';
-        c.innerHTML += `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><strong style="color:var(--primary);">${cli.nombre}</strong><br><small class="text-muted">${cli.tel||'Sin teléfono'}</small></div><div class="d-flex gap-2">${btn}</div></div>`;
+        var btnChat = cli.tel ? `<a href="${waLink}" target="_blank" class="btn btn-sm btn-success text-white px-2 py-1"><i class="fab fa-whatsapp"></i></a>` : '';
+        var btnEdit = `<button class="btn btn-sm btn-light border px-2 py-1" onclick="window.CRM.editarCliente('${cli.nombre}', '${cli.tel || ''}')">✏️</button>`;
+        var btnDel = `<button class="btn btn-sm btn-outline-danger px-2 py-1" onclick="window.CRM.eliminarCliente('${cli.nombre}')">🗑️</button>`;
+
+        c.innerHTML += `<div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+                <strong style="color:var(--primary);">${cli.nombre}</strong><br>
+                <small class="text-muted">${cli.tel||'Sin teléfono'}</small>
+            </div>
+            <div class="d-flex gap-1">
+                ${btnChat} ${btnEdit} ${btnDel}
+            </div>
+        </div>`;
     });
 }
 
@@ -44,4 +55,49 @@ export function guardarClienteManual(){
         document.getElementById('new-cli-tel').value=''; 
         if(window.App && window.App.loadData) window.App.loadData(true); 
     }); 
+}
+
+export function editarCliente(nombreViejo, telViejo) {
+    if(typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Editar Cliente',
+            html: `<input id="swal-input1" class="swal2-input" value="${nombreViejo}" placeholder="Nombre">
+                   <input id="swal-input2" class="swal2-input" value="${telViejo === 'undefined' || !telViejo ? '' : telViejo}" placeholder="Teléfono">`,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            preConfirm: () => {
+                return {
+                    nombreNuevo: document.getElementById('swal-input1').value.trim(),
+                    telNuevo: document.getElementById('swal-input2').value.trim()
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                ejecutarEdicionCliente(nombreViejo, result.value.nombreNuevo, result.value.telNuevo);
+            }
+        });
+    } else {
+        var nombreNuevo = prompt("Nuevo nombre:", nombreViejo);
+        if(!nombreNuevo) return;
+        var telNuevo = prompt("Nuevo teléfono:", telViejo !== 'undefined' ? telViejo : '');
+        ejecutarEdicionCliente(nombreViejo, nombreNuevo, telNuevo);
+    }
+}
+
+function ejecutarEdicionCliente(nombreViejo, nombreNuevo, telNuevo) {
+    if(!nombreNuevo) return alert("Nombre inválido");
+    callAPI('editarClienteBackend', { nombreViejo, nombreNuevo, telNuevo }).then(r => {
+        if(r.exito) { if(window.App && window.App.loadData) window.App.loadData(true); }
+        else { alert(r.error); }
+    });
+}
+
+export function eliminarCliente(nombre) {
+    if(confirm(`¿Intentar eliminar a ${nombre}?\n\nEl sistema bloqueará la acción si tiene deudas activas.`)) {
+        callAPI('eliminarClienteBackend', { nombre }).then(r => {
+            if(r.exito) { if(window.App && window.App.loadData) window.App.loadData(true); }
+            else { alert(r.error); }
+        });
+    }
 }
