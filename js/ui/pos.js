@@ -103,7 +103,6 @@ export function toggleDatosFormales() {
     });
 }
 
-// NUEVO: Calculadora de 1er Pago (A.S.T.)
 window.updatePrimerPago = function() {
     var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible');
     var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
@@ -150,26 +149,25 @@ export function updateCartUI(keepOpen=false) {
 }
 
 export function toggleIni() { 
-    var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart') && document.getElementById('mobile-cart').classList.contains('visible');
-    var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
-    if(!parent) return;
-    var metodo = parent.querySelector('#c-metodo').value; 
-    var boxVip = parent.querySelector('#box-vip');
-    var boxCred = parent.querySelector('#box-credito-detalles');
-    
-    if(metodo !== "Crédito") { 
-        State.usuarioForzoInicial = false; 
-        if(boxVip) boxVip.style.display = 'none'; 
-        if(boxCred) boxCred.style.display = 'none';
-        var elEx = parent.querySelector('#c-eximir'); if(elEx) elEx.checked = false; 
-    } 
-    else { 
-        if(boxVip) boxVip.style.display = 'block'; 
-        if(boxCred) {
-            boxCred.style.display = 'block';
-            window.updatePrimerPago();
-        }
+    var masterMethod = document.querySelector('#desktop-cart-container #c-metodo').value;
+    if (window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible')) {
+        masterMethod = document.querySelector('#mobile-cart #c-metodo').value;
     }
+
+    [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(parent => {
+        if(!parent) return;
+        var mSelector = parent.querySelector('#c-metodo'); if(mSelector) mSelector.value = masterMethod;
+        var boxVip = parent.querySelector('#box-vip'); var boxCred = parent.querySelector('#box-credito-detalles');
+        
+        if(masterMethod !== "Crédito") { 
+            State.usuarioForzoInicial = false; 
+            if(boxVip) boxVip.style.display = 'none'; if(boxCred) boxCred.style.display = 'none';
+            var elEx = parent.querySelector('#c-eximir'); if(elEx) elEx.checked = false; 
+        } else { 
+            if(boxVip) boxVip.style.display = 'block'; 
+            if(boxCred) { boxCred.style.display = 'block'; window.updatePrimerPago(); }
+        }
+    });
     calcCart(); 
 }
 
@@ -255,10 +253,17 @@ export function finalizarVenta() {
        primerPago: parent.querySelector('#c-primer-pago') ? parent.querySelector('#c-primer-pago').value : ""
    };
    
-   parent.querySelector('#btn-vender-main').disabled = true;
+   showToast("⚡ Factura emitida. Sincronizando...", "info");
+   clearCart();
+   
+   if(State.data && State.data.metricas) {
+       var cash = d.metodo === 'Contado' ? State.calculatedValues.total : State.calculatedValues.inicial;
+       State.data.metricas.saldo += cash;
+       var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo);
+   }
+
    callAPI('procesarVentaCarrito', d).then(r => {
-       parent.querySelector('#btn-vender-main').disabled = false;
-       if(r.exito) { clearCart(); if(window.App && window.App.loadData) window.App.loadData(true); } else alert(r.error);
+       if(r.exito) { showToast("✅ Factura guardada", "success"); if(window.App && window.App.loadData) window.App.loadData(true); } else alert(r.error);
    });
 }
 
