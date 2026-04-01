@@ -20,12 +20,23 @@ export function abrirModalNuevo() { document.getElementById('new-file-foto').val
 
 export function crearProducto() {
     if (document.activeElement) document.activeElement.blur();
-    var d = { id: 'GEN-'+Date.now(), nombre: document.getElementById('new-nombre').value, categoria: document.getElementById('new-categoria').value, costo: document.getElementById('new-costo').value, publico: document.getElementById('new-publico').value, descripcion: document.getElementById('new-desc').value, proveedor: "General" };
+    var n = document.getElementById('new-nombre').value; var c = document.getElementById('new-costo').value; var p = document.getElementById('new-publico').value;
+    if(!n || !p) return alert("Falta nombre o precio");
+    var d = { id: 'GEN-'+Date.now(), nombre: n, categoria: document.getElementById('new-categoria').value, costo: c, publico: p, descripcion: document.getElementById('new-desc').value, proveedor: "General" };
     var f = document.getElementById('new-file-foto').files[0];
+    
+    var processApiCall = function(payload) {
+        if(State.modals.nuevo) State.modals.nuevo.hide();
+        showToast("⚡ Creando producto. Subiendo a la nube...", "info");
+        State.data.inv.unshift({ id: payload.id, nombre: payload.nombre, cat: payload.categoria, costo: payload.costo, publico: payload.publico, prov: payload.proveedor, foto: '' });
+        renderInv();
+        callAPI('crearProductoManual', payload).then(r=> { if(r.exito) { showToast("✅ Producto subido", "success"); if(window.App && window.App.loadData) window.App.loadData(true); } });
+    };
+
     var promise = f ? compressImage(f) : Promise.resolve(null);
     promise.then(b64 => {
         if(b64) { d.imagenBase64 = b64.split(',')[1]; d.mimeType = f.type; d.nombreArchivo = f.name; }
-        callAPI('crearProductoManual', d).then(r=> { if(r.exito) { if(State.modals.nuevo) State.modals.nuevo.hide(); if(window.App && window.App.loadData) window.App.loadData(true); } });
+        processApiCall(d);
     });
 }
 
@@ -42,8 +53,20 @@ export function openEdit(id) {
 export function guardarCambiosAvanzado() {
     if (document.activeElement) document.activeElement.blur();
     var p = { id: State.prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, descripcion: document.getElementById('inp-edit-desc').value, proveedor: State.prodEdit.prov, urlExistente: State.prodEdit.foto || "" };
-    var f = document.getElementById('inp-file-foto').files[0]; var promise = f ? compressImage(f) : Promise.resolve(null);
-    promise.then(b64 => { if(b64) { p.imagenBase64 = b64.split(',')[1]; p.mimeType = f.type; p.nombreArchivo = f.name; } callAPI('guardarProductoAvanzado', p).then(r=> { if(State.modals.edicion) State.modals.edicion.hide(); if(window.App && window.App.loadData) window.App.loadData(true); }); });
+    var f = document.getElementById('inp-file-foto').files[0]; 
+    
+    var processApiCall = function(payload) {
+        if(State.modals.edicion) State.modals.edicion.hide();
+        showToast("⚡ Actualizando catálogo en la nube...", "info");
+        if(State.prodEdit) { State.prodEdit.nombre = payload.nombre; State.prodEdit.publico = payload.publico; State.prodEdit.costo = payload.costo; renderInv(); }
+        callAPI('guardarProductoAvanzado', payload).then(r=> { showToast("✅ Catálogo actualizado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); });
+    };
+
+    var promise = f ? compressImage(f) : Promise.resolve(null);
+    promise.then(b64 => { 
+        if(b64) { p.imagenBase64 = b64.split(',')[1]; p.mimeType = f.type; p.nombreArchivo = f.name; } 
+        processApiCall(p);
+    });
 }
 
 export function calcGain(idCosto, idPublico, idMargen) {
