@@ -133,13 +133,14 @@ export function updateCartUI(keepOpen=false) {
    calcCart();
 }
 
-// FIX: A.S.T. Navegación Contextual del DOM para evitar conflictos PC vs Móvil
-window.toggleIni = function(element) { 
+// FIX: Exportación correcta para la función que causaba el fallo
+export function toggleIni(element) { 
     var masterMethod = "Contado";
     if (element) {
         masterMethod = element.value;
     } else {
-        masterMethod = document.querySelector('#desktop-cart-container #c-metodo').value;
+        var desktopSelector = document.querySelector('#desktop-cart-container #c-metodo');
+        if (desktopSelector) masterMethod = desktopSelector.value;
     }
 
     [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(parent => {
@@ -316,7 +317,6 @@ export function shareQuote() {
    window.open("https://wa.me/" + (tel ? "57"+tel.replace(/\D/g,'') : "") + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
-// NUEVO A.S.T: Compartir Nequi
 export function compartirNequi() {
     var msg = `🪐 *Planet.shop by GamePlanet*\n\nHola! Te comparto nuestra cuenta autorizada para pagos:\n\n🟣 *Nequi:* 3003303568\n\nPor favor, envíanos el comprobante por este medio una vez realizada la transferencia. ¡Gracias! 🤝`;
     var activeParent = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible') ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
