@@ -93,40 +93,28 @@ export function toggleMobileCart(forceOpen) {
 }
 
 export function toggleDatosFormales() {
-    var panels = [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')];
-    panels.forEach(parent => {
+    [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(parent => {
         if(!parent) return;
         var box = parent.querySelector('#box-datos-formales');
-        if(box) {
-            if(box.style.display === 'none') { box.style.display = 'block'; } else { box.style.display = 'none'; }
-        }
+        if(box) { box.style.display = box.style.display === 'none' ? 'block' : 'none'; }
     });
 }
 
 window.updatePrimerPago = function() {
-    var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible');
-    var parent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
-    if(!parent) return;
-    
-    var fInput = parent.querySelector('#c-fecha');
-    var ppInput = parent.querySelector('#c-primer-pago');
-    var frec = parent.querySelector('#c-frecuencia');
-    
-    if(fInput && ppInput && frec) {
-        var d = fInput.value ? new Date(fInput.value + "T12:00:00") : new Date();
-        if(frec.value === 'Quincenal') d.setDate(d.getDate() + 15);
-        else d.setMonth(d.getMonth() + 1);
-        ppInput.value = d.toISOString().split('T')[0];
-    }
+    [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(parent => {
+        if(!parent) return;
+        var fInput = parent.querySelector('#c-fecha'); var ppInput = parent.querySelector('#c-primer-pago'); var frec = parent.querySelector('#c-frecuencia');
+        if(fInput && ppInput && frec) {
+            var d = fInput.value ? new Date(fInput.value + "T12:00:00") : new Date();
+            if(frec.value === 'Quincenal') d.setDate(d.getDate() + 15); else d.setMonth(d.getMonth() + 1);
+            ppInput.value = d.toISOString().split('T')[0];
+        }
+    });
 }
 
 export function updateCartUI(keepOpen=false) {
    var count = State.cart.reduce((a, b) => a + (b.cantidad || 1), 0);
    var btnFloat = document.getElementById('btn-float-cart'); if(btnFloat) { btnFloat.style.display = count > 0 ? 'block' : 'none'; btnFloat.innerText = "🛒 " + count; }
-
-   var isMobile = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible');
-   var activeParent = isMobile ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
-   if(!activeParent) activeParent = document.getElementById('desktop-cart-container'); 
 
    [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(p => {
        if(!p) return;
@@ -139,24 +127,24 @@ export function updateCartUI(keepOpen=false) {
                return `<div class="d-flex justify-content-between align-items-center mb-1 border-bottom pb-1"><div style="flex:1; min-width:0;"><small class="fw-bold text-truncate d-block">${isLocked} ${x.nombre}</small><small class="text-muted">${COP.format(px)} c/u</small></div><div class="d-flex align-items-center gap-1"><button class="btn btn-sm btn-light py-0 px-2" onclick="window.POS.abrirEditorItem('${x.id}')">✏️</button><button class="btn btn-sm ${x.conIva ? 'btn-success' : 'btn-outline-secondary'} py-0 px-1" onclick="window.POS.toggleItemIva('${x.id}')"><small>IVA</small></button><button class="btn btn-sm py-0 px-2" onclick="window.POS.changeQty('${x.id}', -1)">-</button> <b>${x.cantidad}</b> <button class="btn btn-sm py-0 px-2" onclick="window.POS.changeQty('${x.id}', 1)">+</button></div></div>`;
            }).join(''); 
        }
-       var metodoLocal = p.querySelector('#c-metodo') ? p.querySelector('#c-metodo').value : 'Contado';
-       var boxVip = p.querySelector('#box-vip');
-       if(metodoLocal === "Crédito") { if(boxVip) boxVip.style.display = 'block'; } else { if(boxVip) boxVip.style.display = 'none'; }
    });
 
    if(State.cart.length === 0 && !keepOpen) { var mc = document.getElementById('mobile-cart'); if(mc) mc.classList.remove('visible'); }
    calcCart();
 }
 
-export function toggleIni() { 
-    var masterMethod = document.querySelector('#desktop-cart-container #c-metodo').value;
-    if (window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible')) {
-        masterMethod = document.querySelector('#mobile-cart #c-metodo').value;
+// FIX: A.S.T. Navegación Contextual del DOM para evitar conflictos PC vs Móvil
+window.toggleIni = function(element) { 
+    var masterMethod = "Contado";
+    if (element) {
+        masterMethod = element.value;
+    } else {
+        masterMethod = document.querySelector('#desktop-cart-container #c-metodo').value;
     }
 
     [document.getElementById('desktop-cart-container'), document.getElementById('mobile-cart')].forEach(parent => {
         if(!parent) return;
-        var mSelector = parent.querySelector('#c-metodo'); if(mSelector) mSelector.value = masterMethod;
+        var mSelector = parent.querySelector('#c-metodo'); if(mSelector && mSelector !== element) mSelector.value = masterMethod;
         var boxVip = parent.querySelector('#box-vip'); var boxCred = parent.querySelector('#box-credito-detalles');
         
         if(masterMethod !== "Crédito") { 
@@ -326,6 +314,15 @@ export function shareQuote() {
    if(parent.querySelector('#c-metodo').value === "Crédito") msg += `\n💰 Total Financiado: ${COP.format(State.calculatedValues.total)}\n• Inicial: ${COP.format(State.calculatedValues.inicial)}`; 
    else msg += `\n💰 Total Contado: ${COP.format(State.calculatedValues.total)}`;
    window.open("https://wa.me/" + (tel ? "57"+tel.replace(/\D/g,'') : "") + "?text=" + encodeURIComponent(msg), '_blank');
+}
+
+// NUEVO A.S.T: Compartir Nequi
+export function compartirNequi() {
+    var msg = `🪐 *Planet.shop by GamePlanet*\n\nHola! Te comparto nuestra cuenta autorizada para pagos:\n\n🟣 *Nequi:* 3003303568\n\nPor favor, envíanos el comprobante por este medio una vez realizada la transferencia. ¡Gracias! 🤝`;
+    var activeParent = window.innerWidth < 992 && document.getElementById('mobile-cart').classList.contains('visible') ? document.getElementById('mobile-cart') : document.getElementById('desktop-cart-container');
+    var tel = activeParent ? activeParent.querySelector('#c-tel').value : "";
+    var waUrl = "https://wa.me/" + (tel ? "57"+tel.replace(/\D/g,'') : ""); 
+    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
 export function agregarAlCarritoDesdeInv(id) {
