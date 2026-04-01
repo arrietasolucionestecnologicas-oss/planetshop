@@ -1,11 +1,11 @@
 // ==========================================
-// [MOD-003] ORQUESTADOR MAESTRO (BOOTSTRAPPER)
+// [MOD-003] ORQUESTADOR MAESTRO (BOOTSTRAPPER - CACHE FIRST OPTIMIZED)
 // ==========================================
 import { State } from './state.js';
 import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
 import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, COP } from './core.js';
 import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales, compartirNequi } from './ui/pos.js';
-import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
+import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, eliminarProductoActual, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
 import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
 import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual, editarCliente, eliminarCliente } from './ui/crm.js';
 
@@ -35,13 +35,14 @@ window.generarCotizacionPDF = generarCotizacionPDF;
 window.toggleMobileCart = toggleMobileCart;
 window.toggleDatosFormales = toggleDatosFormales;
 window.agregarAlCarritoDesdeInv = agregarAlCarritoDesdeInv;
-window.compartirNequi = compartirNequi; // A.S.T: Nuevo botón Nequi
+window.compartirNequi = compartirNequi; 
 
 window.renderInv = renderInv;
 window.abrirModalNuevo = abrirModalNuevo;
 window.crearProducto = crearProducto;
 window.openEdit = openEdit;
 window.guardarCambiosAvanzado = guardarCambiosAvanzado;
+window.eliminarProductoActual = eliminarProductoActual;
 window.calcGain = calcGain;
 window.calcMargen = calcMargen;
 window.abrirModalProv = abrirModalProv;
@@ -89,21 +90,32 @@ window.onload = function() {
   
   verificarIdentidad(); 
   updateOnlineStatus(loadData); 
-  loadData();
+  
+  // INYECCIÓN ZERO-LATENCY (Caché Primero)
+  const cachedData = localStorage.getItem('planet_data');
+  if (cachedData) {
+      renderData(JSON.parse(cachedData));
+      document.getElementById('loader').style.display = 'none';
+      loadData(true); // Revalida en silencio
+  } else {
+      loadData(false); // Carga pesada obligatoria si no hay caché
+  }
 };
 
 window.addEventListener('online', () => updateOnlineStatus(loadData));
 window.addEventListener('offline', () => updateOnlineStatus());
 
-// 3. CARGA MAESTRA DE DATOS
+// 3. CARGA MAESTRA DE DATOS (Stale-While-Revalidate)
 function loadData(silent = false){
-  if(!silent && State.data.inv.length === 0) document.getElementById('loader').style.display='flex';
+  if(!silent) document.getElementById('loader').style.display='flex';
   callAPI('obtenerDatosCompletos').then(res => {
-    if(res && res.inventario) { localStorage.setItem('planet_data', JSON.stringify(res)); renderData(res); }
+    if(res && res.inventario) { 
+        localStorage.setItem('planet_data', JSON.stringify(res)); 
+        renderData(res); 
+    }
     document.getElementById('loader').style.display='none';
   }).catch(() => {
-    const raw = localStorage.getItem('planet_data');
-    if(raw) renderData(JSON.parse(raw));
+    // Si falla la red, la caché ya se pinto en el onload, solo quitamos el loader
     document.getElementById('loader').style.display='none';
   });
 }
