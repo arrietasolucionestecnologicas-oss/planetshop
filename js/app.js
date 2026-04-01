@@ -4,7 +4,7 @@
 import { State } from './state.js';
 import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
 import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, COP } from './core.js';
-import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales } from './ui/pos.js';
+import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales, compartirNequi } from './ui/pos.js';
 import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
 import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
 import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual, editarCliente, eliminarCliente } from './ui/crm.js';
@@ -35,6 +35,7 @@ window.generarCotizacionPDF = generarCotizacionPDF;
 window.toggleMobileCart = toggleMobileCart;
 window.toggleDatosFormales = toggleDatosFormales;
 window.agregarAlCarritoDesdeInv = agregarAlCarritoDesdeInv;
+window.compartirNequi = compartirNequi; // A.S.T: Nuevo botón Nequi
 
 window.renderInv = renderInv;
 window.abrirModalNuevo = abrirModalNuevo;
