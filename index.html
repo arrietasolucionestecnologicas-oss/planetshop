@@ -3,240 +3,130 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>KING'S SHOP POS | Sistema de Gestión Comercial</title>
+  <title>Planet.shop | Sistema POS</title>
+  
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#1a365d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Planet Shop">
   <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
   <style>
-    /* --- TEMA PREMIUM: BLACK & GOLD --- */
     :root { 
-        --primary: #000000;      /* Negro Puro */
-        --gold: #d4af37;         /* Dorado Premium */
-        --gold-hover: #b59020;   /* Dorado Oscuro */
-        --light: #f8f9fa;        /* Gris suave */
-        --dark: #212529;         /* Texto oscuro */
-        --bg: #f4f4f9;
-        --s: #2ecc71; /* Verde éxito */
-        --d: #e74c3c; /* Rojo error */
+        /* Paleta Ocean Blue */
+        --primary: #1a365d;       /* Azul Marino (Oscuro, paz y profesionalismo) */
+        --accent: #2b6cb0;        /* Azul Océano (Brillante para botones principales) */
+        --accent-hover: #1e4e8c;  /* Azul intermedio para hover */
+        --cyan: #63b3ed;          /* Azul Cielo claro (Detalles) */
+        --light: #f8f9fa; 
+        --dark: #2d3748; 
+        --bg: #f0f4f8;            /* Gris-Azulado muy suave para el fondo */
+        --s: #38a169;             /* Verde esmeralda calmado */
+        --d: #e53e3e;             /* Rojo suave */
     }
 
-    body { 
-        background: var(--bg); 
-        padding-bottom: 90px; 
-        font-family: 'Montserrat', sans-serif; 
-        overflow-x: hidden; 
-        color: var(--dark); 
-    }
+    body { background: var(--bg); padding-bottom: 90px; font-family: 'Montserrat', sans-serif; overflow-x: hidden; color: var(--dark); }
 
-    /* HEADER */
-    .header { 
-        background-color: var(--primary); 
-        color: white; 
-        padding: 15px 20px; 
-        border-radius: 0 0 20px 20px; 
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        border-bottom: 2px solid var(--gold);
-    }
-
-    /* INDICADOR OFFLINE */
-    #offline-indicator {
-        background-color: #ffc107;
-        color: #000;
-        text-align: center;
-        padding: 5px;
-        font-size: 0.8rem;
-        font-weight: bold;
-        display: none;
-    }
-
-    /* LAYOUT VENTAS */
+    .header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
+    #offline-indicator { background-color: var(--accent); color: white; text-align: center; padding: 5px; font-size: 0.8rem; font-weight: bold; display: none; }
     .main-layout { display: flex; gap: 20px; align-items: flex-start; padding: 15px; }
     .list-column { flex: 1; min-width: 0; }
     .panel-column { width: 350px; position: sticky; top: 10px; display: none; } 
     @media (min-width: 992px) { .panel-column { display: block; } }
 
-    /* --- ESTILO VENTA: LISTA COMPACTA (POS) --- */
-    .pos-row-lite {
-        background: white;
-        padding: 12px 15px;
-        margin-bottom: 8px;
-        border-radius: 8px;
-        border-left: 5px solid transparent;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        cursor: pointer;
-        display: flex; justify-content: space-between; align-items: center;
-        transition: 0.1s;
-    }
-    .pos-row-lite:hover { transform: translateX(3px); border-left-color: var(--gold); }
-    .pos-row-lite.active { border-left-color: var(--gold); background: #fffcf5; border-right: 1px solid var(--gold); }
-    
+    .pos-row-lite { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
+    .pos-row-lite:hover { transform: translateX(3px); border-left-color: var(--cyan); }
+    .pos-row-lite.active { border-left-color: var(--accent); background: #eef2f7; border-right: 1px solid var(--accent); }
     .pos-row-lite .info { flex: 1; min-width: 0; padding-right: 10px; }
     .pos-row-lite .name { font-weight: 700; color: var(--primary); font-size: 0.95rem; margin-bottom: 2px; }
-    .pos-row-lite .meta { font-size: 0.75rem; color: #888; }
-    .pos-row-lite .price { font-weight: 700; font-size: 1.1rem; color: var(--gold-hover); text-align: right; white-space: nowrap; }
+    .pos-row-lite .price { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-align: right; white-space: nowrap; }
     
-    /* --- ESTILO CATÁLOGO: GRID (STOCK) --- */
-    .catalog-grid {
-        display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
-    }
-    @media (min-width: 768px) {
-        .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-    }
+    .catalog-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; } }
 
-    .card-catalog {
-        background: white; border-radius: 12px; overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #eee;
-        display: flex; flex-direction: column;
-        transition: 0.2s;
-    }
-    .card-catalog:hover { border-color: var(--gold); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.15); }
-
-    .cat-img-box {
-        height: 120px; width: 100%; background: #f8f9fa;
-        display: flex; align-items: center; justify-content: center;
-        overflow: hidden; border-bottom: 1px solid #eee; position: relative;
-    }
+    .card-catalog { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: 0.2s; }
+    .card-catalog:hover { border-color: var(--cyan); box-shadow: 0 5px 15px rgba(99, 179, 237, 0.2); }
+    .cat-img-box { height: 120px; width: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #e2e8f0; position: relative; }
     .cat-img-box img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .btn-edit-float {
-        position: absolute; top: 5px; right: 5px;
-        background: rgba(255,255,255,0.95); border-radius: 50%;
-        width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: var(--primary); font-size: 0.8rem;
-        border: 1px solid transparent;
-    }
-    .btn-edit-float:hover { color: var(--gold); border-color: var(--gold); }
-
+    .btn-edit-float { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.95); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: var(--primary); }
     .cat-body { padding: 10px; flex: 1; display: flex; flex-direction: column; }
-    .cat-title { font-weight: 700; font-size: 0.85rem; line-height: 1.2; margin-bottom: 5px; color: var(--primary); height: 34px; overflow: hidden; }
-    .cat-price { color: var(--gold-hover); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
-    
-    .cat-actions { 
-        background: #fcfcfc; padding: 5px; 
-        display: flex; justify-content: space-around; gap: 2px;
-        border-top: 1px solid #eee;
-    }
-    .btn-copy-mini {
-        border: 1px solid #ddd; background: white; color: #555;
-        border-radius: 4px; padding: 2px 0; width: 100%;
-        font-size: 0.7rem; text-align: center; cursor: pointer; transition: 0.2s;
-    }
-    .btn-copy-mini:hover { background: var(--primary); color: var(--gold); border-color: var(--primary); }
+    .cat-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; color: var(--primary); height: 34px; overflow: hidden; }
+    .cat-price { color: var(--accent); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
 
-    /* PANEL COTIZADOR */
-    .cotizador-panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-    .input-line { border:none; border-bottom: 2px solid #eee; width:100%; text-align:center; font-weight:bold; outline:none; color: var(--primary); }
+    .cotizador-panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); border-top: 4px solid var(--cyan); }
+    .input-line { border:none; border-bottom: 2px solid #e2e8f0; width:100%; text-align:center; font-weight:bold; outline:none; color: var(--primary); }
 
-    /* PANEL MOVIL */
-    .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 5000; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.3); transform: translateY(110%); transition: transform 0.3s; max-height: 85vh; overflow-y: auto; }
+    .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 5000; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.2); transform: translateY(110%); transition: transform 0.3s; max-height: 85vh; overflow-y: auto; border-top: 4px solid var(--accent); }
     .mobile-panel.visible { transform: translateY(0); }
 
-    .card-k { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: none; }
-    
-    .card-balance { 
-        padding: 25px; color: var(--gold); 
-        border-radius: 20px; text-align: center; 
-        background: linear-gradient(135deg, #1a1a1a, #000000); 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
-        margin-bottom: 15px; border: 1px solid var(--gold); 
-    }
+    .card-k { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: none; }
+    .card-balance { padding: 25px; color: var(--cyan); border-radius: 20px; text-align: center; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 15px; }
     .card-balance h1 { color: white; }
 
-    /* SCROLL HORIZONTAL */
-    .scroll-menu {
-        display: flex;
-        overflow-x: auto;
-        gap: 10px;
-        padding-bottom: 5px;
-        margin-bottom: 15px;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch; 
-    }
+    .scroll-menu { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; margin-bottom: 15px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
     .scroll-menu::-webkit-scrollbar { display: none; }
-    .scroll-menu > * { flex: 0 0 auto; }
 
-    .nav-btm { 
-        position: fixed; bottom: 0; width: 100%; background: white; 
-        display: flex; justify-content: space-between; 
-        padding: 8px 10px; border-top: 1px solid #eee; z-index: 1000; 
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    }
-    .nav-btn { 
-        background: none; border: none; color: #aaa; 
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-size: 0.7rem; flex: 1; transition: 0.2s;
-    }
-    .nav-btn i { font-size: 1.3rem; margin-bottom: 3px; }
-    .nav-btn span { font-weight: 500; }
-    .nav-btn.active { color: var(--gold); transform: translateY(-2px); }
+    .nav-btm { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-between; padding: 8px 10px; border-top: 1px solid #e2e8f0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+    .nav-btn { background: none; border: none; color: #a0aec0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; flex: 1; transition: 0.2s; }
+    .nav-btn.active { color: var(--accent); transform: translateY(-2px); }
     .nav-btn.active span { font-weight: 700; color: var(--primary); }
 
-    .file-upload-wrapper { position: relative; width: 100%; height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa; overflow: hidden; }
+    .file-upload-wrapper { position: relative; width: 100%; height: 180px; border: 2px dashed #cbd5e0; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8f9fa; overflow: hidden; margin-bottom: 10px; }
     .preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; z-index: 5; display: none; background: white; }
     .file-input-overlay { position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 100; }
-    .placeholder-text { z-index: 1; pointer-events: none; }
 
     #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-
-    .btn-bi { background: rgba(255,255,255,0.1); border:1px solid rgba(212, 175, 55, 0.5); color:var(--gold); border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; transition: 0.2s; }
-    .btn-bi:hover { background: var(--gold); color: var(--primary); border-color: var(--gold); }
-
+    .btn-bi { background: rgba(255,255,255,0.15); border:1px solid rgba(255, 255, 255, 0.3); color:white; border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; }
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
 
-    .prov-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-    .prov-item:last-child { border-bottom: none; }
-    .btn-wa-mini { background: #25D366; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
-
-    .btn-xs { padding: 2px 8px; font-size: 0.75rem; border-radius: 4px; }
-    .card-debt { border-left: 4px solid var(--d); position: relative; }
-    .card-debt .badge-debt { background: var(--d); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
-
-    /* OVERRIDES BOOTSTRAP */
     .btn-primary, .btn-dark { background-color: var(--primary) !important; border-color: var(--primary) !important; color: white !important; }
-    .btn-primary:hover, .btn-dark:hover { background-color: #333 !important; border-color: #333 !important; color: var(--gold) !important; }
-    
-    .btn-info { background-color: var(--gold) !important; border-color: var(--gold) !important; color: var(--primary) !important; font-weight: bold; }
-    .btn-info:hover { background-color: var(--gold-hover) !important; border-color: var(--gold-hover) !important; }
-
+    .btn-primary:hover, .btn-dark:hover { background-color: var(--accent-hover) !important; border-color: var(--accent-hover) !important; color: white !important; }
+    .btn-info { background-color: var(--cyan) !important; border-color: var(--cyan) !important; color: white !important; font-weight: bold; }
     .text-primary { color: var(--primary) !important; }
-    .text-success { color: #198754 !important; } 
+    #btn-float-cart { background-color: var(--accent); color: white; border: none; }
+    .form-control:focus, .form-select:focus { box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3) !important; border-color: var(--cyan) !important; }
     
-    #btn-float-cart { background-color: var(--gold); color: var(--primary); border: none; }
-    .form-control:focus { box-shadow: 0 0 0 2px var(--gold) !important; border-color: var(--gold) !important; }
-    
-    .nav-pills .nav-link.active { background-color: var(--primary) !important; color: var(--gold) !important; }
-    .nav-pills .nav-link { color: var(--primary) !important; }
-
     #modalEditItem { z-index: 6000 !important; }
-
-    /* MODAL RADIOGRAFÍA FINANCIERA (INYECCIÓN) */
-    .rad-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed var(--gold); }
-    .rad-label { color: #888; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 2px; display: block; font-weight:bold; }
-    .rad-val { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
-    .rad-secret { filter: blur(4px); cursor: pointer; transition: 0.2s; }
-    .rad-secret.revealed { filter: blur(0); }
+    
+    /* BANNER INSTALADOR PWA */
+    .install-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; background: var(--primary); color: white; border-radius: 15px; padding: 15px; z-index: 9999; display: none; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border: 2px solid var(--cyan); }
+    .install-banner .text { font-size: 0.9rem; font-weight: bold; line-height: 1.2; margin-left: 10px; }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="spinner-border text-warning" role="status" style="color: #d4af37 !important;"></div><div class="mt-3 text-muted fw-bold">Conectando al Servidor Central...</div></div>
-  
+  <div class="install-banner" id="install-banner">
+    <div class="d-flex align-items-center">
+      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🪐</div>
+      <div class="text">Instala Planet Shop como una App en tu celular.</div>
+    </div>
+    <div class="d-flex flex-column gap-2" style="min-width: 80px;">
+      <button class="btn btn-sm btn-info fw-bold w-100 text-white shadow-sm" id="btn-install-app">Instalar</button>
+      <button class="btn btn-sm text-white opacity-75 w-100" id="btn-close-install" style="font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.2);">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="loader"><div class="spinner-border text-primary" role="status"></div><h6 class="mt-3 text-muted fw-bold">Conectando a Planet Shop...</h6></div>
   <div id="toast-container"></div>
 
   <div class="header">
-    <div><h4 class="m-0 fw-bold" style="color: var(--gold); letter-spacing: 1px;">👑 KING'S SHOP POS</h4><small class="opacity-75" id="user-display">Verificando Credenciales...</small></div>
+    <div>
+        <h4 class="m-0 fw-bold" style="letter-spacing: 1px;">
+            <span style="color: var(--cyan);">Planet</span><span style="color: white;">.shop</span>
+        </h4>
+        <small class="opacity-75" id="user-display" style="color: var(--cyan);">Verificando Credenciales...</small>
+    </div>
     <div class="d-flex gap-2">
-        <a class="btn-bi" href="dashboard.html"><i class="bi bi-graph-up-arrow"></i> Reportes</a>
-        <button class="btn btn-light shadow-sm rounded-circle" style="width:45px; height:45px; color: var(--primary);" onclick="window.verBancos()" title="Ver Cuentas Bancarias"><i class="bi bi-bank2 fs-5"></i></button>
+        <a href="dashboard.html" target="_blank" class="btn btn-bi" style="background-color: var(--accent); border-color: var(--cyan);"><i class="fas fa-chart-line"></i> BI</a>
+        <button class="btn btn-bi" style="background-color: #38a169; border-color: #38a169;" onclick="window.compartirNequi()"><i class="fas fa-wallet"></i> Nequi</button>
+        <button class="btn btn-bi" onclick="window.abrirModalClientes()"><i class="fas fa-address-book"></i> Clientes</button>
     </div>
   </div>
   
@@ -246,19 +136,18 @@
     <div id="view-pos" class="view-sec">
       <div class="main-layout">
         <div class="list-column">
-           <button class="btn btn-outline-info w-100 mb-2 fw-bold" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open"></i> VER COTIZACIONES GUARDADAS</button>
-           <button class="btn btn-warning w-100 mb-2 fw-bold" onclick="window.agregarItemManual()"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL (NO CATALOGADO)</button>
+           <button class="btn btn-outline-primary w-100 mb-2 fw-bold" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open"></i> VER COTIZACIONES GUARDADAS</button>
+           <button class="btn w-100 mb-2 fw-bold" onclick="window.abrirModalItemManual()" style="background-color: var(--accent); color: white; border: none;"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL</button>
            
-           <div class="bg-white p-2 rounded mb-3 shadow-sm d-flex align-items-center border" style="border-color: #eee;">
+           <div class="bg-white p-2 rounded mb-3 shadow-sm d-flex align-items-center border">
                <i class="fas fa-search text-muted ms-2 me-2"></i>
-               <input type="text" id="pos-search" class="form-control border-0 shadow-none" placeholder="Buscar producto en inventario..." onkeyup="window.renderPos()" style="font-weight:bold;">
+               <input type="text" id="pos-search" class="form-control border-0 shadow-none" placeholder="Buscar producto en inventario..." onkeyup="window.renderPos()" style="font-weight:bold; color:var(--primary);">
            </div>
            
            <div id="pos-placeholder" class="text-center text-muted py-5">
-               <i class="fas fa-keyboard fs-1 mb-2 opacity-50" style="color: var(--gold);"></i>
-               <p>Inicie la búsqueda para agregar<br>productos al carrito de venta.</p>
+               <i class="fas fa-shopping-cart fs-1 mb-2 opacity-50" style="color: var(--cyan);"></i>
+               <p>Busca o agrega ítems libres<br>para facturar.</p>
            </div>
-
            <div id="pos-list"></div>
         </div>
         <div class="panel-column"><div id="desktop-cart-container" class="cotizador-panel-container"></div></div>
@@ -268,29 +157,15 @@
     <div id="view-inv" class="view-sec" style="display:none; padding:15px;">
       <div class="scroll-menu">
         <input type="text" id="inv-search" class="form-control" placeholder="🔍 Buscar Referencia..." onkeyup="window.renderInv()" style="width: 150px;">
-        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--gold);" onchange="window.renderInv()">
-            <option value="">Todos los Proveedores</option>
-        </select>
+        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="window.renderInv()"><option value="">Proveedores</option></select>
         <button class="btn btn-primary" onclick="window.abrirModalNuevo()" style="white-space: nowrap;">+ CREAR PRODUCTO</button>
-        <button class="btn btn-info" onclick="window.abrirModalProv()" title="Gestionar Proveedores" style="white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
-        <button class="btn btn-success" onclick="window.abrirModalWA()" title="Importar desde Chat" style="white-space: nowrap;"><i class="fab fa-whatsapp"></i> Importar Chat</button>
+        <button class="btn" onclick="window.abrirModalProv()" style="background-color:var(--accent); color:white; white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
       </div>
       <div id="inv-list" class="catalog-grid"></div>
     </div>
 
-    <div id="view-web" class="view-sec" style="display:none; padding:15px;">
-        <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-globe" style="color: var(--gold);"></i> Administración Tienda Web</h5>
-        <input type="text" id="web-search" class="form-control mb-3" placeholder="🔍 Filtrar productos publicados..." onkeyup="window.renderWeb()">
-        <div id="web-list"></div>
-    </div>
-
-    <div id="view-ped" class="view-sec" style="display:none; padding:15px;">
-      <button class="btn btn-primary w-100 mb-3" onclick="window.abrirModalPed()">+ Registrar Nuevo Pedido a Proveedor</button>
-      <div id="ped-list"></div>
-    </div>
-
     <div id="view-cartera" class="view-sec" style="display:none; padding:15px;">
-        <div class="card-balance" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border-color: #a93226;">
+        <div class="card-balance" style="background: linear-gradient(135deg, #c53030, #9b2c2c);">
             <small class="opacity-75" style="color:white;">Cuentas por Cobrar (Total Deuda)</small>
             <h1 class="fw-bold display-4 my-1" id="bal-cartera">...</h1>
         </div>
@@ -299,133 +174,69 @@
     </div>
 
     <div id="view-fin" class="view-sec" style="display:none; padding:15px;">
-      <div class="card-balance mb-3" style="background: linear-gradient(135deg, #8b0000, #5c0000); border-color: #ff4d4d; box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);">
-          <small class="opacity-75" style="color: white;">Obligaciones por Pagar (Mis Deudas)</small>
-          <h1 class="fw-bold display-4 my-1" id="bal-pasivos" style="color: white;">...</h1>
-          <button class="btn btn-light btn-sm mt-2 fw-bold" onclick="window.abrirModalPasivos()" style="color: #8b0000;">PAGAR OBLIGACIONES</button>
-      </div>
-
-      <div class="card-balance">
-          <small class="opacity-75">Flujo de Caja Disponible (Sistema)</small>
-          <h1 class="fw-bold display-4 my-1" id="bal-caja">...</h1>
+      <div class="card-balance mb-3" style="background: linear-gradient(135deg, var(--primary), var(--accent));">
+          <small class="opacity-75" style="color: white;">Capital Real</small>
+          <h1 class="fw-bold display-4 my-1" id="bal-patrimonio" style="color: white;">...</h1>
+          <small class="text-white opacity-75" style="font-size:0.7rem;">Caja + Cuentas Cobrar + Inventario - Deudas</small>
       </div>
       
-      <div class="card-k mb-3" style="border: 2px dashed var(--gold);">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="fw-bold m-0"><i class="fas fa-check-double"></i> Conciliación de Caja (Auditoría)</h6>
-              <span id="audit-res" class="small"></span>
-          </div>
-          <div class="input-group">
-              <span class="input-group-text">$</span>
-              <input type="number" id="audit-banco" class="form-control" placeholder="Ingrese Saldo Real (Bancos + Efectivo)">
-              <button class="btn btn-dark" onclick="window.verificarBanco()">Auditar</button>
-          </div>
-      </div>
-
       <div class="row g-2 mb-3">
-         <div class="col-6"><div class="card-k p-2 text-center h-100"><small class="text-muted">Ventas Brutas Mes</small><h6 class="fw-bold mb-0" id="bal-ventas" style="color: var(--primary);">...</h6></div></div>
-         <div class="col-6"><div class="card-k p-2 text-center h-100"><small class="text-muted">Utilidad Neta Mes</small><h6 class="fw-bold text-success mb-0" id="bal-ganancia">...</h6></div></div>
+          <div class="col-6">
+              <div class="card-balance p-3 mb-0" style="background: white; border: 1px solid var(--accent);">
+                  <small class="text-muted fw-bold" style="color: var(--accent) !important;">Flujo de Caja</small>
+                  <h3 class="fw-bold m-0" id="bal-caja" style="color: var(--primary);">...</h3>
+              </div>
+          </div>
+          <div class="col-6">
+              <div class="card-balance p-3 mb-0" style="background: #fff5f5; border: 1px solid #fc8181;">
+                  <small class="text-danger fw-bold">Obligaciones (Pasivos)</small>
+                  <h3 class="fw-bold text-danger m-0" id="bal-pasivos">...</h3>
+                  <button class="btn btn-outline-danger btn-sm mt-1 py-0 px-2" onclick="window.abrirModalPasivos()">Pagar</button>
+              </div>
+          </div>
       </div>
+      
       <ul class="nav nav-pills nav-fill mb-3 bg-white rounded shadow-sm p-1">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#f-abono">Registrar Pago</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-ingreso">Inyección Capital</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-gasto">Registrar Egreso</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist">Movimientos</a></li>
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#f-abono" style="color:var(--primary);">Recaudo</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-ingreso" style="color:var(--primary);">Ingreso</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-gasto" style="color:var(--primary);">Egreso</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist" style="color:var(--primary);">Historial</a></li>
       </ul>
       <div class="tab-content">
-         <div class="tab-pane fade show active" id="f-abono">
-            <div class="card-k">
-               <h6 class="text-success fw-bold">Abono a Deuda (Recaudo)</h6>
-               <select id="ab-cli" class="form-select mb-2"></select>
-               <input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto Recibido">
-               <label class="small text-muted fw-bold">Fecha del Pago:</label>
-               <input type="date" id="ab-fecha" class="form-control mb-2" style="border-color: var(--gold);">
-               <button class="btn btn-success w-100" onclick="window.doAbono()">CONFIRMAR RECAUDO</button>
-            </div>
-         </div>
-         
-         <div class="tab-pane fade" id="f-ingreso">
-            <div class="card-k">
-               <h6 class="fw-bold" style="color: var(--primary);">Entrada de Dinero Extraordinaria</h6>
-               <input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto (Ej: Inversión, Préstamo)">
-               <select id="inc-cat" class="form-select mb-2">
-                   <option value="Venta Externa">Venta Externa</option>
-                   <option value="Prestamo">Préstamo / Financiación</option>
-                   <option value="Inyeccion Capital">Aporte de Capital</option>
-                   <option value="Otros">Otros Ingresos</option>
-               </select>
-               
-               <div id="box-prestamo" style="display:none; background:#fffcf5; padding:10px; border-radius:8px; border:1px solid var(--gold); margin-bottom:10px;">
-                   <label class="small fw-bold text-danger">¿A quién le debes este dinero? (Acreedor) *</label>
-                   <input type="text" id="inc-acreedor" class="form-control mb-2" placeholder="Ej: Banco, Inversionista">
-                   <label class="small fw-bold text-danger">Fecha Límite para pagar *</label>
-                   <input type="date" id="inc-fecha-limite" class="form-control">
-               </div>
-
-               <input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto Ingresado">
-               <button class="btn btn-primary w-100" onclick="window.doIngresoExtra()">REGISTRAR ENTRADA</button>
-            </div>
-         </div>
-
-         <div class="tab-pane fade" id="f-gasto">
-            <div class="card-k">
-               <h6 class="text-danger fw-bold">Salida de Dinero (Gasto/Costo)</h6>
-               <input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto del Egreso">
-               <select id="g-cat" class="form-select mb-2"><option>Transporte / Logística</option><option>Alimentación</option><option>Costo Mercancia (Inventario)</option><option>Servicios Públicos</option><option>Nómina</option><option>Otros Gastos</option></select>
-               <input type="number" id="g-monto" class="form-control mb-2" placeholder="Valor Pagado">
-               
-               <label class="small text-muted fw-bold mt-2">Vincular a Operación (Corrección de Costos):</label>
-               <input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2 border-warning" style="border: 1px solid #ffc107;" placeholder="🔍 Escribe para buscar (Venta o Producto)...">
-               
-               <small class="d-block mb-3 text-muted" style="font-size: 0.75rem;">
-                   * Si vinculas a una <b>Venta</b>, se recalculará su utilidad real.<br>
-                   * Si vinculas a un <b>Producto</b>, se actualizará su costo base en inventario.
-               </small>
-               
-               <button class="btn btn-danger w-100" onclick="window.doGasto()">REGISTRAR EGRESO</button>
-            </div>
-         </div>
-         
-         <div class="tab-pane fade" id="f-hist">
-             <div class="card-k">
-                 <input type="text" id="hist-search" class="form-control mb-3" placeholder="🔍 Buscar movimiento por nombre..." onkeyup="window.renderFin()">
-                 <div id="hist-list"></div>
-             </div>
-         </div>
+         <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="window.doAbono()">CONFIRMAR RECAUDO</button></div></div>
+         <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="window.doIngresoExtra()">REGISTRAR ENTRADA</button></div></div>
+         <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Costo de Mercancía</option><option>Transporte/Fletes</option><option>Servicios/Suscripciones</option><option>Publicidad/Redes</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="window.doGasto()">REGISTRAR EGRESO</button></div></div>
+         <div class="tab-pane fade" id="f-hist"><div class="card-k"><div id="hist-list"></div></div></div>
       </div>
     </div>
   </div>
 
   <div id="mobile-cart" class="mobile-panel cotizador-panel-container"></div>
-  <button id="btn-float-cart" class="btn shadow" style="position:fixed; bottom:80px; right:20px; width:60px; height:60px; z-index:4000; display:none; font-size:1.5rem;" onclick="window.toggleMobileCart()" title="Ver Carrito">🛒</button>
+  <button id="btn-float-cart" class="btn shadow" style="position:fixed; bottom:80px; right:20px; width:60px; height:60px; z-index:4000; display:none; font-size:1.5rem;" onclick="window.toggleMobileCart(true)" title="Ver Carrito">🛒</button>
 
   <div class="nav-btm">
-    <button class="nav-btn active" onclick="window.nav('pos',this)"><i class="fas fa-cash-register"></i><span>Punto Venta</span></button>
-    <button class="nav-btn" onclick="window.nav('inv',this)"><i class="fas fa-box-open"></i><span>Inventario</span></button>
-    <button class="nav-btn" onclick="window.nav('cartera',this)"><i class="fas fa-hand-holding-usd text-danger"></i><span class="text-danger">Cobranza</span></button>
-    <button class="nav-btn" onclick="window.nav('ped',this)"><i class="fas fa-shipping-fast"></i><span>Compras</span></button>
-    <button class="nav-btn" onclick="window.nav('fin',this)"><i class="fas fa-chart-pie"></i><span>Finanzas</span></button>
-    <button class="nav-btn" onclick="window.nav('web',this)"><i class="fas fa-cloud" style="color: var(--primary);"></i><span style="color: var(--primary);">E-Comm</span></button>
+    <button class="nav-btn active" onclick="window.nav('pos',this)"><i class="fas fa-shopping-cart" style="color:var(--accent);"></i><span>Vender</span></button>
+    <button class="nav-btn" onclick="window.nav('inv',this)"><i class="fas fa-box-open"></i><span>Catálogo</span></button>
+    <button class="nav-btn" onclick="window.nav('cartera',this)"><i class="fas fa-hand-holding-usd text-danger"></i><span class="text-danger">Créditos</span></button>
+    <button class="nav-btn" onclick="window.nav('fin',this)"><i class="fas fa-chart-pie"></i><span>Caja</span></button>
   </div>
 
   <template id="tpl-cart">
     <div class="cotizador-panel">
        <div class="d-flex justify-content-between mb-2 align-items-center">
-         <h5 class="fw-bold m-0" style="color: var(--primary);">Resumen de Operación</h5>
+         <h5 class="fw-bold m-0" style="color: var(--primary);">Resumen</h5>
          <div>
-            <button class="btn btn-sm btn-light border fw-bold text-secondary me-1" onclick="window.toggleMobileCart()">🔽 Ocultar</button>
+            <button class="btn btn-sm btn-light border fw-bold text-secondary me-1" onclick="window.toggleMobileCart(false)">🔽 Ocultar</button>
             <button class="btn btn-sm btn-outline-danger" onclick="window.clearCart()">🗑️ Vaciar</button>
          </div>
        </div>
+       <input id="c-concepto" class="form-control mb-2 fw-bold" placeholder="📝 Descripción manual..." style="display:none; border-left:4px solid var(--accent);">
        
-       <input id="c-concepto" class="form-control mb-2 fw-bold" placeholder="📝 Descripción del ítem no catalogado..." style="display:none; border-left:4px solid var(--gold);">
-
-       <div class="d-flex justify-content-between gap-2 mb-2" style="display:none !important;"> 
-         <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="c-iva" onchange="window.calcCart()"><label class="form-check-label small fw-bold" for="c-iva">Aplicar IVA 19%</label></div>
-         <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="c-manual" onchange="window.toggleManual()"><label class="form-check-label small fw-bold" for="c-manual">Precio Base Manual</label></div>
+       <div class="d-flex justify-content-between gap-2 mb-2"> 
+         <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="c-iva" onchange="window.calcCart()"><label class="form-check-label small fw-bold text-muted" for="c-iva">Aplicar IVA 19% global</label></div>
        </div>
-       
-       <div id="cart-items-list" class="mb-3 mt-2" style="max-height:150px; overflow-y:auto;">No hay ítems seleccionados...</div>
+
+       <div id="cart-items-list" class="mb-3 mt-2" style="max-height:150px; overflow-y:auto;">Vacío...</div>
        
        <div class="row g-2 mb-3">
          <div class="col-3 text-center"><small>Margen %</small><input id="c-util" type="number" class="input-line" value="30" oninput="window.calcCart()"></div>
@@ -433,172 +244,118 @@
          <div class="col-3 text-center"><small>Tasa Int.%</small><input id="c-int" type="number" class="input-line" value="5" oninput="window.calcCart()"></div>
          <div class="col-3 text-center"><small>Plazo (M)</small><input id="c-cuotas" type="number" class="input-line" value="1" oninput="window.calcCart()"></div>
        </div>
+       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--cyan);" onchange="window.updatePrimerPago()">
        
-       <label class="small fw-bold text-muted mt-2">Fecha de Registro:</label>
-       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--gold);">
-
-       <div class="alert alert-light border text-center py-2 mb-3" style="background-color: #fffcf5; border-color: var(--gold) !important;">
-          <div id="row-descuento" style="display:none; color: #e74c3c; font-size: 0.85rem; margin-bottom: 5px;">
-              <div class="d-flex justify-content-between"><span>Descuento Aplicado:</span><strong id="res-desc-val">-$0</strong></div>
-          </div>
-          
-          <div class="d-flex justify-content-between align-items-center">
-             <span>Valor Total Venta:</span>
-             <div class="text-end">
-                <strong id="res-cont" class="fs-5" style="color: var(--primary);">$0</strong>
-                <input id="res-cont-input" type="number" class="form-control form-control-sm fw-bold text-end" style="display:none; color: var(--primary); border-color: var(--gold);" placeholder="Monto Base ($)" oninput="window.calcCart()">
-             </div>
-          </div>
-          <div id="row-cred" style="display:none; border-top:1px dashed var(--gold); margin-top:5px; padding-top:5px;">
-             <div class="d-flex justify-content-between" style="color: var(--primary);"><span>Cuota Inicial (30%):</span><strong id="res-ini">$0</strong></div>
-             <div class="d-flex justify-content-between mt-1" style="color: var(--gold-hover);"><span>Saldo a Financiar:</span><strong id="res-cuota-val">$0</strong> <small id="res-cuota-txt">/ mes</small></div>
-          </div>
-          
-          <div class="mt-2 text-end" style="border-top: 1px dotted #ccc; padding-top:5px;">
-             <small class="text-muted" style="font-size:0.7rem;">Anular intereses (Precio Fijo Manual)</small>
-             <input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end" style="border-color: var(--gold); background: #fffffa;" placeholder="💲 Precio Final Pactado" oninput="window.calcCart()">
-          </div>
+       <div class="alert alert-light border text-center py-2 mb-3" style="border-color: var(--accent) !important; background-color: #f8f9fa;">
+          <div class="d-flex justify-content-between align-items-center"><span>Total:</span><div class="text-end"><strong id="res-cont" class="fs-5" style="color: var(--primary);">$0</strong></div></div>
+          <div id="row-cred" style="display:none; border-top:1px dashed var(--accent); margin-top:5px; padding-top:5px;"><div class="d-flex justify-content-between"><span>Inicial:</span><strong id="res-ini">$0</strong></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent);">Saldo:</span><strong id="res-cuota-val">$0</strong><small id="res-cuota-txt">/ mes</small></div></div>
+          <div class="mt-2 text-end" style="border-top: 1px dotted #ccc; padding-top:5px;"><small class="text-muted">Precio Fijo (Anular intereses)</small><input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end" style="border-color: var(--accent);" placeholder="💲 Precio Cerrado" oninput="window.calcCart()"></div>
        </div>
        
-       <input id="c-cliente" list="list-clientes" class="form-control mb-2" placeholder="Nombre del Cliente / Razón Social" onchange="window.autocompletarCliente(this.value)">
+       <input id="c-cliente" class="form-control mb-2" placeholder="Cliente" list="list-clientes-rapido">
+       <datalist id="list-clientes-rapido"></datalist>
        
-       <div class="text-end mb-2">
-          <a href="#" onclick="window.toggleDatosFormales(); return false;" class="small text-muted" style="text-decoration: none;">⚙️ Añadir datos formales (NIT, Tel)</a>
-       </div>
-       <div id="box-datos-formales" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #ddd;">
+       <div class="text-end mb-2"><a href="#" onclick="window.toggleDatosFormales(); return false;" class="small text-muted" style="text-decoration: none;">⚙️ Añadir datos formales (NIT, Tel)</a></div>
+       <div id="box-datos-formales" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
           <input id="c-nit" class="form-control form-control-sm mb-2" placeholder="NIT / Cédula">
           <input id="c-tel" class="form-control form-control-sm" placeholder="Teléfono / WhatsApp">
        </div>
 
-       <select id="c-metodo" class="form-select mb-2" onchange="window.toggleIni()"><option value="Contado">Pago de Contado</option><option value="Crédito">Venta a Crédito</option></select>
-       <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Monto Inicial Personalizado" disabled style="display:none; background:#e9ecef;">
+       <select id="c-metodo" class="form-select mb-2" onchange="window.toggleIni(this)"><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select>
+       <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono Inicial Personalizado" disabled style="display:none;">
        
-       <div id="box-vip" class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #fffcf5; border-color: var(--gold) !important; display: none;">
-           <input class="form-check-input" type="checkbox" id="c-vip" onchange="window.calcCart()">
-           <label class="form-check-label small fw-bold" for="c-vip" style="color: var(--gold-hover);">⭐ Eximir Cuota Inicial (Cliente VIP / Familia)</label>
+       <div id="box-credito-detalles" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0; border-left: 4px solid var(--primary);">
+           <div class="row g-2">
+               <div class="col-6">
+                   <label class="small fw-bold" style="color: var(--primary);">Frecuencia Pago</label>
+                   <select id="c-frecuencia" class="form-select form-select-sm border-primary" onchange="window.updatePrimerPago()">
+                       <option value="Mensual">Mensual</option>
+                       <option value="Quincenal">Quincenal (15 Días)</option>
+                   </select>
+               </div>
+               <div class="col-6">
+                   <label class="small fw-bold text-success">Fecha 1er Pago</label>
+                   <input type="date" id="c-primer-pago" class="form-control form-control-sm border-success fw-bold">
+               </div>
+           </div>
        </div>
-       
-       <div class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #f8f9fa; border-color: #eee;">
-           <input class="form-check-input" type="checkbox" id="c-incluir-desc">
-           <label class="form-check-label small fw-bold text-muted" for="c-incluir-desc" style="margin-top: 2px;"><i class="fas fa-list text-secondary"></i> Incluir Descripción en Cotización</label>
+
+       <div id="box-vip" class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #fffdf9; border-color: var(--accent) !important; display: none;">
+           <input class="form-check-input" type="checkbox" id="c-eximir" onchange="window.calcCart()">
+           <label class="form-check-label small fw-bold" for="c-eximir" style="color: var(--accent-hover);">⭐ Eximir Cuota Inicial (Migración / Confianza)</label>
        </div>
 
        <div class="d-flex gap-2 mb-2">
-           <button class="btn btn-outline-info flex-fill fw-bold" onclick="window.guardarCotizacionActual()" title="Guardar Cotización en la Nube">💾 GUARDAR COTIZ.</button>
-           <button class="btn btn-dark flex-fill fw-bold text-white" onclick="window.generarCotizacionPDF()" title="Generar PDF Formal">📄 PDF</button>
+           <button class="btn btn-outline-primary flex-fill fw-bold" onclick="window.guardarCotizacionActual()">💾 COTIZAR</button>
+           <button class="btn btn-dark flex-fill fw-bold text-white" onclick="window.generarCotizacionPDF()" title="Generar PDF">📄 PDF</button>
            <button class="btn btn-success flex-fill fw-bold" onclick="window.shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button>
        </div>
-       <button id="btn-vender-main" class="btn btn-primary w-100 fw-bold fs-6 py-2" onclick="window.finalizarVenta()">✅ VENDER / FACTURAR</button>
+       <button id="btn-vender-main" class="btn w-100 fw-bold py-2 text-white" onclick="window.finalizarVenta()" style="background-color:var(--accent); border:none;">✅ FACTURAR</button>
     </div>
   </template>
 
-  <div class="modal fade" id="modalRadiografia" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+  <div class="modal fade" id="modalEdicion" tabindex="-1">
+    <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-microscope"></i> Radiografía Financiera</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
         <div class="modal-body">
-            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                <span class="small fw-bold text-muted" id="rad-id">VEN-0000</span>
-                <span class="small fw-bold text-muted" id="rad-fecha">00/00/0000</span>
-            </div>
-
-            <div class="rad-box">
-                <span class="rad-label">Cliente / Beneficiario</span>
-                <div class="rad-val" id="rad-cliente" style="color: var(--gold-hover) !important;">...</div>
-                <div class="small mt-1 fw-bold text-muted" id="rad-prod">...</div>
-            </div>
-
-            <div class="row g-2 mb-3">
-                <div class="col-6">
-                    <div class="rad-box mb-0 h-100" style="border-color: #2ecc71;">
-                        <span class="rad-label">Total Pactado</span>
-                        <div class="rad-val" id="rad-total" style="color: #2ecc71;">...</div>
-                        <span class="badge bg-dark mt-1" id="rad-metodo">...</span>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="rad-box mb-0 h-100" id="box-deuda">
-                        <span class="rad-label">Saldo Actual</span>
-                        <div class="rad-val" id="rad-saldo">...</div>
-                        <div class="small mt-1 fw-bold text-muted" id="rad-plan">...</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rad-box" style="background: rgba(255, 77, 77, 0.05); border-color: #ff4d4d;">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="rad-label text-danger mb-0"><i class="fas fa-lock"></i> Datos Confidenciales</span>
-                    <button class="btn btn-sm btn-outline-danger py-0" onclick="window.revelarSecretos()" style="font-size:0.7rem;">👁️ Revelar</button>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <small class="fw-bold text-muted">Costo Base:</small><br>
-                        <strong class="rad-secret" id="rad-costo">...</strong>
-                    </div>
-                    <div class="col-6">
-                        <small class="fw-bold text-muted">Utilidad Neta:</small><br>
-                        <strong class="rad-secret text-success" id="rad-ganancia">...</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-3">
-                <small class="fw-bold text-muted">Vendedor: <strong class="text-dark" id="rad-vendedor">...</strong></small>
-            </div>
+          <input id="inp-edit-nombre" class="form-control mb-2" placeholder="Nombre">
+          <input list="list-cats" id="inp-edit-categoria" class="form-control mb-2" placeholder="Categoria">
+          <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Unitario ($)</label><input type="number" id="inp-edit-costo" class="form-control" oninput="window.calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')"></div></div>
+          <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
+              <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="inp-edit-margen" class="form-control" oninput="window.calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
+              <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="inp-edit-publico" class="form-control" oninput="window.calcMargen('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
+          </div>
+          <textarea id="inp-edit-desc" class="form-control mb-2" placeholder="Especificaciones y detalles..."></textarea>
+          <div class="mb-2"><label class="small fw-bold">Proveedor Asignado</label><input list="list-provs-all" id="inp-edit-proveedor" class="form-control"></div>
+          
+          <div class="file-upload-wrapper"><input type="file" id="inp-file-foto" accept="image/*" onchange="window.previewFile('inp-file-foto', 'img-preview-box')" class="file-input-overlay"><img id="img-preview-box" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--cyan);">📷</div><div>Tocar para cambiar foto</div></div></div>
+          
+          <button class="btn btn-primary w-100 mt-2 fw-bold" onclick="window.guardarCambiosAvanzado()">Guardar Cambios</button>
+          
+          <button class="btn btn-outline-danger w-100 mt-2 fw-bold" onclick="window.eliminarProductoActual()"><i class="fas fa-trash-alt"></i> Eliminar del Sistema</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal fade" id="modalNuevo" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <input id="new-nombre" class="form-control mb-2" placeholder="Nombre">
+          <input list="list-cats" id="new-categoria" class="form-control mb-2" placeholder="Categoria">
+          <div class="row g-2 mb-2"><div class="col-12"><label class="small fw-bold">Costo Base ($)</label><input type="number" id="new-costo" class="form-control" oninput="window.calcGain('new-costo','new-publico','new-margen')"></div></div>
+          <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--cyan) !important; margin: 0;">
+              <div class="col-4"><label class="small fw-bold" style="color: var(--primary);">Margen (%)</label><input type="number" id="new-margen" class="form-control" value="30" oninput="window.calcGain('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); font-weight: bold;"></div>
+              <div class="col-8"><label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label><input type="number" id="new-publico" class="form-control" oninput="window.calcMargen('new-costo','new-publico','new-margen')" style="border-color: var(--cyan); color: var(--primary); font-weight: bold;"></div>
+          </div>
+          <textarea id="new-desc" class="form-control mb-2" placeholder="Ficha Técnica / Descripción..."></textarea>
+          <div class="mb-2"><label class="small fw-bold">Proveedor</label><input list="list-provs-all" id="new-proveedor" class="form-control"></div>
+          
+          <div class="file-upload-wrapper"><input type="file" id="new-file-foto" accept="image/*" onchange="window.previewFile('new-file-foto', 'img-preview-new')" class="file-input-overlay"><img id="img-preview-new" class="preview-img"><div class="text-center text-muted"><div style="font-size:2rem; color: var(--accent);">📷</div><div>Tocar para subir foto</div></div></div>
+          <button class="btn w-100 mt-2 text-white" style="background-color:var(--accent); border:none;" onclick="window.crearProducto()">Crear Producto</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="modalItemManual" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+  <div class="modal fade" id="modalClientes" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h6 class="modal-title fw-bold" style="color: var(--primary);">➕ Agregar Ítem / Servicio Libre</h6>
+          <h6 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-address-book"></i> Directorio de Clientes</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="small fw-bold text-muted">Nombre del Ítem / Descripción *</label>
-            <input type="text" id="manual-item-nombre" class="form-control fw-bold" placeholder="Ej: Instalación, Envío, Software...">
+          <div class="input-group mb-3">
+            <input id="new-cli-name" class="form-control" placeholder="Nombre del Cliente">
+            <input id="new-cli-tel" class="form-control" placeholder="Teléfono/WA">
+            <button class="btn btn-primary" onclick="window.guardarClienteManual()">💾 Añadir</button>
           </div>
-          <div class="row g-2 mb-4">
-            <div class="col-6">
-              <label class="small fw-bold text-muted">Costo Base ($)</label>
-              <input type="number" id="manual-item-costo" class="form-control" placeholder="Opcional (0)">
-            </div>
-            <div class="col-6">
-              <label class="small fw-bold text-danger">Precio Venta ($) *</label>
-              <input type="number" id="manual-item-precio" class="form-control border-danger fw-bold text-danger" placeholder="Ej: 150000">
-            </div>
-          </div>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary w-50 fw-bold" onclick="window.confirmarItemManual()">Añadir al Carrito</button>
-          </div>
+          <input type="text" id="cli-search" class="form-control mb-2" placeholder="🔍 Buscar cliente..." onkeyup="window.renderClientes()">
+          <div id="list-clientes" style="max-height:350px; overflow-y:auto;"></div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalAbonarPasivo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold text-danger"><i class="fas fa-hand-holding-usd"></i> Pagar Mis Obligaciones</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <label class="small fw-bold">Seleccionar Deuda / Acreedor</label>
-                <select id="pas-select" class="form-select mb-3" onchange="window.seleccionarPasivo()"></select>
-                <label class="small fw-bold">Monto a Pagar (Salida de Caja)</label>
-                <input type="number" id="pas-monto" class="form-control mb-4" placeholder="Valor del abono o cuota">
-                <button class="btn btn-danger w-100 fw-bold py-2" onclick="window.doAbonoPasivo()">REGISTRAR PAGO A TERCERO</button>
-            </div>
-        </div>
     </div>
   </div>
 
@@ -609,7 +366,87 @@
           <h6 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-folder-open text-info"></i> Cotizaciones Guardadas</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="cotizaciones-list" style="background-color: #f8f9fa;"></div>
+        <div class="modal-body" id="cotizaciones-list" style="background-color: #f8f9fa;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalManualItem" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold" style="color: var(--primary);">➕ Agregar Ítem No Catalogado</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="small fw-bold">Nombre del Producto/Servicio *</label>
+          <input id="man-nombre" class="form-control mb-2" placeholder="Ej: Reparación, Domicilio, Accesorio...">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="small fw-bold">Costo Interno ($)</label>
+              <input type="number" id="man-costo" class="form-control" placeholder="Opcional">
+            </div>
+            <div class="col-6">
+              <label class="small fw-bold text-success">Precio Venta ($) *</label>
+              <input type="number" id="man-publico" class="form-control border-success" placeholder="Obligatorio">
+            </div>
+          </div>
+          <button class="btn w-100 fw-bold text-white" style="background-color:var(--accent); border:none;" onclick="window.confirmarItemManual()">Añadir al Carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalEditItem" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title fw-bold" style="color: var(--primary);">✏️ Ajuste Individual de Ítem</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit-item-id">
+          <div class="mb-2">
+            <label class="small fw-bold">Nombre del Producto/Servicio</label>
+            <input id="edit-item-nombre" class="form-control">
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="small fw-bold text-muted">Costo Base</label>
+              <input type="number" id="edit-item-costo" class="form-control bg-light" readonly>
+            </div>
+            <div class="col-6">
+              <label class="small fw-bold">Margen (%)</label>
+              <input type="number" id="edit-item-margen" class="form-control border-primary" oninput="window.calcEditorItem()">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="small fw-bold text-danger">Descuento Unitario (%)</label>
+              <input type="number" id="edit-item-desc" class="form-control border-danger" oninput="window.calcEditorItem()">
+            </div>
+            <div class="col-6 d-flex align-items-end">
+                <div class="form-check form-switch w-100 p-2 bg-light rounded border">
+                    <input class="form-check-input ms-1 mt-1" type="checkbox" id="edit-item-iva" onchange="window.calcEditorItem()">
+                    <label class="form-check-label small fw-bold ms-2" for="edit-item-iva">Aplicar IVA</label>
+                </div>
+            </div>
+          </div>
+          <div class="alert alert-light border text-center mb-3">
+            <small class="text-muted">Precio Unitario Final (Calculado):</small><br>
+            <strong id="edit-item-total" class="fs-4" style="color: var(--accent);">$0</strong>
+          </div>
+          <div class="mb-3 border-top pt-3">
+            <label class="form-label text-success fw-bold">Precio Final Pactado ($):</label>
+            <input type="number" class="form-control border-success" id="edit-item-precio-pactado" placeholder="Ej: 150000" oninput="window.aplicarPrecioPactado()" style="font-weight: bold;">
+            <small class="text-muted">Calcula el descuento (%) en reversa automáticamente.</small>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary w-50 fw-bold" onclick="window.guardarEditorItem()">✔️ Aplicar al Carrito</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -628,338 +465,78 @@
             <button class="btn btn-primary" onclick="window.guardarProvManual()">💾 Guardar</button>
           </div>
           <div id="list-provs" style="max-height:300px; overflow-y:auto;"></div>
-          <div class="d-flex gap-2 mt-3">
-             <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Cerrar</button>
-          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="modalEdicion" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">Modificar Producto</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-2"><label class="small fw-bold">Nombre del Producto</label><input id="inp-edit-nombre" class="form-control fw-bold" style="color: var(--primary);"></div>
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><label class="small fw-bold">Categoría</label><input list="list-cats" id="inp-edit-categoria" class="form-control"></div>
-                    <div class="col-6"><label class="small fw-bold">Costo Unitario</label><input type="number" id="inp-edit-costo" class="form-control" oninput="window.calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')"></div>
-                </div>
-                <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--gold) !important; margin: 0;">
-                    <div class="col-4">
-                        <label class="small fw-bold" style="color: var(--primary);">Margen (%)</label>
-                        <input type="number" id="inp-edit-margen" class="form-control" value="30" oninput="window.calcGain('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--gold); font-weight: bold;">
-                    </div>
-                    <div class="col-8">
-                        <label class="small fw-bold" style="color: var(--primary);">Precio Público Final</label>
-                        <input type="number" id="inp-edit-publico" class="form-control" placeholder="0 = Auto-cálculo" oninput="window.calcMargen('inp-edit-costo','inp-edit-publico','inp-edit-margen')" style="border-color: var(--gold); color: var(--primary); font-weight: bold;">
-                    </div>
-                </div>
-                <div class="mb-2"><label class="small fw-bold">Proveedor Asignado</label><input list="list-provs-all" id="inp-edit-proveedor" class="form-control"></div>
-                <div class="mb-2"><label class="small fw-bold">Ficha Técnica / Descripción</label><textarea id="inp-edit-desc" class="form-control"></textarea></div>
-                <div class="p-3 bg-light rounded border my-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="inp-edit-web" style="cursor:pointer;">
-                        <label class="form-check-label fw-bold small" for="inp-edit-web" style="color: var(--primary);">🌐 Publicar en Tienda Online</label>
-                    </div>
-                    <label class="small fw-bold" style="color: var(--primary);">Sección E-Commerce:</label>
-                    <select id="inp-edit-cat-web" class="form-select form-select-sm" style="border-color: var(--primary);">
-                        <option value="tecnologia">Tecnología</option><option value="electro">Hogar y Electrodomésticos</option><option value="Gadget y Novedades">Gadgets y Novedades</option><option value="juguetes">Juguetes</option><option value="perfumes">Perfumes</option>
-                    </select>
-                </div>
-                <div class="mb-3 file-upload-wrapper">
-                    <input type="file" id="inp-file-foto" accept="image/*" onchange="window.previewFile()" class="file-input-overlay">
-                    <img id="img-preview-box" class="preview-img">
-                    <div class="placeholder-text text-center text-muted"><div style="font-size:2rem; color: var(--gold);">📷</div><div>Tocar para actualizar imagen</div></div>
-                </div>
-                <div class="d-flex gap-2 mt-3">
-                    <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-primary w-50" onclick="window.guardarCambiosAvanzado()">Guardar Cambios</button>
-                </div>
-                <button class="btn btn-outline-danger w-100 mt-2" onclick="window.eliminarProductoActual()">Eliminar del Sistema</button>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalNuevo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">Alta de Nuevo Producto</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form onsubmit="event.preventDefault(); window.crearProducto();">
-                    <div class="mb-2"><label class="small fw-bold">Nombre del Ítem</label><input id="new-nombre" class="form-control" required></div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="small fw-bold">Categoría</label><input list="list-cats" id="new-categoria" class="form-control" onchange="window.generarIDAuto()"></div>
-                        <div class="col-6"><label class="small fw-bold">Costo Base</label><input type="number" id="new-costo" class="form-control" oninput="window.calcGain('new-costo','new-publico','new-margen')"></div>
-                    </div>
-                    <div class="row g-2 mb-2 p-2 bg-light border rounded" style="border-color: var(--gold) !important; margin: 0;">
-                        <div class="col-4">
-                            <label class="small fw-bold" style="color: var(--primary);">Margen (%)</label>
-                            <input type="number" id="new-margen" class="form-control" value="30" oninput="window.calcGain('new-costo','new-publico','new-margen')" style="border-color: var(--gold); font-weight: bold;">
-                        </div>
-                        <div class="col-8">
-                            <label class="small fw-bold" style="color: var(--primary);">Precio Venta Final</label>
-                            <input type="number" id="new-publico" class="form-control" oninput="window.calcMargen('new-costo','new-publico','new-margen')" style="border-color: var(--gold); color: var(--primary); font-weight: bold;">
-                        </div>
-                    </div>
-                    <div class="mb-2"><label class="small fw-bold">Proveedor</label><input list="list-provs-all" id="new-proveedor" class="form-control"></div>
-                    <div class="mb-2"><label class="small fw-bold">Detalles / Specs</label><textarea id="new-desc" class="form-control"></textarea></div>
-                    <div class="mb-3"><label class="small fw-bold">Código SKU (Generado)</label><input id="new-id" class="form-control bg-light" readonly></div>
-                    <div class="p-3 bg-light rounded border my-3">
-                        <div class="form-check form-switch mb-2">
-                            <input class="form-check-input" type="checkbox" id="new-web" style="cursor:pointer;">
-                            <label class="form-check-label fw-bold small" for="new-web" style="color: var(--primary);">🌐 Visible en Web</label>
-                        </div>
-                        <label class="small fw-bold" style="color: var(--primary);">Categoría Online:</label>
-                        <select id="new-cat-web" class="form-select form-select-sm" style="border-color: var(--primary);">
-                            <option value="tecnologia">Tecnología</option><option value="electro">Hogar y Electrodomésticos</option><option value="Gadget y Novedades">Gadgets y Novedades</option><option value="juguetes">Juguetes</option><option value="perfumes">Perfumes</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold">Imagen del Producto:</label>
-                        <input type="file" id="new-file-foto" accept="image/*" class="form-control">
-                    </div>
-                    <div class="d-flex gap-2 mt-3">
-                        <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary w-50 fw-bold" style="color: var(--gold);">Confirmar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalWA" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+  <div class="modal fade" id="modalLoginApp" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><div class="modal-body text-center p-5"><div style="font-size: 3rem; color: var(--cyan);"><i class="fas fa-globe"></i></div><h4 class="fw-bold mt-3" style="color: var(--primary);">Planet Shop</h4><input type="text" id="login-alias" class="form-control text-center fw-bold mb-3" style="border: 2px solid var(--accent);" placeholder="Tu Nombre"><button class="btn btn-primary w-100" onclick="window.guardarIdentidad()">ACCEDER</button></div></div></div></div>
+  
+  <div class="modal fade" id="modalRefinanciar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h6 class="modal-title fw-bold text-success"><i class="fab fa-whatsapp"></i> Importación Masiva</h6>
+          <h6 class="modal-title fw-bold" style="color: var(--primary);">🔄 Refinanciar Deuda</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p class="small text-muted">Pega el texto del chat con la lista de precios para crear productos automáticamente.</p>
-          <input id="wa-prov" class="form-control mb-2" placeholder="Nombre Proveedor">
-          <input list="list-cats" id="wa-cat" class="form-control mb-2" placeholder="Categoría Asignada">
-          <textarea id="wa-text" class="form-control mb-3" rows="5" placeholder="Pegar texto aquí..."></textarea>
-          <div class="d-flex gap-2">
-             <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-             <button class="btn btn-success w-50" onclick="window.procesarWA()">Procesar Texto</button>
-          </div>
+          <label class="small fw-bold text-muted">Cliente</label>
+          <input id="ref-cliente" class="form-control mb-2 bg-light" readonly>
+          <label class="small fw-bold text-danger">Saldo a Refinanciar ($)</label>
+          <input id="ref-saldo-actual" class="form-control mb-2 bg-light text-danger fw-bold" readonly>
+          <label class="small fw-bold">Cargo Adicional / Mora ($)</label>
+          <input type="number" id="ref-cargo" class="form-control border-warning mb-2" value="0">
+          <label class="small fw-bold">Nuevas Cuotas Totales</label>
+          <input type="number" id="ref-cuotas" class="form-control mb-2" value="1">
+          <label class="small fw-bold">Fecha de Próximo Pago</label>
+          <input type="date" id="ref-fecha" class="form-control mb-3 border-primary">
+          <button class="btn btn-primary w-100 fw-bold" onclick="window.procesarRefinanciamiento()">Acordar Nuevo Plan</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal fade" id="modalPed" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">Generar Solicitud de Compra</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label class="small fw-bold">Producto Requerido *</label>
-                <input list="list-prods-all" id="pe-prod" class="form-control mb-2" placeholder="Buscar o escribir nombre...">
-                <label class="small fw-bold">Proveedor Destino</label>
-                <input id="pe-prov" class="form-control mb-2" placeholder="Nombre Proveedor">
-                <label class="small fw-bold">Presupuesto Estimado (Opcional)</label>
-                <input type="number" id="pe-costo" class="form-control mb-2" placeholder="$">
-                <label class="small fw-bold">Observaciones</label>
-                <input id="pe-nota" class="form-control mb-2" placeholder="Especificaciones, colores, etc...">
-                <div class="d-flex gap-2 mt-3">
-                   <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                   <button class="btn btn-primary w-50" onclick="window.savePed()">Crear Orden</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalEditPed" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">Modificar Orden de Compra</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label class="small fw-bold">Producto</label>
-                <input list="list-prods-all" id="ed-ped-prod" class="form-control mb-2">
-                <label class="small fw-bold">Proveedor</label>
-                <input id="ed-ped-prov" class="form-control mb-2">
-                <label class="small fw-bold">Costo Proyectado</label>
-                <input type="number" id="ed-ped-costo" class="form-control mb-2">
-                <label class="small fw-bold">Notas Adicionales</label>
-                <input id="ed-ped-nota" class="form-control mb-2">
-                <div class="d-flex gap-2 mt-3">
-                   <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                   <button class="btn btn-primary w-50" onclick="window.guardarEdicionPed()">Actualizar Orden</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalEditMov" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">✏️ Ajuste Contable (Corrección)</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted">⚠️ Advertencia: Modificar transacciones pasadas afectará el balance general y los estados de cuenta.</p>
-                <label class="small fw-bold">Concepto Original</label>
-                <input id="ed-mov-desc" class="form-control mb-2" disabled style="background-color: #e9ecef;">
-                <label class="small fw-bold">Fecha Contable Real</label>
-                <input type="date" id="ed-mov-fecha" class="form-control mb-2" style="border-color: var(--gold);">
-                <label class="small fw-bold">Monto Corregido</label>
-                <input type="number" id="ed-mov-monto" class="form-control mb-3" style="font-weight: bold; color: var(--primary);">
-                <label class="small fw-bold text-danger">Justificación del Cambio (Obligatoria) *</label>
-                <input type="text" id="ed-mov-justificacion" class="form-control mb-3 border-danger" placeholder="Ej: Me equivoqué de cliente, Error de digitación...">
-                <div class="d-flex gap-2 mt-3">
-                   <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                   <button class="btn btn-warning w-50 fw-bold" onclick="window.guardarEdicionMovimiento()">Aplicar Corrección</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalRefinanciar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">🔄 Refinanciar Deuda</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <label class="small fw-bold text-muted">Cliente</label>
-                <input id="ref-cliente" class="form-control mb-2 bg-light" readonly>
-                <label class="small fw-bold text-muted">Saldo Actual</label>
-                <input id="ref-saldo-actual" class="form-control mb-3 bg-light text-danger fw-bold" readonly>
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="small fw-bold">Cargo Adicional / Mora ($)</label>
-                        <input type="number" id="ref-cargo" class="form-control border-warning" value="0" oninput="window.calcRefinanciamiento()">
-                    </div>
-                    <div class="col-6">
-                        <label class="small fw-bold">Nuevas Cuotas</label>
-                        <input type="number" id="ref-cuotas" class="form-control" value="1" min="1" oninput="window.calcRefinanciamiento()">
-                    </div>
-                </div>
-                <label class="small fw-bold">Nueva Fecha de Pago</label>
-                <input type="date" id="ref-fecha" class="form-control mb-3 border-primary">
-                <div class="alert alert-light border border-primary text-center">
-                    <small class="d-block text-muted">Proyección Nuevo Acuerdo:</small>
-                    <div class="d-flex justify-content-between mt-2">
-                        <span>Nuevo Saldo:</span><strong id="ref-nuevo-saldo" class="text-danger">$0</strong>
-                    </div>
-                    <div class="d-flex justify-content-between mt-1">
-                        <span>Nueva Cuota:</span><strong id="ref-nueva-cuota" class="text-primary">$0 / mes</strong>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 mt-3">
-                    <button class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-primary w-50 fw-bold" onclick="window.procesarRefinanciamiento()">Guardar Acuerdo</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalEditItem" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title fw-bold" style="color: var(--primary);">✏️ Ajuste Individual de Ítem</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="edit-item-id">
-                <div class="mb-2">
-                    <label class="small fw-bold">Nombre del Producto/Servicio</label>
-                    <input id="edit-item-nombre" class="form-control">
-                </div>
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="small fw-bold text-muted">Costo Base</label>
-                        <input type="number" id="edit-item-costo" class="form-control bg-light" readonly>
-                    </div>
-                    <div class="col-6">
-                        <label class="small fw-bold">Margen (%)</label>
-                        <input type="number" id="edit-item-margen" class="form-control border-primary" oninput="window.calcEditorItem()">
-                    </div>
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="small fw-bold text-danger">Descuento Unitario (%)</label>
-                        <input type="number" id="edit-item-desc" class="form-control border-danger" oninput="window.calcEditorItem()">
-                    </div>
-                    <div class="col-6 d-flex align-items-end">
-                        <div class="form-check form-switch w-100 p-2 bg-light rounded border">
-                            <input class="form-check-input ms-1 mt-1" type="checkbox" id="edit-item-iva" onchange="window.calcEditorItem()">
-                            <label class="form-check-label small fw-bold ms-2" for="edit-item-iva">Aplicar IVA</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="alert alert-light border text-center mb-3">
-                    <small class="text-muted">Precio Unitario Final (Calculado):</small><br>
-                    <strong id="edit-item-total" class="fs-4" style="color: var(--gold-hover);">$0</strong>
-                </div>
-                <div class="mb-3 border-top pt-3">
-                    <label class="form-label text-success fw-bold">Precio Final Pactado ($):</label>
-                    <input type="number" class="form-control border-success" id="edit-item-precio-pactado" placeholder="Ej: 1500000" oninput="window.aplicarPrecioPactado()" style="font-weight: bold;">
-                    <small class="text-muted">Calcula el descuento (%) en reversa automáticamente.</small>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-primary w-50 fw-bold" onclick="window.guardarEditorItem()">✔️ Aplicar al Carrito</button>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalLoginApp" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-body text-center p-5">
-            <div style="font-size: 3rem; color: var(--gold);"><i class="fas fa-shield-alt"></i></div>
-            <h4 class="fw-bold mt-3" style="color: var(--primary);">Seguridad KING'S SHOP</h4>
-            <p class="text-muted small mb-4">Para utilizar el sistema en este dispositivo, por favor registra tu identidad operativa.</p>
-            <input type="text" id="login-alias" class="form-control form-control-lg text-center fw-bold mb-3 border-dark" placeholder="Tu Nombre o Alias">
-            <button class="btn btn-dark btn-lg w-100 fw-bold" onclick="window.guardarIdentidad()">ACCEDER AL SISTEMA</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <datalist id="list-cats"></datalist>
-  <datalist id="list-provs-all"></datalist>
-  <datalist id="list-prods-all"></datalist>
-  <datalist id="g-vinculo-list"></datalist>
-  <datalist id="list-clientes"></datalist>
+  <datalist id="list-cats"></datalist><datalist id="list-provs-all"></datalist><datalist id="g-vinculo-list"></datalist>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
   <script>
+    let deferredPrompt;
+    const installBanner = document.getElementById('install-banner');
+    
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registrado', reg))
-          .catch(err => console.log('SW fallo', err));
+        navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
       });
     }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.style.display = 'flex';
+    });
+
+    document.getElementById('btn-install-app').addEventListener('click', async () => {
+      installBanner.style.display = 'none';
+      if(deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`Respuesta del usuario: ${outcome}`);
+          deferredPrompt = null;
+      }
+    });
+
+    document.getElementById('btn-close-install').addEventListener('click', () => {
+      installBanner.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBanner.style.display = 'none';
+      console.log('App instalada con éxito');
+    });
   </script>
-  <script type="module" src="./js/app.js"></script>
+  
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
