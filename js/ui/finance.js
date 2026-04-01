@@ -26,9 +26,13 @@ export function abrirModalRefinanciar(id,cli,saldo){
 }
 
 export function procesarRefinanciamiento(){ 
-    callAPI('refinanciarDeuda', {idVenta: State.refEditId, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value}).then(r=>{ 
-        if(State.modals.refinanciar) State.modals.refinanciar.hide(); 
+    var idVenta = State.refEditId;
+    var d = {idVenta: idVenta, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value};
+    if(State.modals.refinanciar) State.modals.refinanciar.hide(); 
+    showToast("⚡ Procesando refinanciación...", "info");
+    callAPI('refinanciarDeuda', d).then(r=>{ 
         if(window.App && window.App.loadData) window.App.loadData(true); 
+        showToast("✅ Deuda reestructurada", "success");
     }); 
 }
 
@@ -54,7 +58,40 @@ export function renderFin(){
     if(elPatrimonio) elPatrimonio.innerText = COP.format(patrimonio);
 }
 
-export function doAbono(){ callAPI('registrarAbono', {idVenta: document.getElementById('ab-cli').value, monto: document.getElementById('ab-monto').value, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text}).then(()=>{ if(window.App && window.App.loadData) window.App.loadData(true); }); }
-export function doIngresoExtra(){ callAPI('registrarIngresoExtra', {desc: document.getElementById('inc-desc').value, cat: document.getElementById('inc-cat').value, monto: document.getElementById('inc-monto').value}).then(()=>{ if(window.App && window.App.loadData) window.App.loadData(true); }); }
-export function doGasto(){ callAPI('registrarGasto', {desc: document.getElementById('g-desc').value, cat: document.getElementById('g-cat').value, monto: document.getElementById('g-monto').value, vinculo: document.getElementById('g-vinculo').value}).then(()=>{ if(window.App && window.App.loadData) window.App.loadData(true); }); }
+export function doAbono(){ 
+    var cli = document.getElementById('ab-cli').value;
+    var monto = parseFloat(document.getElementById('ab-monto').value);
+    if(!cli || isNaN(monto) || monto <= 0) return;
+    var d = {idVenta: cli, monto: monto, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text};
+    document.getElementById('ab-monto').value = ''; document.getElementById('ab-fecha').value = '';
+    showToast("⚡ Recaudando dinero...", "info");
+    if(State.data && State.data.metricas) { State.data.metricas.saldo += monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
+    callAPI('registrarAbono', d).then(()=>{ showToast("✅ Abono procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+}
+
+export function doIngresoExtra(){ 
+    var desc = document.getElementById('inc-desc').value;
+    var cat = document.getElementById('inc-cat').value;
+    var monto = parseFloat(document.getElementById('inc-monto').value);
+    if(!desc || isNaN(monto) || monto <= 0) return;
+    var d = {desc: desc, cat: cat, monto: monto};
+    document.getElementById('inc-desc').value = ''; document.getElementById('inc-monto').value = '';
+    showToast("⚡ Registrando ingreso...", "info");
+    if(State.data && State.data.metricas) { State.data.metricas.saldo += monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
+    callAPI('registrarIngresoExtra', d).then(()=>{ showToast("✅ Ingreso procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+}
+
+export function doGasto(){ 
+    var desc = document.getElementById('g-desc').value;
+    var cat = document.getElementById('g-cat').value;
+    var monto = parseFloat(document.getElementById('g-monto').value);
+    var vinculo = document.getElementById('g-vinculo').value;
+    if(!desc || isNaN(monto) || monto <= 0) return;
+    var d = {desc: desc, cat: cat, monto: monto, vinculo: vinculo};
+    document.getElementById('g-desc').value = ''; document.getElementById('g-monto').value = ''; document.getElementById('g-vinculo').value = '';
+    showToast("⚡ Registrando egreso...", "info");
+    if(State.data && State.data.metricas) { State.data.metricas.saldo -= monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
+    callAPI('registrarGasto', d).then(()=>{ showToast("✅ Egreso procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+}
+
 export function abrirModalPasivos() { alert("Módulo de pasivos en construcción."); }
