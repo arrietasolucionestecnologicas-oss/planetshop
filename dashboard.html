@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planet.shop | Enterprise BI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root { 
+        var(--primary): #1a365d; 
+        var(--accent): #2b6cb0; 
+        var(--cyan): #63b3ed; 
+        var(--bg): #f0f4f8; 
+    }
+    
+    body { background-color: #f0f4f8; color: #2d3748; font-family: 'Montserrat', sans-serif; padding-bottom: 50px; }
+    
+    .top-bar { background: #1a365d; padding: 15px 25px; border-bottom: 3px solid #63b3ed; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .brand { color: white; font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
+    .btn-close-dash { background: #2b6cb0; border: none; padding: 8px 20px; color: white; border-radius: 30px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .btn-close-dash:hover { transform: scale(1.05); background: #1e4e8c; color:white; }
+    
+    /* Selector de Mes */
+    .filter-group { background: white; margin: 20px; padding: 15px; border-radius: 12px; display: flex; gap: 15px; border: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .custom-month-input { background: #f8f9fa; border: 2px solid #63b3ed; color: #1a365d; padding: 8px 15px; border-radius: 8px; font-weight: bold; outline: none; transition: 0.2s; }
+    .custom-month-input:focus { box-shadow: 0 0 0 3px rgba(99,179,237,0.3); }
+    .btn-aplicar { background: #2b6cb0; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+    .btn-aplicar:hover { background: #1a365d; }
+
+    .kpi-card { background: white; border-radius: 12px; padding: 20px; position: relative; overflow: hidden; height: 100%; transition: 0.3s; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+    .kpi-card:hover { transform: translateY(-5px); border-color: #63b3ed; box-shadow: 0 8px 15px rgba(99,179,237,0.15); }
+    .kpi-icon { position: absolute; right: -10px; top: -10px; font-size: 4rem; opacity: 0.05; transform: rotate(15deg); color: #1a365d; }
+    .kpi-label { font-size: 0.8rem; text-transform: uppercase; color: #1a365d; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 700; color: #2b6cb0; line-height: 1; }
+    
+    .text-muted { color: #718096 !important; }
+    .kpi-sub { font-size: 0.85rem; margin-top: 8px; color: #718096; }
+    
+    .panel-box { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; height: 100%; }
+    .panel-title { font-weight: 700; color: #1a365d; margin-bottom: 20px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; }
+    
+    .table-custom { width: 100%; font-size: 0.9rem; }
+    .table-custom td { padding: 10px 0; border-bottom: 1px solid #e2e8f0; color: #2d3748; }
+    .table-custom tr:last-child td { border-bottom: none; }
+    .badge-rank { background: #eef2f7; color: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 10px; }
+    
+    .text-pos { color: #38a169 !important; } .text-neg { color: #e53e3e !important; } .text-warn { color: #dd6b20 !important; }
+    #loader { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+
+    /* HISTORIAL Y BUSCADOR */
+    .search-hist { background: #f8f9fa; border: 1px solid #cbd5e0; color: #2d3748; padding: 10px 15px; border-radius: 8px; width: 100%; outline: none; margin-bottom: 15px; font-weight: bold; transition: 0.2s; }
+    .search-hist:focus { border-color: #63b3ed; box-shadow: 0 0 0 3px rgba(99,179,237,0.2); }
+    .search-hist::placeholder { color: #a0aec0; font-weight: normal; }
+    
+    .hist-row { background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
+    .hist-row:hover { border-color: #63b3ed; background: #f0f4f8; transform: translateX(3px); }
+    .h-cliente { font-weight: bold; color: #1a365d; font-size: 0.95rem; }
+    .h-prod { color: #718096; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .h-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
+    .bg-pend { background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; }
+    .bg-pag { background: #f0fff4; color: #38a169; border: 1px solid #9ae6b4; }
+
+    /* MODAL RADIOGRAFÍA FINANCIERA */
+    .modal-content { background-color: white; color: #2d3748; border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .modal-header { border-bottom: 1px solid #e2e8f0; background: #1a365d; color: white; border-radius: 15px 15px 0 0; }
+    .modal-title { font-weight: bold; }
+    .rad-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed #cbd5e0; }
+    .rad-label { color: #718096; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 2px; display: block; font-weight: bold; }
+    .rad-val { font-size: 1.1rem; font-weight: bold; color: #1a365d; }
+    .rad-secret { filter: blur(4px); cursor: pointer; transition: 0.2s; }
+    .rad-secret.revealed { filter: blur(0); }
+  </style>
+</head>
+<body>
+
+  <div id="loader"><div class="spinner-border text-primary" role="status"></div><div class="mt-3 fw-bold" style="color: #1a365d;">Calculando Métricas...</div></div>
+
+  <div class="top-bar">
+    <div class="brand"><i class="fas fa-chart-line" style="color: #63b3ed;"></i> Planet<span style="color:#63b3ed;">.shop</span> <span style="font-size:0.9rem; font-weight:400; opacity: 0.8;">BI</span></div>
+    <a class="btn-close-dash" href="index.html"><i class="fas fa-arrow-left"></i> VOLVER AL POS</a>
+  </div>
+
+  <div class="container-fluid px-4">
+    <div class="d-flex justify-content-center">
+      <div class="filter-group">
+        <label class="fw-bold small" style="color: #1a365d;">Trazabilidad de:</label>
+        <input type="month" id="input-mes" class="custom-month-input">
+        <button class="btn-aplicar" onclick="loadCustomMonth()"><i class="fas fa-search"></i> Extraer Datos</button>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #38a169;"><i class="fas fa-dollar-sign kpi-icon"></i><div class="kpi-label">Ventas Brutas</div><div class="kpi-value" id="k-ventas">...</div><div class="kpi-sub text-pos fw-bold"><i class="fas fa-check-circle"></i> Ingresos Totales</div></div></div>
+      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #63b3ed;"><i class="fas fa-chart-pie kpi-icon"></i><div class="kpi-label">Margen Real</div><div class="kpi-value" id="k-margen">...%</div><div class="kpi-sub fw-bold" id="k-util-monto" style="color: #1a365d;">Util: $0</div></div></div>
+      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #e53e3e;"><i class="fas fa-hand-holding-usd kpi-icon"></i><div class="kpi-label">Cartera (Deuda)</div><div class="kpi-value text-neg" id="k-deuda">...</div><div class="kpi-sub">Global Pendiente</div></div></div>
+      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #2b6cb0;"><i class="fas fa-receipt kpi-icon"></i><div class="kpi-label">Ticket Promedio</div><div class="kpi-value" id="k-ticket">...</div><div class="kpi-sub">Por transacción</div></div></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-lg-5">
+          <div class="panel-box d-flex flex-column">
+              <div class="panel-title">
+                  <span><i class="fas fa-list-alt text-muted"></i> Historial de Operaciones</span>
+                  <span class="badge" style="background: #2b6cb0;" id="count-hist">0</span>
+              </div>
+              <input type="text" id="hist-search" class="search-hist" placeholder="🔍 Buscar cliente, producto o ID..." onkeyup="filterHistorial()">
+              <div id="hist-container" style="flex:1; overflow-y:auto; padding-right:5px; min-height:300px; max-height:400px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e2e8f0; padding: 5px;">
+                  <div class="text-center mt-5" style="color: #a0aec0;">Cargando operaciones...</div>
+              </div>
+          </div>
+      </div>
+
+      <div class="col-lg-7">
+          <div class="panel-box">
+              <div class="panel-title"><span><i class="fas fa-chart-area text-muted"></i> Flujo Anual (Ventas vs Gastos)</span></div>
+              <div style="height: 350px;"><canvas id="chart-flow"></canvas></div>
+          </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-wallet text-muted"></i> Gastos del Mes</span></div><div style="height: 200px; position:relative;"><canvas id="chart-gastos"></canvas></div><div id="gastos-summary" class="mt-3 small text-center fst-italic" style="color: #718096;"></div></div></div>
+      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-crown text-warning"></i> Top Clientes</span></div><table class="table-custom" id="list-clientes"></table></div></div>
+      <div class="col-md-4"><div class="panel-box" style="border-color: #feb2b2;"><div class="panel-title"><span class="text-neg"><i class="fas fa-bed"></i> Inventario Dormido</span></div><div class="alert alert-light border small mb-2 p-2 text-muted"><i class="fas fa-info-circle"></i> Productos sin ventas en el mes</div><table class="table-custom" id="list-dormidos"></table></div></div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalRadiografia" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-microscope text-info"></i> Radiografía Financiera</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                <span class="small fw-bold" id="rad-id" style="color: #1a365d;">VEN-0000</span>
+                <span class="small" id="rad-fecha" style="color: #718096;">00/00/0000</span>
+            </div>
+
+            <div class="rad-box" style="background: white;">
+                <span class="rad-label">Cliente / Beneficiario</span>
+                <div class="rad-val" id="rad-cliente" style="color: #2b6cb0;">...</div>
+                <div class="small mt-1 text-muted" id="rad-prod">...</div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div class="rad-box mb-0 h-100" style="background: white; border-color: #63b3ed;">
+                        <span class="rad-label">Total Pactado</span>
+                        <div class="rad-val" id="rad-total" style="color: #1a365d;">...</div>
+                        <span class="badge bg-primary mt-1" id="rad-metodo">...</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="rad-box mb-0 h-100" id="box-deuda" style="background: white;">
+                        <span class="rad-label">Saldo Actual</span>
+                        <div class="rad-val text-neg" id="rad-saldo">...</div>
+                        <div class="small mt-1 text-muted" id="rad-plan">...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rad-box" style="background: #fff5f5; border-color: #feb2b2;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="rad-label text-neg mb-0"><i class="fas fa-lock"></i> Datos Confidenciales</span>
+                    <button class="btn btn-sm btn-outline-danger py-0 fw-bold" onclick="revelarSecretos()" style="font-size:0.7rem;">👁️ Revelar</button>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Costo Base:</small><br>
+                        <strong class="rad-secret text-dark" id="rad-costo">...</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Utilidad Neta:</small><br>
+                        <strong class="rad-secret text-pos" id="rad-ganancia">...</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <small class="text-muted fw-bold">Vendedor Responsable: <strong style="color: #1a365d;" id="rad-vendedor">...</strong></small>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // A.S.T: DEBES REEMPLAZAR ESTE LINK POR EL DE TU APPS SCRIPT DE PLANET SHOP
+    const API_URL = "https://script.google.com/macros/s/AKfycbzWEqQQTow3irxkTU4Y3CVJshtfjo1s2m1dwSicRihQ42_fArC6L9MAuQoUPUfzzXYS/exec"; 
+
+    var chartFlow, chartGastos;
+    var dataHistorial = [];
+    var modalRad;
+
+    window.onload = function() { 
+        modalRad = new bootstrap.Modal(document.getElementById('modalRadiografia'));
+        var hoy = new Date();
+        var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        var yyyy = hoy.getFullYear();
+        document.getElementById('input-mes').value = `${yyyy}-${mm}`;
+        loadCustomMonth(); 
+    };
+
+    async function callAPI(action, data = null) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: action, data: data })
+        });
+        const result = await response.json();
+        return result;
+      } catch (e) {
+        alert("Error de conexión: " + e.toString());
+        return { exito: false, error: e.toString() };
+      }
+    }
+
+    function loadCustomMonth() {
+        var val = document.getElementById('input-mes').value;
+        if(!val) return;
+        var parts = val.split('-');
+        var payload = {
+            anio: parseInt(parts[0]),
+            mes: parseInt(parts[1]) - 1 
+        };
+        document.getElementById('loader').style.display = 'flex';
+        callAPI('getDashboardData', payload).then(renderData);
+    }
+
+    function renderData(data) {
+      document.getElementById('loader').style.display = 'none';
+      if(!data || !data.exito) return alert("Fallo al obtener datos: " + (data?data.error:""));
+      
+      document.getElementById('k-ventas').innerText = fmt(data.kpis.ventas);
+      document.getElementById('k-margen').innerText = data.kpis.margen + "%";
+      document.getElementById('k-util-monto').innerText = "Util: " + fmt(data.kpis.utilidad);
+      document.getElementById('k-util-monto').className = data.kpis.utilidad >= 0 ? "kpi-sub text-pos fw-bold" : "kpi-sub text-neg fw-bold";
+      document.getElementById('k-deuda').innerText = fmt(data.kpis.deuda);
+      document.getElementById('k-ticket').innerText = fmt(data.kpis.ticket);
+      renderFlowChart(data.charts.flujoVentas, data.charts.flujoGastos);
+      renderGastosChart(data.charts.gastosLabels, data.charts.gastosData);
+      
+      var htmlCli = "";
+      data.listas.clientes.forEach((c, i) => { htmlCli += `<tr><td><span class="badge-rank">#${i+1}</span> <strong>${c.k}</strong></td><td class="text-end fw-bold text-pos">${fmt(c.v)}</td></tr>`; });
+      document.getElementById('list-clientes').innerHTML = htmlCli || "<tr><td class='text-center text-muted'>Sin datos</td></tr>";
+      
+      var htmlSleep = "";
+      data.listas.dormidos.forEach(p => { htmlSleep += `<tr><td><strong>${p.nombre}</strong></td><td class="text-end small text-muted">Costo: ${fmt(p.costo)}</td></tr>`; });
+      document.getElementById('list-dormidos').innerHTML = htmlSleep || "<tr><td class='text-center text-muted'>¡Excelente, todo se vendió!</td></tr>";
+      
+      dataHistorial = data.historialOperaciones || [];
+      document.getElementById('count-hist').innerText = dataHistorial.length;
+      renderHistorialTable(dataHistorial);
+    }
+
+    function renderHistorialTable(lista) {
+        var c = document.getElementById('hist-container');
+        c.innerHTML = '';
+        if(lista.length === 0) {
+            c.innerHTML = '<div class="text-center mt-5 text-muted">No hay ventas registradas en este mes.</div>';
+            return;
+        }
+        lista.forEach((v, index) => {
+            var isPagado = (v.estado === 'Pagado');
+            var badge = isPagado ? `<span class="h-badge bg-pag">PAGADO</span>` : `<span class="h-badge bg-pend">DEBE ${fmt(v.saldo)}</span>`;
+            c.innerHTML += `
+            <div class="hist-row" onclick="abrirRadiografia(${index})">
+                <div>
+                    <div class="h-cliente">${v.cliente}</div>
+                    <div class="h-prod">${v.producto}</div>
+                    <small style="font-size:0.7rem;" class="text-muted fw-bold">${v.fechaStr} | ${v.id}</small>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold" style="color:#1a365d;">${fmt(v.total)}</div>
+                    <div class="mt-1">${badge}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    function filterHistorial() {
+        var q = document.getElementById('hist-search').value.toLowerCase().trim();
+        if(!q) { renderHistorialTable(dataHistorial); return; }
+        var filtrados = dataHistorial.filter(v => v.cliente.toLowerCase().includes(q) || v.producto.toLowerCase().includes(q) || v.id.toLowerCase().includes(q));
+        renderHistorialTable(filtrados);
+    }
+
+    function abrirRadiografia(index) {
+        var v = dataHistorial[index];
+        if(!v) return;
+        document.getElementById('rad-id').innerText = v.id;
+        document.getElementById('rad-fecha').innerText = v.fechaStr;
+        document.getElementById('rad-cliente').innerText = v.cliente;
+        document.getElementById('rad-prod').innerText = v.producto;
+        document.getElementById('rad-total').innerText = fmt(v.total);
+        document.getElementById('rad-metodo').innerText = v.metodo.toUpperCase();
+        document.getElementById('rad-costo').innerText = fmt(v.costo);
+        document.getElementById('rad-ganancia').innerText = fmt(v.ganancia);
+        document.querySelectorAll('.rad-secret').forEach(e => e.classList.remove('revealed'));
+        document.getElementById('rad-vendedor').innerText = v.vendedor;
+        var boxDeuda = document.getElementById('box-deuda');
+        if (v.estado === 'Pagado') {
+            boxDeuda.style.borderColor = '#63b3ed';
+            document.getElementById('rad-saldo').innerText = 'PAZ Y SALVO';
+            document.getElementById('rad-saldo').className = 'rad-val text-pos';
+            document.getElementById('rad-plan').innerText = `Inicial: ${fmt(v.inicial)}`;
+        } else {
+            boxDeuda.style.borderColor = '#ff4d4d';
+            document.getElementById('rad-saldo').innerText = fmt(v.saldo);
+            document.getElementById('rad-saldo').className = 'rad-val text-neg';
+            var cuotaTxt = v.cuotas > 1 ? `${v.cuotas} cuotas de ${fmt(v.valCuota)}` : `Pago único pendiente`;
+            document.getElementById('rad-plan').innerText = `Inicial: ${fmt(v.inicial)} | ${cuotaTxt}`;
+        }
+        modalRad.show();
+    }
+
+    function revelarSecretos() {
+        document.querySelectorAll('.rad-secret').forEach(e => e.classList.toggle('revealed'));
+    }
+
+    function renderFlowChart(vData, gData) {
+      var ctx = document.getElementById('chart-flow').getContext('2d'); if(chartFlow) chartFlow.destroy();
+      chartFlow = new Chart(ctx, { 
+          type: 'line', 
+          data: { 
+              labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], 
+              datasets: [ 
+                  { label: 'Ingresos', data: vData, borderColor: '#2b6cb0', backgroundColor: 'rgba(43, 108, 176, 0.1)', tension: 0.4, fill: true, borderWidth: 3 }, 
+                  { label: 'Gastos', data: gData, borderColor: '#e53e3e', backgroundColor: 'rgba(0,0,0,0)', tension: 0.4, borderDash: [5, 5], borderWidth: 2 } 
+              ] 
+          }, 
+          options: { 
+              responsive: true, maintainAspectRatio: false, 
+              plugins: { legend: { labels: { color: '#2d3748', font: {weight: 'bold'} } } }, 
+              scales: { 
+                  y: { grid: { color: '#e2e8f0' }, ticks: { color: '#718096' } }, 
+                  x: { grid: { display: false }, ticks: { color: '#718096', font: {weight: 'bold'} } } 
+              } 
+          } 
+      });
+    }
+
+    function renderGastosChart(labels, values) {
+      var ctx = document.getElementById('chart-gastos').getContext('2d'); if(chartGastos) chartGastos.destroy();
+      if(values.length === 0) { document.getElementById('gastos-summary').innerText = "Sin gastos registrados."; return; } else { document.getElementById('gastos-summary').innerText = ""; }
+      chartGastos = new Chart(ctx, { 
+          type: 'doughnut', 
+          data: { 
+              labels: labels, 
+              datasets: [{ data: values, backgroundColor: ['#e53e3e', '#dd6b20', '#2b6cb0', '#805ad5', '#38a169'], borderWidth: 2, borderColor: '#ffffff' }] 
+          }, 
+          options: { 
+              responsive: true, maintainAspectRatio: false, 
+              plugins: { legend: { position: 'right', labels: { color: '#2d3748', boxWidth: 12, font: {weight: 'bold'} } } }, 
+              cutout: '70%' 
+          } 
+      });
+    }
+
+    function fmt(n) { return "$" + Number(n).toLocaleString('es-CO'); }
+  </script>
+</body>
+</html>
