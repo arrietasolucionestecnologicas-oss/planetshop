@@ -49,7 +49,7 @@
     .badge-rank { background: #eef2f7; color: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 10px; }
     
     .text-pos { color: #38a169 !important; } .text-neg { color: #e53e3e !important; } .text-warn { color: #dd6b20 !important; }
-    #loader { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    #loader { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.3s; }
 
     /* HISTORIAL Y BUSCADOR */
     .search-hist { background: #f8f9fa; border: 1px solid #cbd5e0; color: #2d3748; padding: 10px 15px; border-radius: 8px; width: 100%; outline: none; margin-bottom: 15px; font-weight: bold; transition: 0.2s; }
@@ -77,7 +77,7 @@
 </head>
 <body>
 
-  <div id="loader"><div class="spinner-border text-primary" role="status"></div><div class="mt-3 fw-bold" style="color: #1a365d;">Calculando Métricas...</div></div>
+  <div id="loader"><div class="spinner-border text-primary" role="status"></div><div class="mt-3 fw-bold" style="color: #1a365d;" id="loader-txt">Calculando Métricas...</div></div>
 
   <div class="top-bar">
     <div class="brand"><i class="fas fa-chart-line" style="color: #63b3ed;"></i> Planet<span style="color:#63b3ed;">.shop</span> <span style="font-size:0.9rem; font-weight:400; opacity: 0.8;">BI</span></div>
@@ -198,6 +198,7 @@
     var chartFlow, chartGastos;
     var dataHistorial = [];
     var modalRad;
+    var lastMonthCacheKey = ""; // Puntero de memoria
 
     window.onload = function() { 
         modalRad = new bootstrap.Modal(document.getElementById('modalRadiografia'));
@@ -205,7 +206,17 @@
         var mm = String(hoy.getMonth() + 1).padStart(2, '0');
         var yyyy = hoy.getFullYear();
         document.getElementById('input-mes').value = `${yyyy}-${mm}`;
-        loadCustomMonth(); 
+        lastMonthCacheKey = `planet_bi_${yyyy}_${mm}`;
+        
+        // INYECCIÓN ZERO-LATENCY BI
+        const cachedBI = localStorage.getItem(lastMonthCacheKey);
+        if(cachedBI) {
+            renderData(JSON.parse(cachedBI));
+            document.getElementById('loader').style.display = 'none';
+            loadCustomMonth(true); // Revalida en background
+        } else {
+            loadCustomMonth(false); 
+        }
     };
 
     async function callAPI(action, data = null) {
@@ -222,21 +233,36 @@
       }
     }
 
-    function loadCustomMonth() {
+    function loadCustomMonth(silent = false) {
         var val = document.getElementById('input-mes').value;
         if(!val) return;
         var parts = val.split('-');
-        var payload = {
-            anio: parseInt(parts[0]),
-            mes: parseInt(parts[1]) - 1 
-        };
-        document.getElementById('loader').style.display = 'flex';
-        callAPI('getDashboardData', payload).then(renderData);
+        var payload = { anio: parseInt(parts[0]), mes: parseInt(parts[1]) - 1 };
+        
+        lastMonthCacheKey = `planet_bi_${parts[0]}_${parts[1]}`; // Setear nueva llave de mes
+        
+        if(!silent) {
+            // Si hay caché del mes que el usuario acaba de seleccionar, mostramos rápido
+            const local = localStorage.getItem(lastMonthCacheKey);
+            if(local) {
+                renderData(JSON.parse(local));
+            } else {
+                document.getElementById('loader').style.display = 'flex';
+                document.getElementById('loader-txt').innerText = "Calculando Métricas de " + val;
+            }
+        }
+        
+        callAPI('getDashboardData', payload).then(res => {
+            if(res && res.exito) {
+                localStorage.setItem(lastMonthCacheKey, JSON.stringify(res)); // Refrescar caché
+                renderData(res);
+            }
+            document.getElementById('loader').style.display = 'none';
+        });
     }
 
     function renderData(data) {
-      document.getElementById('loader').style.display = 'none';
-      if(!data || !data.exito) return alert("Fallo al obtener datos: " + (data?data.error:""));
+      if(!data || !data.exito) return;
       
       document.getElementById('k-ventas').innerText = fmt(data.kpis.ventas);
       document.getElementById('k-margen').innerText = data.kpis.margen + "%";
