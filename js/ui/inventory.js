@@ -16,13 +16,13 @@ export function renderInv(){
     c.innerHTML = htmlContent;
 }
 
-export function abrirModalNuevo() { document.getElementById('new-file-foto').value = ""; document.getElementById('img-preview-new').style.display='none'; if(State.modals.nuevo) State.modals.nuevo.show(); }
+export function abrirModalNuevo() { document.getElementById('new-file-foto').value = ""; document.getElementById('img-preview-new') && (document.getElementById('img-preview-new').style.display='none'); if(State.modals.nuevo) State.modals.nuevo.show(); }
 
 export function crearProducto() {
     if (document.activeElement) document.activeElement.blur();
     var n = document.getElementById('new-nombre').value; var c = document.getElementById('new-costo').value; var p = document.getElementById('new-publico').value;
     if(!n || !p) return alert("Falta nombre o precio");
-    var d = { id: 'GEN-'+Date.now(), nombre: n, categoria: document.getElementById('new-categoria').value, costo: c, publico: p, descripcion: document.getElementById('new-desc').value, proveedor: "General" };
+    var d = { id: 'GEN-'+Date.now(), nombre: n, categoria: document.getElementById('new-categoria').value, costo: c, publico: p, descripcion: document.getElementById('new-desc').value, proveedor: document.getElementById('new-proveedor').value || "General" };
     var f = document.getElementById('new-file-foto').files[0];
     
     var processApiCall = function(payload) {
@@ -42,30 +42,96 @@ export function crearProducto() {
 
 export function openEdit(id) {
     State.prodEdit = State.data.inv.find(x=>x.id===id);
-    document.getElementById('inp-edit-nombre').value = State.prodEdit.nombre; document.getElementById('inp-edit-categoria').value = State.prodEdit.cat; document.getElementById('inp-edit-costo').value = State.prodEdit.costo; document.getElementById('inp-edit-publico').value = State.prodEdit.publico;
+    document.getElementById('inp-edit-nombre').value = State.prodEdit.nombre; 
+    document.getElementById('inp-edit-categoria').value = State.prodEdit.cat; 
+    document.getElementById('inp-edit-costo').value = State.prodEdit.costo; 
+    document.getElementById('inp-edit-publico').value = State.prodEdit.publico;
     var m = 30; if(State.prodEdit.costo > 0 && State.prodEdit.publico > 0) m = ((State.prodEdit.publico / State.prodEdit.costo) - 1) * 100;
     document.getElementById('inp-edit-margen').value = m.toFixed(1);
-    document.getElementById('inp-edit-desc').value = State.prodEdit.desc || ""; document.getElementById('inp-file-foto').value = ""; document.getElementById('img-preview-box').style.display='none'; 
-    var fixedUrl = fixDriveLink(State.prodEdit.foto); if(fixedUrl){ document.getElementById('img-preview-box').src=fixedUrl; document.getElementById('img-preview-box').style.display='block';} 
+    document.getElementById('inp-edit-proveedor').value = State.prodEdit.prov || "";
+    document.getElementById('inp-edit-desc').value = State.prodEdit.desc || ""; 
+    document.getElementById('inp-file-foto').value = ""; 
+    document.getElementById('img-preview-box').style.display='none'; 
+    var fixedUrl = fixDriveLink(State.prodEdit.foto); 
+    if(fixedUrl){ document.getElementById('img-preview-box').src=fixedUrl; document.getElementById('img-preview-box').style.display='block';} 
     if(State.modals.edicion) State.modals.edicion.show();
 }
 
 export function guardarCambiosAvanzado() {
     if (document.activeElement) document.activeElement.blur();
-    var p = { id: State.prodEdit.id, nombre: document.getElementById('inp-edit-nombre').value, categoria: document.getElementById('inp-edit-categoria').value, costo: document.getElementById('inp-edit-costo').value, publico: document.getElementById('inp-edit-publico').value, descripcion: document.getElementById('inp-edit-desc').value, proveedor: State.prodEdit.prov, urlExistente: State.prodEdit.foto || "" };
+    var p = { 
+        id: State.prodEdit.id, 
+        nombre: document.getElementById('inp-edit-nombre').value, 
+        categoria: document.getElementById('inp-edit-categoria').value, 
+        costo: document.getElementById('inp-edit-costo').value, 
+        publico: document.getElementById('inp-edit-publico').value, 
+        descripcion: document.getElementById('inp-edit-desc').value, 
+        proveedor: document.getElementById('inp-edit-proveedor').value, 
+        urlExistente: State.prodEdit.foto || "" 
+    };
     var f = document.getElementById('inp-file-foto').files[0]; 
     
     var processApiCall = function(payload) {
         if(State.modals.edicion) State.modals.edicion.hide();
         showToast("⚡ Actualizando catálogo en la nube...", "info");
-        if(State.prodEdit) { State.prodEdit.nombre = payload.nombre; State.prodEdit.publico = payload.publico; State.prodEdit.costo = payload.costo; renderInv(); }
-        callAPI('guardarProductoAvanzado', payload).then(r=> { showToast("✅ Catálogo actualizado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); });
+        
+        if(State.prodEdit) { 
+            State.prodEdit.nombre = payload.nombre; 
+            State.prodEdit.cat = payload.categoria;
+            State.prodEdit.publico = payload.publico; 
+            State.prodEdit.costo = payload.costo; 
+            State.prodEdit.prov = payload.proveedor;
+            State.prodEdit.desc = payload.descripcion;
+            renderInv(); 
+        }
+        
+        callAPI('guardarProductoAvanzado', payload).then(r=> { 
+            if(r.exito) {
+                showToast("✅ Catálogo actualizado", "success"); 
+                if(window.App && window.App.loadData) window.App.loadData(true); 
+            } else {
+                showToast("❌ Error al actualizar", "error");
+            }
+        });
     };
 
     var promise = f ? compressImage(f) : Promise.resolve(null);
     promise.then(b64 => { 
         if(b64) { p.imagenBase64 = b64.split(',')[1]; p.mimeType = f.type; p.nombreArchivo = f.name; } 
         processApiCall(p);
+    });
+}
+
+export function eliminarProductoActual() {
+    if (!State.prodEdit) return;
+    var id = State.prodEdit.id;
+    var nombre = State.prodEdit.nombre;
+    
+    Swal.fire({
+        title: '¿Eliminar Producto?',
+        text: 'Se eliminará definitivamente "' + nombre + '" del inventario.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if(State.modals.edicion) State.modals.edicion.hide();
+            showToast("🗑️ Eliminando producto...", "info");
+            
+            callAPI('eliminarProductoBackend', { id: id, aliasOperador: localStorage.getItem("alias") || "Sistema" }).then(r => {
+                if (r.exito) {
+                    State.data.inv = State.data.inv.filter(p => p.id !== id);
+                    renderInv();
+                    showToast("✅ Producto eliminado exitosamente", "success");
+                    if(window.App && window.App.loadData) window.App.loadData(true);
+                } else {
+                    showToast("❌ Error al eliminar el producto", "error");
+                }
+            });
+        }
     });
 }
 
@@ -100,3 +166,7 @@ export function guardarProvManual(){
 }
 
 export function editarProv(nombre){ var t = prompt("Nuevo teléfono para "+nombre+":"); if(t) { callAPI('registrarProveedor', {nombre:nombre, tel:t}).then(()=> { if(window.App && window.App.loadData) window.App.loadData(true); }); } }
+
+// Exposición Global explícita para asegurar binding HTML
+window.eliminarProductoActual = eliminarProductoActual;
+window.guardarCambiosAvanzado = guardarCambiosAvanzado;
