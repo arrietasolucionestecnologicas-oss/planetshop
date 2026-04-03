@@ -2,6 +2,8 @@ import { State } from '../state.js';
 import { callAPI } from '../api.js';
 import { COP, showToast } from '../core.js';
 
+let isProcessing = false;
+
 export function renderCartera() {
     var c=document.getElementById('cartera-list'); c.innerHTML='';
     var activos = State.data.deudores.filter(d=>d.estado!=='Castigado');
@@ -26,19 +28,38 @@ export function abrirModalRefinanciar(id,cli,saldo){
 }
 
 export function procesarRefinanciamiento(){ 
+    if (isProcessing) return;
     var idVenta = State.refEditId;
     var d = {idVenta: idVenta, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value};
+    
+    isProcessing = true;
+    var btn = document.activeElement; var oTxt = "";
+    if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; btn.disabled = true; }
+
     if(State.modals.refinanciar) State.modals.refinanciar.hide(); 
     showToast("⚡ Procesando refinanciación...", "info");
     callAPI('refinanciarDeuda', d).then(r=>{ 
         if(window.App && window.App.loadData) window.App.loadData(true); 
         showToast("✅ Deuda reestructurada", "success");
+    }).finally(() => {
+        isProcessing = false;
+        if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
     }); 
 }
 
 export function castigarDeuda(idVenta) {
+    if (isProcessing) return;
     if(confirm("¿Seguro que deseas castigar esta deuda?")) {
-        callAPI('castigarCartera',{idVenta: idVenta}).then(()=> { if(window.App && window.App.loadData) window.App.loadData(true); });
+        isProcessing = true;
+        var btn = document.activeElement; var oTxt = "";
+        if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '☠️...'; btn.disabled = true; }
+
+        callAPI('castigarCartera',{idVenta: idVenta}).then(()=> { 
+            if(window.App && window.App.loadData) window.App.loadData(true); 
+        }).finally(() => {
+            isProcessing = false;
+            if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
+        });
     }
 }
 
@@ -59,39 +80,75 @@ export function renderFin(){
 }
 
 export function doAbono(){ 
+    if (isProcessing) return;
     var cli = document.getElementById('ab-cli').value;
     var monto = parseFloat(document.getElementById('ab-monto').value);
     if(!cli || isNaN(monto) || monto <= 0) return;
     var d = {idVenta: cli, monto: monto, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text};
+    
+    isProcessing = true;
+    var btn = document.activeElement; var oTxt = "";
+    if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; btn.disabled = true; }
+
     document.getElementById('ab-monto').value = ''; document.getElementById('ab-fecha').value = '';
     showToast("⚡ Recaudando dinero...", "info");
     if(State.data && State.data.metricas) { State.data.metricas.saldo += monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
-    callAPI('registrarAbono', d).then(()=>{ showToast("✅ Abono procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+    callAPI('registrarAbono', d).then(()=>{ 
+        showToast("✅ Abono procesado", "success"); 
+        if(window.App && window.App.loadData) window.App.loadData(true); 
+    }).finally(() => {
+        isProcessing = false;
+        if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
+    }); 
 }
 
 export function doIngresoExtra(){ 
+    if (isProcessing) return;
     var desc = document.getElementById('inc-desc').value;
     var cat = document.getElementById('inc-cat').value;
     var monto = parseFloat(document.getElementById('inc-monto').value);
     if(!desc || isNaN(monto) || monto <= 0) return;
     var d = {desc: desc, cat: cat, monto: monto};
+    
+    isProcessing = true;
+    var btn = document.activeElement; var oTxt = "";
+    if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; btn.disabled = true; }
+
     document.getElementById('inc-desc').value = ''; document.getElementById('inc-monto').value = '';
     showToast("⚡ Registrando ingreso...", "info");
     if(State.data && State.data.metricas) { State.data.metricas.saldo += monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
-    callAPI('registrarIngresoExtra', d).then(()=>{ showToast("✅ Ingreso procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+    callAPI('registrarIngresoExtra', d).then(()=>{ 
+        showToast("✅ Ingreso procesado", "success"); 
+        if(window.App && window.App.loadData) window.App.loadData(true); 
+    }).finally(() => {
+        isProcessing = false;
+        if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
+    }); 
 }
 
 export function doGasto(){ 
+    if (isProcessing) return;
     var desc = document.getElementById('g-desc').value;
     var cat = document.getElementById('g-cat').value;
     var monto = parseFloat(document.getElementById('g-monto').value);
     var vinculo = document.getElementById('g-vinculo').value;
     if(!desc || isNaN(monto) || monto <= 0) return;
     var d = {desc: desc, cat: cat, monto: monto, vinculo: vinculo};
+    
+    isProcessing = true;
+    var btn = document.activeElement; var oTxt = "";
+    if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; btn.disabled = true; }
+
     document.getElementById('g-desc').value = ''; document.getElementById('g-monto').value = ''; document.getElementById('g-vinculo').value = '';
     showToast("⚡ Registrando egreso...", "info");
     if(State.data && State.data.metricas) { State.data.metricas.saldo -= monto; var elCaja = document.getElementById('bal-caja'); if(elCaja) elCaja.innerText = COP.format(State.data.metricas.saldo); }
-    callAPI('registrarGasto', d).then(()=>{ showToast("✅ Egreso procesado", "success"); if(window.App && window.App.loadData) window.App.loadData(true); }); 
+    callAPI('registrarGasto', d).then(()=>{ 
+        showToast("✅ Egreso procesado", "success"); 
+        if(window.App && window.App.loadData) window.App.loadData(true); 
+    }).finally(() => {
+        isProcessing = false;
+        if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
+    }); 
 }
 
 export function abrirModalPasivos() { alert("Módulo de pasivos en construcción."); }
