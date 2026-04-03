@@ -30,7 +30,7 @@ export function abrirModalRefinanciar(id,cli,saldo){
 export function procesarRefinanciamiento(){ 
     if (isProcessing) return;
     var idVenta = State.refEditId;
-    var d = {idVenta: idVenta, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value};
+    var d = {idVenta: idVenta, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value, aliasOperador: localStorage.getItem("alias") || "Sistema"};
     
     isProcessing = true;
     var btn = document.activeElement; var oTxt = "";
@@ -54,7 +54,7 @@ export function castigarDeuda(idVenta) {
         var btn = document.activeElement; var oTxt = "";
         if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '☠️...'; btn.disabled = true; }
 
-        callAPI('castigarCartera',{idVenta: idVenta}).then(()=> { 
+        callAPI('castigarCartera',{idVenta: idVenta, aliasOperador: localStorage.getItem("alias") || "Sistema"}).then(()=> { 
             if(window.App && window.App.loadData) window.App.loadData(true); 
         }).finally(() => {
             isProcessing = false;
@@ -68,7 +68,18 @@ export function renderFin(){
     var cuentasCobrar = 0;
     State.data.deudores.filter(d=>d.estado!=='Castigado').forEach(d=> { cuentasCobrar += d.saldo; s.innerHTML+=`<option value="${d.idVenta}">${d.cliente} (Debe: ${COP.format(d.saldo)})</option>`; });
     
-    document.getElementById('hist-list').innerHTML = (State.data.historial||[]).map(x=>`<div class="d-flex justify-content-between border-bottom py-1"><div class="lh-1"><small class="fw-bold d-block">${x.desc}</small><small class="text-muted" style="font-size:0.6rem;">${x.fecha}</small></div><strong class="${x.tipo.includes('ingreso')||x.tipo.includes('abono')?'text-success':'text-danger'}">${COP.format(x.monto)}</strong></div>`).join('');
+    var searchEl = document.getElementById('hist-search');
+    var q = searchEl ? searchEl.value.toLowerCase().trim() : "";
+    var dataHist = State.data.historial || [];
+    
+    dataHist.forEach((x, index) => x._originalIndex = index);
+    if(q) dataHist = dataHist.filter(x => (x.desc && x.desc.toLowerCase().includes(q)) || (x.monto && x.monto.toString().includes(q)));
+
+    document.getElementById('hist-list').innerHTML = dataHist.map(x=>{
+        var i = (x.tipo.includes('ingreso')||x.tipo.includes('abono'));
+        var btnEdit = `<button class="btn btn-sm btn-light border-0 text-muted p-1 ms-2" onclick="window.Finance.abrirEditMov(${x._originalIndex})" title="Corregir Movimiento"><i class="fas fa-pencil-alt"></i></button>`;
+        return `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div class="lh-1"><small class="fw-bold d-block">${x.desc}</small><small class="text-muted" style="font-size:0.6rem;">${x.fecha}</small></div><div class="text-end"><strong class="${i?'text-success':'text-danger'}">${i?'+':'-'} ${COP.format(x.monto)}</strong>${btnEdit}</div></div>`;
+    }).join('');
     
     var invCosto = State.data.inv.reduce((a,b) => a + (b.costo || 0), 0);
     var cajaActual = (State.data.metricas && State.data.metricas.saldo) ? State.data.metricas.saldo : 0;
@@ -79,12 +90,70 @@ export function renderFin(){
     if(elPatrimonio) elPatrimonio.innerText = COP.format(patrimonio);
 }
 
+export function abrirEditMov(index) {
+    if (!State.data.historial[index]) return;
+    State.movEditObj = State.data.historial[index]; 
+    
+    document.getElementById('ed-mov-desc').value = State.movEditObj.desc;
+    document.getElementById('ed-mov-monto').value = State.movEditObj.monto;
+    var elJust = document.getElementById('ed-mov-justificacion');
+    if(elJust) elJust.value = ""; 
+    
+    var fechaRaw = String(State.movEditObj.fecha);
+    var fechaIso = "";
+    if(fechaRaw.includes('/')) { 
+        var parts = fechaRaw.split('/'); 
+        if(parts.length === 3) fechaIso = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; 
+    } else { 
+        fechaIso = fechaRaw.split(' ')[0]; 
+    }
+    
+    document.getElementById('ed-mov-fecha').value = fechaIso;
+    
+    if(!State.modals.editMov) State.modals.editMov = new bootstrap.Modal(document.getElementById('modalEditMov'));
+    State.modals.editMov.show();
+}
+
+export function guardarEdicionMovimiento() {
+    if (isProcessing) return;
+    if(!State.movEditObj) return;
+    
+    var nuevaFecha = document.getElementById('ed-mov-fecha').value;
+    var nuevoMonto = document.getElementById('ed-mov-monto').value;
+    var justificacion = document.getElementById('ed-mov-justificacion').value.trim();
+    
+    if(!nuevaFecha || !nuevoMonto) return alert("Fecha y monto requeridos");
+    if(justificacion.length < 5) return alert("⚠️ Debe escribir una justificación válida para la auditoría contable.");
+    
+    isProcessing = true;
+    var btn = document.activeElement; var oTxt = "";
+    if(btn && btn.tagName === 'BUTTON') { oTxt = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; btn.disabled = true; }
+
+    var originalClone = Object.assign({}, State.movEditObj);
+    var payload = { original: originalClone, fecha: nuevaFecha, monto: nuevoMonto, justificacion: justificacion, aliasOperador: localStorage.getItem("alias") || "Sistema" };
+    
+    if(State.modals.editMov) State.modals.editMov.hide();
+    showToast("⚡ Aplicando ajuste contable...", "info");
+    
+    callAPI('editarMovimiento', payload).then(r => { 
+        if(r.exito) {
+            showToast("✅ Contabilidad reestructurada", "success");
+            if(window.App && window.App.loadData) window.App.loadData(true); 
+        } else { 
+            alert("Error crítico: " + r.error); 
+        } 
+    }).finally(() => {
+        isProcessing = false;
+        if(btn && btn.tagName === 'BUTTON') { btn.innerHTML = oTxt; btn.disabled = false; }
+    });
+}
+
 export function doAbono(){ 
     if (isProcessing) return;
     var cli = document.getElementById('ab-cli').value;
     var monto = parseFloat(document.getElementById('ab-monto').value);
     if(!cli || isNaN(monto) || monto <= 0) return;
-    var d = {idVenta: cli, monto: monto, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text};
+    var d = {idVenta: cli, monto: monto, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text, aliasOperador: localStorage.getItem("alias") || "Sistema"};
     
     isProcessing = true;
     var btn = document.activeElement; var oTxt = "";
@@ -108,7 +177,7 @@ export function doIngresoExtra(){
     var cat = document.getElementById('inc-cat').value;
     var monto = parseFloat(document.getElementById('inc-monto').value);
     if(!desc || isNaN(monto) || monto <= 0) return;
-    var d = {desc: desc, cat: cat, monto: monto};
+    var d = {desc: desc, cat: cat, monto: monto, aliasOperador: localStorage.getItem("alias") || "Sistema"};
     
     isProcessing = true;
     var btn = document.activeElement; var oTxt = "";
@@ -133,7 +202,7 @@ export function doGasto(){
     var monto = parseFloat(document.getElementById('g-monto').value);
     var vinculo = document.getElementById('g-vinculo').value;
     if(!desc || isNaN(monto) || monto <= 0) return;
-    var d = {desc: desc, cat: cat, monto: monto, vinculo: vinculo};
+    var d = {desc: desc, cat: cat, monto: monto, vinculo: vinculo, aliasOperador: localStorage.getItem("alias") || "Sistema"};
     
     isProcessing = true;
     var btn = document.activeElement; var oTxt = "";
@@ -152,3 +221,8 @@ export function doGasto(){
 }
 
 export function abrirModalPasivos() { alert("Módulo de pasivos en construcción."); }
+
+// Vinculación global para el archivo HTML
+if (!window.Finance) window.Finance = {};
+window.Finance.abrirEditMov = abrirEditMov;
+window.guardarEdicionMovimiento = guardarEdicionMovimiento;
