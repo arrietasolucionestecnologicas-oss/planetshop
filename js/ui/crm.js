@@ -34,6 +34,7 @@ export function renderClientes() {
         var btnChat = cli.tel ? `<a href="${waLink}" target="_blank" class="btn btn-sm btn-success text-white px-2 py-1"><i class="fab fa-whatsapp"></i></a>` : '';
         var btnEdit = `<button class="btn btn-sm btn-light border px-2 py-1" onclick="window.CRM.editarCliente('${cli.nombre}', '${cli.tel || ''}')">✏️</button>`;
         var btnDel = `<button class="btn btn-sm btn-outline-danger px-2 py-1" onclick="window.CRM.eliminarCliente('${cli.nombre}')">🗑️</button>`;
+        var btnMigrar = `<button class="btn btn-sm text-white px-2 py-1 ms-1" style="background-color: #805ad5; border:none;" onclick="window.CRM.iniciarMigracionDeuda('${cli.nombre}', '${cli.tel || ''}')" title="Importar Deuda Antigua">📥</button>`;
 
         c.innerHTML += `<div class="d-flex justify-content-between align-items-center border-bottom py-2">
             <div>
@@ -41,7 +42,7 @@ export function renderClientes() {
                 <small class="text-muted">${cli.tel||'Sin teléfono'}</small>
             </div>
             <div class="d-flex gap-1">
-                ${btnChat} ${btnEdit} ${btnDel}
+                ${btnChat} ${btnEdit} ${btnDel} ${btnMigrar}
             </div>
         </div>`;
     });
@@ -100,4 +101,78 @@ export function eliminarCliente(nombre) {
             else { alert(r.error); }
         });
     }
+}
+
+export function iniciarMigracionDeuda(nombre, tel) {
+    if(typeof Swal === 'undefined') return alert("Librería de alertas no cargada");
+    Swal.fire({
+        title: '📥 Importar Deuda Antigua',
+        html: `
+            <div class="text-start">
+                <label class="small fw-bold text-muted">Cliente</label>
+                <input id="mig-cli" class="swal2-input mb-2 mt-0 w-100 bg-light" value="${nombre}" readonly>
+                
+                <label class="small fw-bold">Concepto / Producto</label>
+                <input id="mig-prod" class="swal2-input mb-2 mt-0 w-100" placeholder="Ej: Zapatos, Ropa, Préstamo...">
+                
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="small fw-bold">Valor Original ($)</label>
+                        <input id="mig-total" type="number" class="swal2-input mt-0 w-100 m-0" placeholder="Precio total">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold text-danger">Saldo Pendiente ($) *</label>
+                        <input id="mig-saldo" type="number" class="swal2-input mt-0 w-100 m-0 border-danger fw-bold text-danger" placeholder="Deuda actual">
+                    </div>
+                </div>
+                
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="small fw-bold">Cuotas Restantes *</label>
+                        <input id="mig-cuotas" type="number" class="swal2-input mt-0 w-100 m-0" value="1" min="1">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold">Fecha Próx. Cobro *</label>
+                        <input id="mig-fecha" type="date" class="swal2-input mt-0 w-100 m-0 border-primary">
+                    </div>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Importar Deuda',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#805ad5',
+        preConfirm: () => {
+            var prod = document.getElementById('mig-prod').value.trim();
+            var total = parseFloat(document.getElementById('mig-total').value) || 0;
+            var saldo = parseFloat(document.getElementById('mig-saldo').value) || 0;
+            var cuotas = parseInt(document.getElementById('mig-cuotas').value) || 1;
+            var fecha = document.getElementById('mig-fecha').value;
+
+            if(!prod) return Swal.showValidationMessage('Ingresa el producto o concepto');
+            if(saldo <= 0) return Swal.showValidationMessage('El saldo pendiente debe ser mayor a $0');
+            if(cuotas < 1) return Swal.showValidationMessage('Se requiere mínimo 1 cuota restante');
+            if(!fecha) return Swal.showValidationMessage('Selecciona la fecha del próximo cobro');
+            if(total < saldo) total = saldo; 
+
+            return { cliente: nombre, tel: tel, producto: prod, totalOriginal: total, saldoPendiente: saldo, cuotasRestantes: cuotas, fechaCobro: fecha };
+        }
+    }).then((result) => {
+        if(result.isConfirmed) {
+            Swal.fire({ title: 'Importando Deuda...', text: 'Sincronizando con Cartera', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            var data = result.value;
+            data.aliasOperador = localStorage.getItem("alias") || "Sistema";
+            
+            callAPI('migrarDeudaHistorica', data).then(r => {
+                if(r.exito) {
+                    if(State.modals.clientes) State.modals.clientes.hide();
+                    Swal.fire('¡Importación Exitosa!', 'La deuda ya está registrada en el módulo de Cobranza y configurada para notificaciones.', 'success').then(() => {
+                        if(window.App && window.App.loadData) window.App.loadData(true);
+                    });
+                } else {
+                    Swal.fire('Error de Importación', r.error, 'error');
+                }
+            });
+        }
+    });
 }
