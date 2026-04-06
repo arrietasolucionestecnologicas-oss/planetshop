@@ -60,6 +60,9 @@ export function guardarClienteManual(){
 
 export function editarCliente(nombreViejo, telViejo) {
     if(typeof Swal !== 'undefined') {
+        // LIBERACIÓN DE FOCO: Ocultar modal subyacente para permitir escritura
+        if(State.modals.clientes) State.modals.clientes.hide();
+
         Swal.fire({
             title: 'Editar Cliente',
             html: `<input id="swal-input1" class="swal2-input" value="${nombreViejo}" placeholder="Nombre">
@@ -76,6 +79,9 @@ export function editarCliente(nombreViejo, telViejo) {
         }).then((result) => {
             if (result.isConfirmed) {
                 ejecutarEdicionCliente(nombreViejo, result.value.nombreNuevo, result.value.telNuevo);
+            } else {
+                // Restaurar el modal si el usuario cancela la acción
+                if(State.modals.clientes) State.modals.clientes.show();
             }
         });
     } else {
@@ -105,6 +111,10 @@ export function eliminarCliente(nombre) {
 
 export function iniciarMigracionDeuda(nombre, tel) {
     if(typeof Swal === 'undefined') return alert("Librería de alertas no cargada");
+    
+    // LIBERACIÓN DE FOCO: Ocultar modal subyacente para permitir escritura
+    if(State.modals.clientes) State.modals.clientes.hide();
+
     Swal.fire({
         title: '📥 Importar Deuda Antigua',
         html: `
@@ -165,7 +175,6 @@ export function iniciarMigracionDeuda(nombre, tel) {
             
             callAPI('migrarDeudaHistorica', data).then(r => {
                 if(r.exito) {
-                    if(State.modals.clientes) State.modals.clientes.hide();
                     Swal.fire('¡Importación Exitosa!', 'La deuda ya está registrada en el módulo de Cobranza y configurada para notificaciones.', 'success').then(() => {
                         if(window.App && window.App.loadData) window.App.loadData(true);
                     });
@@ -173,6 +182,9 @@ export function iniciarMigracionDeuda(nombre, tel) {
                     Swal.fire('Error de Importación', r.error, 'error');
                 }
             });
+        } else {
+            // Restaurar el modal si el usuario cancela la acción
+            if(State.modals.clientes) State.modals.clientes.show();
         }
     });
 }
