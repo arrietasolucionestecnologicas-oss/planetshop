@@ -6,7 +6,7 @@ import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
 import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, COP } from './core.js';
 import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales, compartirNequi } from './ui/pos.js';
 import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, eliminarProductoActual, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
-import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
+import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, anularVenta, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos } from './ui/finance.js';
 import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual, editarCliente, eliminarCliente, iniciarMigracionDeuda } from './ui/crm.js';
 
 // 1. INYECCIÓN AL SCOPE GLOBAL (WINDOW)
@@ -63,7 +63,7 @@ window.guardarClienteManual = guardarClienteManual;
 // Anclas internas de soporte cruzado
 window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
 window.Inventory = { openEdit, editarProv };
-window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda };
+window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta };
 window.CRM = { editarCliente, eliminarCliente, iniciarMigracionDeuda };
 window.App = { loadData };
 
@@ -78,6 +78,7 @@ window.onload = function() {
   State.modals.cotizaciones = new bootstrap.Modal(document.getElementById('modalCotizaciones'));
   State.modals.prov = new bootstrap.Modal(document.getElementById('modalProv'));
   State.modals.clientes = new bootstrap.Modal(document.getElementById('modalClientes'));
+  State.modals.radiografia = new bootstrap.Modal(document.getElementById('modalRadiografia'));
   
   var tpl = document.getElementById('tpl-cart').innerHTML;
   document.getElementById('desktop-cart-container').innerHTML = tpl;
