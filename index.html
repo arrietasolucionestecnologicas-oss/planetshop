@@ -98,6 +98,13 @@
     /* BANNER INSTALADOR PWA */
     .install-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; background: var(--primary); color: white; border-radius: 15px; padding: 15px; z-index: 9999; display: none; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border: 2px solid var(--cyan); }
     .install-banner .text { font-size: 0.9rem; font-weight: bold; line-height: 1.2; margin-left: 10px; }
+
+    /* MODAL RADIOGRAFÍA FINANCIERA (INYECCIÓN POS) */
+    .rad-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed var(--accent); }
+    .rad-label { color: #888; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 2px; display: block; font-weight:bold; }
+    .rad-val { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
+    .rad-secret { filter: blur(4px); cursor: pointer; transition: 0.2s; }
+    .rad-secret.revealed { filter: blur(0); }
   </style>
 </head>
 <body>
@@ -207,7 +214,13 @@
          <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="window.doAbono()">CONFIRMAR RECAUDO</button></div></div>
          <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="window.doIngresoExtra()">REGISTRAR ENTRADA</button></div></div>
          <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Costo de Mercancía</option><option>Transporte/Fletes</option><option>Servicios/Suscripciones</option><option>Publicidad/Redes</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="window.doGasto()">REGISTRAR EGRESO</button></div></div>
-         <div class="tab-pane fade" id="f-hist"><div class="card-k"><div id="hist-list"></div></div></div>
+         
+         <div class="tab-pane fade" id="f-hist">
+             <div class="card-k">
+                 <input type="text" id="hist-search" class="form-control mb-3" placeholder="🔍 Buscar movimiento..." onkeyup="window.renderFin()">
+                 <div id="hist-list"></div>
+             </div>
+         </div>
       </div>
     </div>
   </div>
@@ -531,6 +544,47 @@
                 <label class="small fw-bold">Monto a Pagar (Salida de Caja)</label>
                 <input type="number" id="pas-monto" class="form-control mb-4" placeholder="Valor del abono o cuota">
                 <button class="btn btn-danger w-100 fw-bold py-2" onclick="window.Finance.doAbonoPasivo()">REGISTRAR PAGO A TERCERO</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalEditMov" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold" style="color: var(--primary);">✏️ Ajuste Contable (Corrección)</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">⚠️ Advertencia: Modificar transacciones pasadas afectará el balance general y los estados de cuenta.</p>
+                <label class="small fw-bold">Concepto Original</label>
+                <input id="ed-mov-desc" class="form-control mb-2" disabled style="background-color: #e9ecef;">
+                <label class="small fw-bold">Fecha Contable Real</label>
+                <input type="date" id="ed-mov-fecha" class="form-control mb-2" style="border-color: var(--cyan);">
+                <label class="small fw-bold">Monto Corregido</label>
+                <input type="number" id="ed-mov-monto" class="form-control mb-3" style="font-weight: bold; color: var(--primary);">
+                <label class="small fw-bold text-danger">Justificación del Cambio (Obligatoria) *</label>
+                <input type="text" id="ed-mov-justificacion" class="form-control mb-3 border-danger" placeholder="Ej: Me equivoqué de cliente, Error de digitación...">
+                <div class="d-flex gap-2 mt-3">
+                   <button type="button" class="btn btn-secondary w-50" data-bs-dismiss="modal">Cancelar</button>
+                   <button class="btn btn-warning w-50 fw-bold" onclick="window.guardarEdicionMovimiento()">Aplicar Corrección</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalRadiografia" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold" style="color: var(--primary);"><i class="fas fa-microscope text-info"></i> Radiografía Financiera</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted text-center p-3">Detalle dinámico gestionado por el módulo BI y Cartera.</p>
+                <button class="btn btn-outline-danger w-100 fw-bold mt-2" id="btn-anular-venta" style="display:none;" onclick="window.Finance.anularVenta(document.getElementById('rad-id').innerText)">☠️ ANULAR VENTA</button>
             </div>
         </div>
     </div>
