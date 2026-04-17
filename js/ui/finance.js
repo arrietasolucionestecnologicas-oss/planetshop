@@ -63,6 +63,51 @@ export function castigarDeuda(idVenta) {
     }
 }
 
+export function anularVenta(idVenta) {
+    if (isProcessing) return;
+    if(typeof Swal === 'undefined') return alert("Librería de alertas no cargada");
+
+    if(State.modals.radiografia) State.modals.radiografia.hide();
+
+    Swal.fire({
+        title: '☠️ Anular Venta Completa',
+        html: `Esta acción es irreversible. Se revertirán los saldos de caja, la cartera y se borrará del BI.<br><br>
+               <input id="anul-just" class="swal2-input w-100 m-0 mt-3" placeholder="Justificación (Mín. 10 letras)...">`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#e53e3e',
+        cancelButtonColor: '#a0aec0',
+        confirmButtonText: 'Ejecutar Anulación',
+        cancelButtonText: 'Cancelar',
+        preConfirm: () => {
+            const val = document.getElementById('anul-just').value.trim();
+            if (val.length < 10) {
+                Swal.showValidationMessage('La justificación debe tener al menos 10 caracteres.');
+            }
+            return val;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            isProcessing = true;
+            Swal.fire({ title: 'Sanitizando Contabilidad...', text: 'Reescribiendo saldos en la Nube', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            
+            callAPI('anularVentaBackend', { idVenta: idVenta, justificacion: result.value, aliasOperador: localStorage.getItem("alias") || "Sistema" }).then(r => {
+                if(r.exito) {
+                    Swal.fire('¡Venta Anulada!', 'El Rollback contable se ha completado.', 'success').then(() => {
+                        if(window.App && window.App.loadData) window.App.loadData(true);
+                    });
+                } else {
+                    Swal.fire('Error', r.error, 'error');
+                }
+            }).finally(() => {
+                isProcessing = false;
+            });
+        } else {
+            if(State.modals.radiografia) State.modals.radiografia.show();
+        }
+    });
+}
+
 export function renderFin(){
     var s=document.getElementById('ab-cli'); s.innerHTML='<option>Seleccione...</option>';
     var cuentasCobrar = 0;
@@ -226,3 +271,4 @@ export function abrirModalPasivos() { alert("Módulo de pasivos en construcción
 if (!window.Finance) window.Finance = {};
 window.Finance.abrirEditMov = abrirEditMov;
 window.guardarEdicionMovimiento = guardarEdicionMovimiento;
+window.Finance.anularVenta = anularVenta;
