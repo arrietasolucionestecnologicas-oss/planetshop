@@ -8,7 +8,73 @@ export function renderCartera() {
     var c=document.getElementById('cartera-list'); c.innerHTML='';
     var activos = State.data.deudores.filter(d=>d.estado!=='Castigado');
     document.getElementById('bal-cartera').innerText = COP.format(activos.reduce((a,b)=>a+b.saldo,0));
-    activos.forEach(d=>{ c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4"><div class="d-flex justify-content-between"><div><h6 style="color:var(--primary); font-weight:bold;">${d.cliente}</h6><small>${d.producto}</small></div><div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div></div><div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2"><button class="btn btn-xs flex-fill text-white" style="background:#38a169; border:none;" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de Cuenta</button><button class="btn btn-xs btn-outline-primary flex-fill" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> <button class="btn btn-xs btn-outline-dark flex-fill" onclick="window.Finance.castigarDeuda('${d.idVenta}')">☠️ Castigar</button></div></div>`; });
+    activos.forEach(d=>{ 
+        c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 style="color:var(--primary); font-weight:bold;">${d.cliente}</h6>
+                    <small>${d.producto}</small>
+                </div>
+                <div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2">
+                <button class="btn btn-xs btn-outline-dark flex-fill fw-bold" onclick="window.Finance.abrirRadiografia('${d.idVenta}')" title="Ver Radiografía Financiera"><i class="fas fa-microscope"></i> Detalles</button>
+                <button class="btn btn-xs flex-fill text-white" style="background:#38a169; border:none;" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de Cuenta</button>
+                <button class="btn btn-xs btn-outline-primary flex-fill" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> 
+                <button class="btn btn-xs btn-outline-danger flex-fill" onclick="window.Finance.castigarDeuda('${d.idVenta}')">☠️ Castigar</button>
+            </div>
+        </div>`; 
+    });
+}
+
+export function abrirRadiografia(idVenta) {
+    var v = State.data.deudores.find(x => x.idVenta === idVenta);
+    if(!v) return showToast("No se encontraron detalles ampliados.", "error");
+    
+    var safeNum = function(val) {
+        if (val === undefined || val === null || val === '') return 0;
+        var parsed = parseFloat(String(val).replace(/[^0-9.-]+/g, ''));
+        return isNaN(parsed) ? 0 : parsed;
+    };
+    
+    document.getElementById('rad-id').innerText = v.idVenta;
+    document.getElementById('rad-fecha').innerText = v.fechaStr || v.fechaLimite || "Sin fecha";
+    document.getElementById('rad-cliente').innerText = v.cliente;
+    document.getElementById('rad-prod').innerText = v.producto;
+    
+    var totalEstimado = v.saldo + (v.deudaInicial || 0);
+    document.getElementById('rad-total').innerText = COP.format(safeNum(totalEstimado));
+    document.getElementById('rad-metodo').innerText = "CRÉDITO";
+    document.getElementById('rad-costo').innerText = "Confidencial";
+    document.getElementById('rad-ganancia').innerText = "Confidencial";
+    
+    document.querySelectorAll('.rad-secret').forEach(e => e.classList.remove('revealed'));
+    document.getElementById('rad-vendedor').innerText = v.vendedor || "Sistema";
+    
+    var boxDeuda = document.getElementById('box-deuda');
+    if (v.estado === 'Pagado') {
+        boxDeuda.style.borderColor = '#2ecc71';
+        document.getElementById('rad-saldo').innerText = 'PAZ Y SALVO';
+        document.getElementById('rad-saldo').className = 'rad-val text-success';
+        document.getElementById('rad-plan').innerText = `Inicial Faltante: ${COP.format(safeNum(v.deudaInicial))}`;
+    } else {
+        boxDeuda.style.borderColor = '#e74c3c';
+        document.getElementById('rad-saldo').innerText = COP.format(safeNum(v.saldo));
+        document.getElementById('rad-saldo').className = 'rad-val text-danger';
+        var cuotas = parseInt(v.cuotas) || 1;
+        var cuotaTxt = cuotas > 1 ? `${cuotas} cuotas de ${COP.format(safeNum(v.valCuota))}` : `Pago único pendiente`;
+        document.getElementById('rad-plan').innerText = `Inicial: ${COP.format(safeNum(v.deudaInicial))} | ${cuotaTxt}`;
+    }
+
+    var btnAnular = document.getElementById('btn-anular-venta');
+    if(btnAnular) btnAnular.style.display = 'block';
+    
+    if(!State.modals.radiografia) State.modals.radiografia = new bootstrap.Modal(document.getElementById('modalRadiografia'));
+    State.modals.radiografia.show();
+}
+
+export function revelarSecretos() {
+    document.querySelectorAll('.rad-secret').forEach(e => e.classList.toggle('revealed'));
 }
 
 export function enviarEstadoCuentaAvanzadoWA(idVenta) {
@@ -266,9 +332,3 @@ export function doGasto(){
 }
 
 export function abrirModalPasivos() { alert("Módulo de pasivos en construcción."); }
-
-// Vinculación global para el archivo HTML
-if (!window.Finance) window.Finance = {};
-window.Finance.abrirEditMov = abrirEditMov;
-window.guardarEdicionMovimiento = guardarEdicionMovimiento;
-window.Finance.anularVenta = anularVenta;
