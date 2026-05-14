@@ -6,7 +6,7 @@ import { callAPI, updateOnlineStatus, sincronizarCola } from './api.js';
 import { nav, verificarIdentidad, guardarIdentidad, previewFile, copyingDato, COP } from './core.js';
 import { renderPos, toggleCart, abrirModalItemManual, confirmarItemManual, abrirEditorItem, calcEditorItem, aplicarPrecioPactado, guardarEditorItem, toggleItemIva, changeQty, updateCartUI, toggleIni, calcCart, finalizarVenta, clearCart, shareProductNative, shareProdWhatsApp, shareQuote, agregarAlCarritoDesdeInv, guardarCotizacionActual, abrirModalCotizaciones, renderCotizaciones, cargarCotizacion, eliminarCotizacion, generarCotizacionPDF, toggleMobileCart, toggleDatosFormales, compartirNequi } from './ui/pos.js';
 import { renderInv, abrirModalNuevo, crearProducto, openEdit, guardarCambiosAvanzado, eliminarProductoActual, calcGain, calcMargen, abrirModalProv, renderProvs, guardarProvManual, editarProv } from './ui/inventory.js';
-import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, anularVenta, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos } from './ui/finance.js';
+import { renderCartera, enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, procesarRefinanciamiento, castigarDeuda, anularVenta, renderFin, doAbono, doIngresoExtra, doGasto, abrirModalPasivos, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos, enviarResumenPagosWA } from './ui/finance.js';
 import { construirDirectorioClientes, abrirModalClientes, renderClientes, guardarClienteManual, editarCliente, eliminarCliente, iniciarMigracionDeuda } from './ui/crm.js';
 
 // 1. INYECCIÓN AL SCOPE GLOBAL (WINDOW)
@@ -59,13 +59,11 @@ window.procesarRefinanciamiento = procesarRefinanciamiento;
 window.abrirModalClientes = abrirModalClientes;
 window.renderClientes = renderClientes;
 window.guardarClienteManual = guardarClienteManual;
-window.renderFin = renderFin;
-window.renderCartera = renderCartera;
 
-// Anclas internas de soporte cruzado
+// Anclas internas de soporte cruzado y consolidación del Namespace Finance
 window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
 window.Inventory = { openEdit, editarProv };
-window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos, renderFin, renderCartera };
+window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos, renderFin, renderCartera, enviarResumenPagosWA, doAbono, doIngresoExtra, doGasto };
 window.CRM = { editarCliente, eliminarCliente, iniciarMigracionDeuda };
 window.App = { loadData };
 
