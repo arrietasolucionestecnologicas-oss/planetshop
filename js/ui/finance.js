@@ -32,7 +32,8 @@ export function renderCartera() {
     }
 
     filtrados.forEach(d => { 
-        c.innerHTML += `<div class="card-k card-debt border-start border-danger border-4">
+        c.innerHTML += `
+        <div class="card-k card-debt border-start border-danger border-4">
             <div class="d-flex justify-content-between">
                 <div>
                     <h6 style="color:var(--primary); font-weight:bold;">${d.cliente}</h6>
@@ -51,7 +52,6 @@ export function renderCartera() {
 }
 
 export function abrirRadiografia(idVenta) {
-    // Buscamos con trim() para evitar fallos por espacios en la DB (Caso Sonia Marin )
     var v = State.data.deudores.find(x => x.idVenta.trim() === idVenta.trim());
     if (!v) return showToast("No se encontraron detalles ampliados.", "error");
     
@@ -66,7 +66,6 @@ export function abrirRadiografia(idVenta) {
     document.getElementById('rad-cliente').innerText = v.cliente;
     document.getElementById('rad-prod').innerText = v.producto;
     
-    // Binding de datos confidenciales corregido
     document.getElementById('rad-costo').innerText = v.costo_total > 0 ? COP.format(v.costo_total) : "N/A (Migración)";
     document.getElementById('rad-ganancia').innerText = v.ganancia > 0 ? COP.format(v.ganancia) : "N/A (Migración)";
     
@@ -102,7 +101,8 @@ export function abrirRadiografia(idVenta) {
             State.tempHistorialVenta = res.historial;
             State.tempVentaActual = v; 
             
-            let totalIngresos = 0; let totalEgresos = 0;
+            let totalIngresos = 0; 
+            let totalEgresos = 0;
             res.historial.forEach(m => { 
                 if (m.tipo.includes('ingreso') || m.tipo.includes('abono')) totalIngresos += m.monto; 
                 else totalEgresos += m.monto; 
@@ -126,7 +126,8 @@ export function abrirRadiografia(idVenta) {
                     if (esIngreso) saldoEnEseMomento -= m.monto;
                     else saldoEnEseMomento += m.monto;
                     
-                    html += `<div class="d-flex justify-content-between border-bottom py-2">
+                    html += `
+                    <div class="d-flex justify-content-between border-bottom py-2">
                         <div>
                             <span class="d-block fw-bold" style="font-size:0.75rem;">${m.desc}</span>
                             <small class="text-muted">${m.fecha}</small>
@@ -154,7 +155,8 @@ export function enviarResumenPagosWA() {
 
     var msg = `🪐 *PLANET SHOP - KÁRDEX DE PAGOS*\n\nHola *${v.cliente.trim()}*, este es el historial detallado de tu crédito:\n\n📦 *Producto:* ${v.producto}\n\n*📜 DETALLE DE MOVIMIENTOS:*\n`;
 
-    let totalIngresos = 0; let totalEgresos = 0;
+    let totalIngresos = 0; 
+    let totalEgresos = 0;
     hist.forEach(m => { 
         if (m.tipo.includes('ingreso') || m.tipo.includes('abono')) totalIngresos += m.monto; 
         else totalEgresos += m.monto; 
@@ -162,22 +164,16 @@ export function enviarResumenPagosWA() {
     
     let verdaderoTotal = v.saldo + totalIngresos - totalEgresos;
     let saldoEnEseMomento = verdaderoTotal;
-    var totalAbonado = 0;
 
     hist.forEach(m => {
         let esIngreso = m.tipo.includes('ingreso') || m.tipo.includes('abono');
         let icono = esIngreso ? '✅' : '❌';
-        if (esIngreso) {
-            saldoEnEseMomento -= m.monto;
-            totalAbonado += m.monto;
-        } else {
-            saldoEnEseMomento += m.monto;
-        }
+        if (esIngreso) saldoEnEseMomento -= m.monto;
+        else saldoEnEseMomento += m.monto;
         msg += `${icono} ${m.fecha}: ${m.desc}\n   Monto: *${COP.format(m.monto)}* | Saldo: *${COP.format(Math.max(0, saldoEnEseMomento))}*\n`;
     });
 
     msg += `\n💰 *Total Pactado:* ${COP.format(verdaderoTotal)}\n`;
-    msg += `💳 *Total Abonado:* ${COP.format(totalAbonado)}\n`;
     msg += `📊 *Saldo Actual Pendiente:* ${COP.format(v.saldo)}\n\n`;
     msg += `¡Gracias por confiar en Planet Shop! 🤝`;
 
@@ -190,23 +186,33 @@ export function revelarSecretos() {
 }
 
 export function enviarEstadoCuentaAvanzadoWA(idVenta) {
-    var d = State.data.deudores.find(x => x.idVenta === idVenta); if (!d) return;
+    var d = State.data.deudores.find(x => x.idVenta === idVenta); 
+    if (!d) return;
     var msg = `🪐 *PLANET SHOP - ESTADO DE CUENTA*\n\nHola *${d.cliente.trim()}*, este es el resumen de tu crédito:\n\n📦 *Producto:* ${d.producto}\n📊 *Saldo Pendiente:* ${COP.format(d.saldo)}\n\n`;
     if (d.deudaInicial > 0) msg += `⚠️ *Nota:* Tienes pendiente de inicial por ${COP.format(d.deudaInicial)}\n\n`;
     if (d.valCuota > 0) msg += `💳 *Próxima Cuota:* ${COP.format(d.valCuota)}\n📅 *Vencimiento:* ${d.fechaLimite || "Inmediato"}\n\n`;
     msg += `🏦 *Medios de Pago:* Bancolombia, Nequi y Daviplata. 🤝`;
-    var waUrl = "https://wa.me/" + (d.telefono ? "57"+d.telefono.replace(/\D/g,'') : ""); window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
+    var waUrl = "https://wa.me/" + (d.telefono ? "57"+d.telefono.replace(/\D/g,'') : ""); 
+    window.open(waUrl + "?text=" + encodeURIComponent(msg), '_blank');
 }
 
 export function abrirModalRefinanciar(id, cli, saldo) { 
-    State.refEditId = id; document.getElementById('ref-cliente').value = cli; document.getElementById('ref-saldo-actual').value = COP.format(saldo); 
+    State.refEditId = id; 
+    document.getElementById('ref-cliente').value = cli; 
+    document.getElementById('ref-saldo-actual').value = COP.format(saldo); 
     if (State.modals.refinanciar) State.modals.refinanciar.show(); 
 }
 
 export function procesarRefinanciamiento() { 
     if (isProcessing) return;
     var idVenta = State.refEditId;
-    var d = {idVenta: idVenta, cargoAdicional: document.getElementById('ref-cargo').value, nuevasCuotas: document.getElementById('ref-cuotas').value, nuevaFecha: document.getElementById('ref-fecha').value, aliasOperador: localStorage.getItem("alias") || "Sistema"};
+    var d = {
+        idVenta: idVenta, 
+        cargoAdicional: document.getElementById('ref-cargo').value, 
+        nuevasCuotas: document.getElementById('ref-cuotas').value, 
+        nuevaFecha: document.getElementById('ref-fecha').value, 
+        aliasOperador: localStorage.getItem("alias") || "Sistema"
+    };
     isProcessing = true;
     showToast("⚡ Procesando refinanciación...", "info");
     callAPI('refinanciarDeuda', d).then(r => { 
@@ -251,10 +257,16 @@ export function anularVenta(idVenta) {
 }
 
 export function renderFin() {
-    var s = document.getElementById('ab-cli'); if(!s) return;
+    var s = document.getElementById('ab-cli'); 
+    if(!s) return;
     s.innerHTML = '<option>Seleccione...</option>';
     var cuentasCobrar = 0;
-    State.data.deudores.filter(d => d.estado !== 'Castigado').forEach(d => { cuentasCobrar += d.saldo; s.innerHTML += `<option value="${d.idVenta}">${d.cliente} (Debe: ${COP.format(d.saldo)})</option>`; });
+    
+    State.data.deudores.filter(d => d.estado !== 'Castigado').forEach(d => { 
+        cuentasCobrar += d.saldo; 
+        // Inyectamos el nombre limpio en un atributo data para doAbono
+        s.innerHTML += `<option value="${d.idVenta}" data-cliente="${d.cliente}">${d.cliente} (Debe: ${COP.format(d.saldo)})</option>`; 
+    });
     
     var searchEl = document.getElementById('hist-search');
     var q = searchEl ? searchEl.value.toLowerCase().trim() : "";
@@ -264,7 +276,19 @@ export function renderFin() {
 
     document.getElementById('hist-list').innerHTML = dataHist.map(x => {
         var i = (x.tipo.includes('ingreso') || x.tipo.includes('abono'));
-        return `<div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><small class="fw-bold d-block">${x.desc}</small><small class="text-muted" style="font-size:0.6rem;">${x.fecha}</small></div><div class="text-end"><strong class="${i ? 'text-success' : 'text-danger'}">${i ? '+' : '-'} ${COP.format(x.monto)}</strong><button class="btn btn-sm text-muted p-1 ms-2" onclick="window.Finance.abrirEditMov(${x._originalIndex})"><i class="fas fa-pencil-alt"></i></button></div></div>`;
+        return `
+        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+                <small class="fw-bold d-block">${x.desc}</small>
+                <small class="text-muted" style="font-size:0.6rem;">${x.fecha}</small>
+            </div>
+            <div class="text-end">
+                <strong class="${i ? 'text-success' : 'text-danger'}">${i ? '+' : '-'} ${COP.format(x.monto)}</strong>
+                <button class="btn btn-sm text-muted p-1 ms-2" onclick="window.Finance.abrirEditMov(${x._originalIndex})">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+        </div>`;
     }).join('');
     
     var invCosto = State.data.inv.reduce((a, b) => a + (b.costo || 0), 0);
@@ -302,11 +326,21 @@ export function guardarEdicionMovimiento() {
 
 export function doAbono() { 
     if (isProcessing) return;
-    var cliId = document.getElementById('ab-cli').value;
+    var sel = document.getElementById('ab-cli');
+    var cliId = sel.value;
     var monto = parseFloat(document.getElementById('ab-monto').value);
     if (!cliId || isNaN(monto) || monto <= 0) return;
+    
+    // Capturamos el nombre limpio del atributo data-cliente
+    var clienteLimpio = sel.options[sel.selectedIndex].getAttribute('data-cliente');
+    
     isProcessing = true;
-    callAPI('registrarAbono', { idVenta: cliId, monto: monto, cliente: document.getElementById('ab-cli').options[document.getElementById('ab-cli').selectedIndex].text, aliasOperador: localStorage.getItem("alias") || "Sistema" }).then(() => {
+    callAPI('registrarAbono', { 
+        idVenta: cliId, 
+        monto: monto, 
+        cliente: clienteLimpio, 
+        aliasOperador: localStorage.getItem("alias") || "Sistema" 
+    }).then(() => {
         showToast("✅ Abono procesado", "success");
         if (window.App && window.App.loadData) window.App.loadData(true);
     }).finally(() => { isProcessing = false; }); 
