@@ -42,6 +42,7 @@ export function abrirRadiografia(idVenta) {
     document.getElementById('rad-cliente').innerText = v.cliente;
     document.getElementById('rad-prod').innerText = v.producto;
     
+    // Total temporal hasta que la consulta asíncrona lo recalcule exactamente
     var totalEstimado = v.saldo + (v.deudaInicial || 0);
     document.getElementById('rad-total').innerText = COP.format(safeNum(totalEstimado));
     document.getElementById('rad-metodo').innerText = "CRÉDITO";
@@ -69,7 +70,7 @@ export function abrirRadiografia(idVenta) {
     var btnAnular = document.getElementById('btn-anular-venta');
     if(btnAnular) btnAnular.style.display = 'block';
     
-    // Inyección asíncrona del Kárdex (Lazy Loading)
+    // Inyección asíncrona del Kárdex (Lazy Loading) con ingeniería de Saldos
     var timelineContainer = document.getElementById('rad-timeline');
     var btnWaKardex = document.getElementById('btn-wa-resumen');
     
@@ -81,17 +82,40 @@ export function abrirRadiografia(idVenta) {
             State.tempHistorialVenta = res.historial;
             State.tempVentaActual = v; 
             
+            // 1. Descubrir el Monto Pactado Original
+            let totalIngresos = 0; let totalEgresos = 0;
+            res.historial.forEach(m => { 
+                if(m.tipo.includes('ingreso') || m.tipo.includes('abono')) totalIngresos += m.monto; 
+                else totalEgresos += m.monto; 
+            });
+            
+            let verdaderoTotal = v.saldo + totalIngresos - totalEgresos;
+            document.getElementById('rad-total').innerText = COP.format(verdaderoTotal);
+            
+            let saldoEnEseMomento = verdaderoTotal;
             let html = '';
+            
             if (res.historial.length === 0) {
                 html = '<div class="text-center text-muted">No hay abonos registrados aún.</div>';
             } else {
+                // 2. Construir la línea de tiempo con Saldo Corriente (Running Balance)
                 res.historial.forEach(m => {
                     let esIngreso = m.tipo.includes('ingreso') || m.tipo.includes('abono');
                     let color = esIngreso ? 'text-success' : 'text-danger';
                     let signo = esIngreso ? '+' : '-';
-                    html += `<div class="d-flex justify-content-between border-bottom py-1">
-                        <div><span class="d-block fw-bold">${m.desc}</span><small class="text-muted">${m.fecha}</small></div>
-                        <div class="fw-bold ${color}">${signo}${COP.format(m.monto)}</div>
+                    
+                    if (esIngreso) saldoEnEseMomento -= m.monto; // Resta al saldo si paga
+                    else saldoEnEseMomento += m.monto; // Suma al saldo si hubo devolución
+                    
+                    html += `<div class="d-flex justify-content-between border-bottom py-2">
+                        <div>
+                            <span class="d-block fw-bold">${m.desc}</span>
+                            <small class="text-muted">${m.fecha}</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold ${color}">${signo}${COP.format(m.monto)}</div>
+                            <small class="text-muted fw-bold" style="font-size: 0.65rem;">Queda debiendo: <span style="color: var(--primary);">${COP.format(saldoEnEseMomento)}</span></small>
+                        </div>
                     </div>`;
                 });
             }
@@ -113,15 +137,29 @@ export function enviarResumenPagosWA() {
 
     var msg = `🪐 *PLANET SHOP - KÁRDEX DE PAGOS*\n\nHola *${v.cliente.trim()}*, este es el historial detallado de tu crédito:\n\n📦 *Producto:* ${v.producto}\n\n*📜 DETALLE DE MOVIMIENTOS:*\n`;
 
+    let totalIngresos = 0; let totalEgresos = 0;
+    hist.forEach(m => { 
+        if(m.tipo.includes('ingreso') || m.tipo.includes('abono')) totalIngresos += m.monto; 
+        else totalEgresos += m.monto; 
+    });
+    
+    let verdaderoTotal = v.saldo + totalIngresos - totalEgresos;
+    let saldoEnEseMomento = verdaderoTotal;
     var totalAbonado = 0;
+
     hist.forEach(m => {
         let esIngreso = m.tipo.includes('ingreso') || m.tipo.includes('abono');
         let icono = esIngreso ? '✅' : '❌';
-        msg += `${icono} ${m.fecha}: ${m.desc} -> *${COP.format(m.monto)}*\n`;
-        if(esIngreso) totalAbonado += m.monto;
+        if (esIngreso) {
+            saldoEnEseMomento -= m.monto;
+            totalAbonado += m.monto;
+        } else {
+            saldoEnEseMomento += m.monto;
+        }
+        msg += `${icono} ${m.fecha}: ${m.desc}\n   Monto: *${COP.format(m.monto)}* | Queda debiendo: *${COP.format(saldoEnEseMomento)}*\n`;
     });
 
-    msg += `\n💰 *Total Pactado:* ${COP.format(v.saldo + totalAbonado)}\n`;
+    msg += `\n💰 *Total Pactado:* ${COP.format(verdaderoTotal)}\n`;
     msg += `💳 *Total Abonado:* ${COP.format(totalAbonado)}\n`;
     msg += `📊 *Saldo Actual Pendiente:* ${COP.format(v.saldo)}\n\n`;
     msg += `Cualquier duda, estamos a tu disposición. ¡Gracias por confiar en Planet Shop! 🤝`;
