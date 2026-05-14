@@ -59,11 +59,13 @@ window.procesarRefinanciamiento = procesarRefinanciamiento;
 window.abrirModalClientes = abrirModalClientes;
 window.renderClientes = renderClientes;
 window.guardarClienteManual = guardarClienteManual;
+window.renderFin = renderFin;
+window.renderCartera = renderCartera;
 
 // Anclas internas de soporte cruzado
 window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
 window.Inventory = { openEdit, editarProv };
-window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos };
+window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos, renderFin, renderCartera };
 window.CRM = { editarCliente, eliminarCliente, iniciarMigracionDeuda };
 window.App = { loadData };
 
