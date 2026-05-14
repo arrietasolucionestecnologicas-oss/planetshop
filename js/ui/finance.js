@@ -7,8 +7,27 @@ let isProcessing = false;
 export function renderCartera() {
     var c=document.getElementById('cartera-list'); c.innerHTML='';
     var activos = State.data.deudores.filter(d=>d.estado!=='Castigado');
+    
+    // Filtrado de búsqueda
+    var searchEl = document.getElementById('cartera-search');
+    var q = searchEl ? searchEl.value.toLowerCase().trim() : "";
+    var filtrados = activos;
+    
+    if (q) {
+        filtrados = activos.filter(d => 
+            (d.cliente && d.cliente.toLowerCase().includes(q)) || 
+            (d.producto && d.producto.toLowerCase().includes(q))
+        );
+    }
+
     document.getElementById('bal-cartera').innerText = COP.format(activos.reduce((a,b)=>a+b.saldo,0));
-    activos.forEach(d=>{ 
+    
+    if(filtrados.length === 0) {
+        c.innerHTML = '<div class="text-center text-muted py-3">No hay deudas que coincidan con la búsqueda.</div>';
+        return;
+    }
+
+    filtrados.forEach(d=>{ 
         c.innerHTML+=`<div class="card-k card-debt border-start border-danger border-4">
             <div class="d-flex justify-content-between">
                 <div>
@@ -26,7 +45,6 @@ export function renderCartera() {
         </div>`; 
     });
 }
-
 export function abrirRadiografia(idVenta) {
     var v = State.data.deudores.find(x => x.idVenta === idVenta);
     if(!v) return showToast("No se encontraron detalles ampliados.", "error");
