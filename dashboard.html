@@ -314,7 +314,7 @@
     function filterHistorial() {
         var q = document.getElementById('hist-search').value.toLowerCase().trim();
         if(!q) { renderHistorialTable(dataHistorial); return; }
-        var filtrados = dataHistorial.filter(v => v.cliente.toLowerCase().includes(q) || v.producto.toLowerCase().includes(q) || v.id.toLowerCase().includes(q));
+        var filtrados = dataHistorial.filter(v => String(v.cliente).toLowerCase().includes(q) || String(v.producto).toLowerCase().includes(q) || String(v.id).toLowerCase().includes(q));
         renderHistorialTable(filtrados);
     }
 

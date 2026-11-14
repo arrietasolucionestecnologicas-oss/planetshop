@@ -95,7 +95,9 @@ window.onload = function() {
   // INYECCIÓN ZERO-LATENCY (Caché Primero)
   const cachedData = localStorage.getItem('planet_data');
   if (cachedData) {
-      renderData(JSON.parse(cachedData));
+      // Blindaje: una caché corrupta o un registro mal digitado NUNCA debe dejar la app en "Conectando..."
+      try { renderData(JSON.parse(cachedData)); }
+      catch (err) { console.error('[BOOT] Caché local inválida, se descarta:', err); localStorage.removeItem('planet_data'); }
       document.getElementById('loader').style.display = 'none';
       loadData(true); // Revalida en silencio
   } else {
@@ -120,15 +122,24 @@ function loadData(silent = false){
   });
 }
 
+// Google Sheets devuelve como NÚMERO cualquier celda que solo tenga dígitos (ej. un teléfono
+// digitado en el campo nombre). Se fuerzan a texto los campos que la UI trata como string.
+function normalizarTexto(lista, campos) {
+    return (lista || []).filter(x => x && typeof x === 'object').map(x => {
+        campos.forEach(k => { if (x[k] !== undefined && typeof x[k] !== 'string') x[k] = (x[k] === null) ? '' : String(x[k]); });
+        return x;
+    });
+}
+
 function renderData(res) {
-    State.data.inv = res.inventario || []; 
-    State.data.deudores = res.deudores || []; 
-    State.data.historial = res.historial || []; 
+    State.data.inv = normalizarTexto(res.inventario, ['nombre', 'cat']);
+    State.data.deudores = normalizarTexto(res.deudores, ['idVenta', 'cliente', 'producto', 'telefono', 'estado']);
+    State.data.historial = normalizarTexto(res.historial, ['desc', 'tipo', 'fecha']);
     State.data.cotizaciones = res.cotizaciones || [];
-    State.data.proveedores = res.proveedores || []; 
+    State.data.proveedores = normalizarTexto(res.proveedores, ['nombre', 'tel']);
     State.data.pasivos = res.pasivos || [];
-    State.data.clientes = res.clientes || [];
-    
+    State.data.clientes = normalizarTexto(res.clientes, ['nombre', 'tel']);
+
     State.data.clientesActivos = construirDirectorioClientes();
     
     if(res.metricas) { 
