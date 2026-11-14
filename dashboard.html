@@ -2,157 +2,227 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Planet.shop | Enterprise BI</title>
+  <meta name="theme-color" content="#0d2a63">
+  <link rel="icon" type="image/png" href="icon-192.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    :root { 
-        var(--primary): #1a365d; 
-        var(--accent): #2b6cb0; 
-        var(--cyan): #63b3ed; 
-        var(--bg): #f0f4f8; 
+    /* ═══════════ Mismo sistema visual de index.html: azul marino, fondo gris muy claro, tarjetas blancas ═══════════ */
+    :root {
+        --navy: #0d2a63; --navy-2: #0a1d47; --azul: #2563eb; --azul-osc: #1d4ed8; --azul-bg: #e6eeff; --azul-txt: #1a4bbd;
+        --verde: #12a150; --verde-bg: #e1f5ea; --verde-txt: #0b7a3b;
+        --ambar: #e8a317; --ambar-bg: #fdf0d0; --ambar-txt: #8a5a00;
+        --rojo: #d92d3a; --rojo-bg: #fde7e9; --rojo-txt: #b4202c;
+        --indigo: #5b4bd8;
+        --texto: #13203d; --muted: #566581; --borde: #e1e7f2; --borde-campo: #cdd7ea; --fondo: #f2f5fb;
+        --radio: 16px; --sombra: 0 1px 2px rgba(16, 40, 90, .05), 0 8px 24px rgba(16, 40, 90, .05);
+        --fuente: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+        --bs-body-font-family: var(--fuente); --bs-body-color: var(--texto); --bs-primary-rgb: 37, 99, 235; --bs-danger-rgb: 217, 45, 58;
     }
-    
-    body { background-color: #f0f4f8; color: #2d3748; font-family: 'Montserrat', sans-serif; padding-bottom: 50px; }
-    
-    .top-bar { background: #1a365d; padding: 15px 25px; border-bottom: 3px solid #63b3ed; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .brand { color: white; font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
-    .btn-close-dash { background: #2b6cb0; border: none; padding: 8px 20px; color: white; border-radius: 30px; font-weight: bold; font-size: 0.85rem; transition: 0.3s; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    .btn-close-dash:hover { transform: scale(1.05); background: #1e4e8c; color:white; }
-    
-    /* Selector de Mes */
-    .filter-group { background: white; margin: 20px; padding: 15px; border-radius: 12px; display: flex; gap: 15px; border: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .custom-month-input { background: #f8f9fa; border: 2px solid #63b3ed; color: #1a365d; padding: 8px 15px; border-radius: 8px; font-weight: bold; outline: none; transition: 0.2s; }
-    .custom-month-input:focus { box-shadow: 0 0 0 3px rgba(99,179,237,0.3); }
-    .btn-aplicar { background: #2b6cb0; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-    .btn-aplicar:hover { background: #1a365d; }
 
-    .kpi-card { background: white; border-radius: 12px; padding: 20px; position: relative; overflow: hidden; height: 100%; transition: 0.3s; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
-    .kpi-card:hover { transform: translateY(-5px); border-color: #63b3ed; box-shadow: 0 8px 15px rgba(99,179,237,0.15); }
-    .kpi-icon { position: absolute; right: -10px; top: -10px; font-size: 4rem; opacity: 0.05; transform: rotate(15deg); color: #1a365d; }
-    .kpi-label { font-size: 0.8rem; text-transform: uppercase; color: #1a365d; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 700; color: #2b6cb0; line-height: 1; }
-    
-    .text-muted { color: #718096 !important; }
-    .kpi-sub { font-size: 0.85rem; margin-top: 8px; color: #718096; }
-    
-    .panel-box { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; height: 100%; }
-    .panel-title { font-weight: 700; color: #1a365d; margin-bottom: 20px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f4f8; padding-bottom: 10px; }
-    
-    .table-custom { width: 100%; font-size: 0.9rem; }
-    .table-custom td { padding: 10px 0; border-bottom: 1px solid #e2e8f0; color: #2d3748; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { background: var(--fondo); color: var(--texto); font-family: var(--fuente); font-size: 15px; line-height: 1.45; }
+    h1, h2, h5 { color: var(--texto); letter-spacing: -.01em; }
+    .text-muted { color: var(--muted) !important; }
+    .text-pos { color: var(--verde-txt) !important; } .text-neg { color: var(--rojo-txt) !important; } .text-warn { color: var(--ambar-txt) !important; }
+    :focus-visible { outline: 3px solid #8fb0ff; outline-offset: 2px; }
+
+    /* Barra superior */
+    .top { position: sticky; top: 0; z-index: 900; display: flex; align-items: center; gap: 12px; padding: 12px 32px; background: rgba(242, 245, 251, .92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); }
+    .marca-logo { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--navy); color: #fff; }
+    .marca-logo svg { width: 26px; height: 26px; }
+    .top-id { display: flex; flex-direction: column; min-width: 0; margin-right: auto; line-height: 1.2; }
+    .top-brand { font-size: 20px; letter-spacing: -.01em; color: var(--navy); }
+    .top-brand span { color: var(--azul); }
+    .top-id small { color: var(--muted); font-size: 13px; }
+    .acc-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid var(--borde-campo); border-radius: 12px; background: #fff; color: var(--texto); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+    .acc-btn:hover { background: var(--fondo); border-color: #b6c3de; color: var(--texto); }
+    .acc-btn i { color: var(--azul); }
+    .vista { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px 32px 56px; }
+
+    /* Encabezado y filtro de mes */
+    .pag-cab { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+    .pag-cab h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    .pag-cab p { margin: 4px 0 0; color: var(--muted); }
+    .filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+    .filter-group label { margin: 0; font-size: 13px; font-weight: 600; color: #2b3b5c; }
+    .custom-month-input { min-height: 42px; padding: 0 12px; border: 1px solid var(--borde-campo); border-radius: 12px; background: #fff; color: var(--texto); font-weight: 600; outline: none; }
+    .custom-month-input:focus, .search-hist:focus { border-color: var(--azul); box-shadow: 0 0 0 3px #cfe0ff; }
+    .btn-aplicar { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid var(--azul); border-radius: 12px; background: var(--azul); color: #fff; font-weight: 600; }
+    .btn-aplicar:hover { background: var(--azul-osc); border-color: var(--azul-osc); }
+
+    /* Indicadores */
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
+    .kpi { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid transparent; border-radius: var(--radio); box-shadow: var(--sombra); }
+    .kpi-ico { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border-radius: 50%; color: #fff; font-size: 22px; }
+    .kpi-cuerpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .kpi-tit { font-size: 14px; color: #2b3b5c; }
+    .kpi-val { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 13px; color: var(--muted); }
+    .kpi-verde { background: #e8f7ee; border-color: #c9ebd8; } .kpi-verde .kpi-ico { background: var(--verde); }
+    .kpi-azul { background: #eaf1ff; border-color: #d3e1ff; } .kpi-azul .kpi-ico { background: var(--azul); }
+    .kpi-rojo { background: #fdecee; border-color: #f7cfd3; } .kpi-rojo .kpi-ico { background: var(--rojo); }
+    .kpi-indigo { background: #eeedfd; border-color: #d9d5fa; } .kpi-indigo .kpi-ico { background: var(--indigo); }
+
+    /* Paneles */
+    .panel-box { height: 100%; padding: 20px; background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+    .panel-title { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 17px; font-weight: 700; color: var(--texto); }
+    .panel-title i { margin-right: 6px; color: var(--navy) !important; }
+    .panel-title .badge { background: var(--azul-bg) !important; color: var(--azul-txt); font-size: 12.5px; border-radius: 999px; padding: 5px 11px; }
+    .panel-nota { margin-bottom: 10px; padding: 10px 12px; border-radius: 12px; background: #f4f7fd; color: var(--muted); font-size: 13px; }
+    .table-custom { width: 100%; font-size: 14.5px; }
+    .table-custom td { padding: 11px 0; border-bottom: 1px solid var(--borde); color: var(--texto); }
     .table-custom tr:last-child td { border-bottom: none; }
-    .badge-rank { background: #eef2f7; color: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; margin-right: 10px; }
-    
-    .text-pos { color: #38a169 !important; } .text-neg { color: #e53e3e !important; } .text-warn { color: #dd6b20 !important; }
-    #loader { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.3s; }
+    .badge-rank { margin-right: 10px; padding: 3px 9px; border-radius: 999px; background: var(--azul-bg); color: var(--azul-txt); font-size: 12px; font-weight: 700; }
 
-    /* HISTORIAL Y BUSCADOR */
-    .search-hist { background: #f8f9fa; border: 1px solid #cbd5e0; color: #2d3748; padding: 10px 15px; border-radius: 8px; width: 100%; outline: none; margin-bottom: 15px; font-weight: bold; transition: 0.2s; }
-    .search-hist:focus { border-color: #63b3ed; box-shadow: 0 0 0 3px rgba(99,179,237,0.2); }
-    .search-hist::placeholder { color: #a0aec0; font-weight: normal; }
-    
-    .hist-row { background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-    .hist-row:hover { border-color: #63b3ed; background: #f0f4f8; transform: translateX(3px); }
-    .h-cliente { font-weight: bold; color: #1a365d; font-size: 0.95rem; }
-    .h-prod { color: #718096; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-    .h-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
-    .bg-pend { background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; }
-    .bg-pag { background: #f0fff4; color: #38a169; border: 1px solid #9ae6b4; }
+    /* Historial y buscador */
+    .search-hist { width: 100%; min-height: 46px; margin-bottom: 14px; padding: 0 14px; border: 1px solid var(--borde-campo); border-radius: 14px; background: #fff; color: var(--texto); font-weight: 500; outline: none; }
+    .search-hist::placeholder { color: #8391ad; }
+    #hist-container { flex: 1; min-height: 300px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+    .hist-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 8px; background: #fff; border: 1px solid var(--borde); border-radius: 14px; cursor: pointer; transition: border-color .12s, background .12s; }
+    .hist-row:hover { border-color: #a9bfee; background: #f9fbff; }
+    .h-cliente { font-weight: 700; color: var(--texto); }
+    .h-prod { max-width: 220px; overflow: hidden; color: var(--muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+    .h-badge { display: inline-flex; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .bg-pend { background: var(--rojo-bg); color: var(--rojo-txt); }
+    .bg-pag { background: var(--verde-bg); color: var(--verde-txt); }
 
-    /* MODAL RADIOGRAFÍA FINANCIERA */
-    .modal-content { background-color: white; color: #2d3748; border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-    .modal-header { border-bottom: 1px solid #e2e8f0; background: #1a365d; color: white; border-radius: 15px 15px 0 0; }
-    .modal-title { font-weight: bold; }
-    .rad-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed #cbd5e0; }
-    .rad-label { color: #718096; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 2px; display: block; font-weight: bold; }
-    .rad-val { font-size: 1.1rem; font-weight: bold; color: #1a365d; }
-    .rad-secret { filter: blur(4px); cursor: pointer; transition: 0.2s; }
+    /* Cargador */
+    #loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(242, 245, 251, .96); transition: opacity .3s; }
+    #loader .marca-logo { width: 64px; height: 64px; margin-bottom: 18px; border-radius: 18px; }
+    #loader .marca-logo svg { width: 38px; height: 38px; }
+    #loader .spinner-border { color: var(--azul) !important; }
+    #loader-txt { color: var(--muted) !important; }
+
+    /* Modal radiografía financiera */
+    .modal-backdrop { --bs-backdrop-bg: #081432; --bs-backdrop-opacity: .5; }
+    .modal-content { border: 0; border-radius: 20px; box-shadow: 0 24px 64px rgba(8, 20, 50, .3); }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--borde); }
+    .modal-title { font-size: 17px; font-weight: 700; }
+    .modal-body { padding: 18px 20px 22px; }
+    .btn { --bs-btn-border-radius: 10px; --bs-btn-font-weight: 600; }
+    .btn-outline-danger { --bs-btn-color: var(--rojo-txt); --bs-btn-border-color: #f1c5c9; --bs-btn-hover-color: var(--rojo-txt); --bs-btn-hover-bg: var(--rojo-bg); --bs-btn-hover-border-color: #e9a7ad; --bs-btn-active-color: var(--rojo-txt); --bs-btn-active-bg: var(--rojo-bg); --bs-btn-active-border-color: #e9a7ad; }
+    .rad-box { padding: 14px; margin-bottom: 14px; border: 1px solid var(--borde); border-radius: 14px; background: #f9fbff; }
+    .rad-label { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .rad-val { font-size: 18px; font-weight: 700; color: var(--navy); }
+    .rad-secret { filter: blur(4px); cursor: pointer; transition: .2s; }
     .rad-secret.revealed { filter: blur(0); }
+
+    @media (max-width: 1199px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vista { padding: 22px 24px 48px; } .top { padding: 12px 24px; } }
+    @media (max-width: 767px) {
+      .top { padding: 10px 14px; } .marca-logo { width: 38px; height: 38px; } .marca-logo svg { width: 23px; height: 23px; }
+      .acc-btn { padding: 0 12px; }
+      .vista { padding: 16px 14px 40px; }
+      .pag-cab { margin-bottom: 16px; align-items: stretch; } .pag-cab h1 { font-size: 24px; }
+      .filter-group { width: 100%; } .custom-month-input { flex: 1 1 140px; } .btn-aplicar { flex: 1 1 100%; justify-content: center; }
+      .kpis { gap: 10px; margin-bottom: 18px; }
+      .kpi { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+      .kpi-ico { width: 42px; height: 42px; font-size: 18px; } .kpi-val { font-size: 20px; }
+      .panel-box { padding: 16px; }
+    }
+    @media (max-width: 575px) {
+      .modal { --bs-modal-margin: 0px; }
+      .modal .modal-dialog-centered { align-items: flex-end; }
+      .modal .modal-content { border-radius: 22px 22px 0 0; }
+      .modal .modal-body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   </style>
 </head>
 <body>
 
-  <div id="loader"><div class="spinner-border text-primary" role="status"></div><div class="mt-3 fw-bold" style="color: #1a365d;" id="loader-txt">Calculando Métricas...</div></div>
-
-  <div class="top-bar">
-    <div class="brand"><i class="fas fa-chart-line" style="color: #63b3ed;"></i> Planet<span style="color:#63b3ed;">.shop</span> <span style="font-size:0.9rem; font-weight:400; opacity: 0.8;">BI</span></div>
-    <a class="btn-close-dash" href="index.html"><i class="fas fa-arrow-left"></i> VOLVER AL POS</a>
+  <div id="loader">
+    <span class="marca-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-3 fw-bold" id="loader-txt">Calculando Métricas...</div>
   </div>
 
-  <div class="container-fluid px-4">
-    <div class="d-flex justify-content-center">
+  <header class="top">
+    <span class="marca-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+    <div class="top-id">
+      <strong class="top-brand">Planet<span>.shop</span></strong>
+      <small>Panel BI</small>
+    </div>
+    <a class="acc-btn" href="index.html"><i class="fas fa-arrow-left"></i><span>Volver al POS</span></a>
+  </header>
+
+  <main class="vista">
+    <div class="pag-cab">
+      <div>
+        <h1>Indicadores del mes</h1>
+        <p>Ventas, margen, cartera y gastos del negocio.</p>
+      </div>
       <div class="filter-group">
-        <label class="fw-bold small" style="color: #1a365d;">Trazabilidad de:</label>
+        <label for="input-mes">Trazabilidad de:</label>
         <input type="month" id="input-mes" class="custom-month-input">
-        <button class="btn-aplicar" onclick="loadCustomMonth()"><i class="fas fa-search"></i> Extraer Datos</button>
+        <button class="btn-aplicar" onclick="loadCustomMonth()"><i class="fas fa-search"></i> Extraer datos</button>
       </div>
     </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #38a169;"><i class="fas fa-dollar-sign kpi-icon"></i><div class="kpi-label">Ventas Brutas</div><div class="kpi-value" id="k-ventas">...</div><div class="kpi-sub text-pos fw-bold"><i class="fas fa-check-circle"></i> Ingresos Totales</div></div></div>
-      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #63b3ed;"><i class="fas fa-chart-pie kpi-icon"></i><div class="kpi-label">Margen Real</div><div class="kpi-value" id="k-margen">...%</div><div class="kpi-sub fw-bold" id="k-util-monto" style="color: #1a365d;">Util: $0</div></div></div>
-      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #e53e3e;"><i class="fas fa-hand-holding-usd kpi-icon"></i><div class="kpi-label">Cartera (Deuda)</div><div class="kpi-value text-neg" id="k-deuda">...</div><div class="kpi-sub">Global Pendiente</div></div></div>
-      <div class="col-md-3"><div class="kpi-card" style="border-left: 4px solid #2b6cb0;"><i class="fas fa-receipt kpi-icon"></i><div class="kpi-label">Ticket Promedio</div><div class="kpi-value" id="k-ticket">...</div><div class="kpi-sub">Por transacción</div></div></div>
+    <div class="kpis">
+      <div class="kpi kpi-verde"><span class="kpi-ico"><i class="fas fa-dollar-sign"></i></span><div class="kpi-cuerpo"><span class="kpi-tit">Ventas brutas</span><strong class="kpi-val" id="k-ventas">...</strong><span class="kpi-sub">Ingresos totales del mes</span></div></div>
+      <div class="kpi kpi-azul"><span class="kpi-ico"><i class="fas fa-chart-pie"></i></span><div class="kpi-cuerpo"><span class="kpi-tit">Margen real</span><strong class="kpi-val" id="k-margen">...%</strong><span class="kpi-sub fw-bold" id="k-util-monto">Util: $0</span></div></div>
+      <div class="kpi kpi-rojo"><span class="kpi-ico"><i class="fas fa-hand-holding-usd"></i></span><div class="kpi-cuerpo"><span class="kpi-tit">Cartera (deuda)</span><strong class="kpi-val text-neg" id="k-deuda">...</strong><span class="kpi-sub">Global pendiente</span></div></div>
+      <div class="kpi kpi-indigo"><span class="kpi-ico"><i class="fas fa-receipt"></i></span><div class="kpi-cuerpo"><span class="kpi-tit">Ticket promedio</span><strong class="kpi-val" id="k-ticket">...</strong><span class="kpi-sub">Por transacción</span></div></div>
     </div>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
       <div class="col-lg-5">
           <div class="panel-box d-flex flex-column">
               <div class="panel-title">
-                  <span><i class="fas fa-list-alt text-muted"></i> Historial de Operaciones</span>
-                  <span class="badge" style="background: #2b6cb0;" id="count-hist">0</span>
+                  <span><i class="fas fa-list-alt"></i> Historial de operaciones</span>
+                  <span class="badge" id="count-hist">0</span>
               </div>
-              <input type="text" id="hist-search" class="search-hist" placeholder="🔍 Buscar cliente, producto o ID..." onkeyup="filterHistorial()">
-              <div id="hist-container" style="flex:1; overflow-y:auto; padding-right:5px; min-height:300px; max-height:400px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e2e8f0; padding: 5px;">
-                  <div class="text-center mt-5" style="color: #a0aec0;">Cargando operaciones...</div>
+              <input type="text" id="hist-search" class="search-hist" placeholder="Buscar cliente, producto o ID..." onkeyup="filterHistorial()">
+              <div id="hist-container">
+                  <div class="text-center mt-5 text-muted">Cargando operaciones...</div>
               </div>
           </div>
       </div>
 
       <div class="col-lg-7">
           <div class="panel-box">
-              <div class="panel-title"><span><i class="fas fa-chart-area text-muted"></i> Flujo Anual (Ventas vs Gastos)</span></div>
+              <div class="panel-title"><span><i class="fas fa-chart-area"></i> Flujo anual (ventas vs gastos)</span></div>
               <div style="height: 350px;"><canvas id="chart-flow"></canvas></div>
           </div>
       </div>
     </div>
 
     <div class="row g-3">
-      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-wallet text-muted"></i> Gastos del Mes</span></div><div style="height: 200px; position:relative;"><canvas id="chart-gastos"></canvas></div><div id="gastos-summary" class="mt-3 small text-center fst-italic" style="color: #718096;"></div></div></div>
-      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-crown text-warning"></i> Top Clientes</span></div><table class="table-custom" id="list-clientes"></table></div></div>
-      <div class="col-md-4"><div class="panel-box" style="border-color: #feb2b2;"><div class="panel-title"><span class="text-neg"><i class="fas fa-bed"></i> Inventario Dormido</span></div><div class="alert alert-light border small mb-2 p-2 text-muted"><i class="fas fa-info-circle"></i> Productos sin ventas en el mes</div><table class="table-custom" id="list-dormidos"></table></div></div>
+      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-wallet"></i> Gastos del mes</span></div><div style="height: 200px; position:relative;"><canvas id="chart-gastos"></canvas></div><div id="gastos-summary" class="mt-3 small text-center text-muted"></div></div></div>
+      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-crown"></i> Top clientes</span></div><table class="table-custom" id="list-clientes"></table></div></div>
+      <div class="col-md-4"><div class="panel-box"><div class="panel-title"><span><i class="fas fa-bed"></i> Inventario dormido</span></div><div class="panel-nota"><i class="fas fa-info-circle"></i> Productos sin ventas en el mes</div><table class="table-custom" id="list-dormidos"></table></div></div>
     </div>
-  </div>
+  </main>
 
   <div class="modal fade" id="modalRadiografia" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><i class="fas fa-microscope text-info"></i> Radiografía Financiera</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
             <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
-                <span class="small fw-bold" id="rad-id" style="color: #1a365d;">VEN-0000</span>
-                <span class="small" id="rad-fecha" style="color: #718096;">00/00/0000</span>
+                <span class="small fw-bold" id="rad-id" style="color: #0d2a63;">VEN-0000</span>
+                <span class="small" id="rad-fecha" style="color: #566581;">00/00/0000</span>
             </div>
 
             <div class="rad-box" style="background: white;">
                 <span class="rad-label">Cliente / Beneficiario</span>
-                <div class="rad-val" id="rad-cliente" style="color: #2b6cb0;">...</div>
+                <div class="rad-val" id="rad-cliente" style="color: #2563eb;">...</div>
                 <div class="small mt-1 text-muted" id="rad-prod">...</div>
             </div>
 
             <div class="row g-2 mb-3">
                 <div class="col-6">
-                    <div class="rad-box mb-0 h-100" style="background: white; border-color: #63b3ed;">
+                    <div class="rad-box mb-0 h-100" style="background: white; border-color: #8fb0ff;">
                         <span class="rad-label">Total Pactado</span>
-                        <div class="rad-val" id="rad-total" style="color: #1a365d;">...</div>
+                        <div class="rad-val" id="rad-total" style="color: #0d2a63;">...</div>
                         <span class="badge bg-primary mt-1" id="rad-metodo">...</span>
                     </div>
                 </div>
@@ -165,7 +235,7 @@
                 </div>
             </div>
 
-            <div class="rad-box" style="background: #fff5f5; border-color: #feb2b2;">
+            <div class="rad-box" style="background: #fdecee; border-color: #f1c5c9;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="rad-label text-neg mb-0"><i class="fas fa-lock"></i> Datos Confidenciales</span>
                     <button class="btn btn-sm btn-outline-danger py-0 fw-bold" onclick="revelarSecretos()" style="font-size:0.7rem;">👁️ Revelar</button>
@@ -183,7 +253,7 @@
             </div>
 
             <div class="text-center mt-3">
-                <small class="text-muted fw-bold">Vendedor Responsable: <strong style="color: #1a365d;" id="rad-vendedor">...</strong></small>
+                <small class="text-muted fw-bold">Vendedor Responsable: <strong style="color: #0d2a63;" id="rad-vendedor">...</strong></small>
             </div>
         </div>
       </div>
@@ -304,7 +374,7 @@
                     <small style="font-size:0.7rem;" class="text-muted fw-bold">${v.fechaStr} | ${v.id}</small>
                 </div>
                 <div class="text-end">
-                    <div class="fw-bold" style="color:#1a365d;">${fmt(v.total)}</div>
+                    <div class="fw-bold" style="color:#0d2a63;">${fmt(v.total)}</div>
                     <div class="mt-1">${badge}</div>
                 </div>
             </div>`;
@@ -333,12 +403,12 @@
         document.getElementById('rad-vendedor').innerText = v.vendedor;
         var boxDeuda = document.getElementById('box-deuda');
         if (v.estado === 'Pagado') {
-            boxDeuda.style.borderColor = '#63b3ed';
+            boxDeuda.style.borderColor = '#8fb0ff';
             document.getElementById('rad-saldo').innerText = 'PAZ Y SALVO';
             document.getElementById('rad-saldo').className = 'rad-val text-pos';
             document.getElementById('rad-plan').innerText = `Inicial: ${fmt(v.inicial)}`;
         } else {
-            boxDeuda.style.borderColor = '#ff4d4d';
+            boxDeuda.style.borderColor = '#d92d3a';
             document.getElementById('rad-saldo').innerText = fmt(v.saldo);
             document.getElementById('rad-saldo').className = 'rad-val text-neg';
             var cuotaTxt = v.cuotas > 1 ? `${v.cuotas} cuotas de ${fmt(v.valCuota)}` : `Pago único pendiente`;
@@ -358,16 +428,16 @@
           data: { 
               labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'], 
               datasets: [ 
-                  { label: 'Ingresos', data: vData, borderColor: '#2b6cb0', backgroundColor: 'rgba(43, 108, 176, 0.1)', tension: 0.4, fill: true, borderWidth: 3 }, 
-                  { label: 'Gastos', data: gData, borderColor: '#e53e3e', backgroundColor: 'rgba(0,0,0,0)', tension: 0.4, borderDash: [5, 5], borderWidth: 2 } 
+                  { label: 'Ingresos', data: vData, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.4, fill: true, borderWidth: 3 }, 
+                  { label: 'Gastos', data: gData, borderColor: '#d92d3a', backgroundColor: 'rgba(0,0,0,0)', tension: 0.4, borderDash: [5, 5], borderWidth: 2 } 
               ] 
           }, 
           options: { 
               responsive: true, maintainAspectRatio: false, 
-              plugins: { legend: { labels: { color: '#2d3748', font: {weight: 'bold'} } } }, 
+              plugins: { legend: { labels: { color: '#13203d', font: {weight: 'bold'} } } }, 
               scales: { 
-                  y: { grid: { color: '#e2e8f0' }, ticks: { color: '#718096' } }, 
-                  x: { grid: { display: false }, ticks: { color: '#718096', font: {weight: 'bold'} } } 
+                  y: { grid: { color: '#e1e7f2' }, ticks: { color: '#566581' } }, 
+                  x: { grid: { display: false }, ticks: { color: '#566581', font: {weight: 'bold'} } } 
               } 
           } 
       });
@@ -380,11 +450,11 @@
           type: 'doughnut', 
           data: { 
               labels: labels, 
-              datasets: [{ data: values, backgroundColor: ['#e53e3e', '#dd6b20', '#2b6cb0', '#805ad5', '#38a169'], borderWidth: 2, borderColor: '#ffffff' }] 
+              datasets: [{ data: values, backgroundColor: ['#d92d3a', '#e8a317', '#2563eb', '#5b4bd8', '#12a150'], borderWidth: 2, borderColor: '#ffffff' }] 
           }, 
           options: { 
               responsive: true, maintainAspectRatio: false, 
-              plugins: { legend: { position: 'right', labels: { color: '#2d3748', boxWidth: 12, font: {weight: 'bold'} } } }, 
+              plugins: { legend: { position: 'right', labels: { color: '#13203d', boxWidth: 12, font: {weight: 'bold'} } } }, 
               cutout: '70%' 
           } 
       });
