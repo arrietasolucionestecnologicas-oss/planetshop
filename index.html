@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Planet.shop | Sistema POS</title>
-  
+
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1a365d">
+  <meta name="theme-color" content="#0d2a63">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Planet Shop">
@@ -15,296 +15,554 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
   <style>
-    :root { 
-        /* Paleta Ocean Blue */
-        --primary: #1a365d;       /* Azul Marino (Oscuro, paz y profesionalismo) */
-        --accent: #2b6cb0;        /* Azul Océano (Brillante para botones principales) */
-        --accent-hover: #1e4e8c;  /* Azul intermedio para hover */
-        --cyan: #63b3ed;          /* Azul Cielo claro (Detalles) */
-        --light: #f8f9fa; 
-        --dark: #2d3748; 
-        --bg: #f0f4f8;            /* Gris-Azulado muy suave para el fondo */
-        --s: #38a169;             /* Verde esmeralda calmado */
-        --d: #e53e3e;             /* Rojo suave */
+    /* ═══════════ Sistema visual: azul marino estructural, fondo gris muy claro, tarjetas blancas ═══════════ */
+    :root {
+        --navy: #0d2a63; --navy-2: #0a1d47; --azul: #2563eb; --azul-osc: #1d4ed8; --azul-bg: #e6eeff; --azul-txt: #1a4bbd;
+        --verde: #12a150; --verde-bg: #e1f5ea; --verde-txt: #0b7a3b;
+        --ambar: #e8a317; --ambar-bg: #fdf0d0; --ambar-txt: #8a5a00;
+        --rojo: #d92d3a; --rojo-bg: #fde7e9; --rojo-txt: #b4202c;
+        --texto: #13203d; --muted: #566581; --borde: #e1e7f2; --borde-campo: #cdd7ea; --fondo: #f2f5fb; --card: #fff;
+        --radio: 16px; --sombra: 0 1px 2px rgba(16, 40, 90, .05), 0 8px 24px rgba(16, 40, 90, .05);
+        --fuente: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+
+        /* Nombres heredados: los usan los módulos JS y los modales. NO eliminar. */
+        --primary: var(--navy); --accent: var(--azul); --accent-hover: var(--azul-osc); --cyan: #8fb0ff;
+        --light: #f7f9fd; --dark: var(--texto); --bg: var(--fondo); --s: var(--verde); --d: var(--rojo);
+
+        /* Bootstrap alineado a la paleta */
+        --bs-body-font-family: var(--fuente); --bs-body-color: var(--texto);
+        --bs-border-color: var(--borde); --bs-secondary-color: var(--muted);
+        --bs-primary-rgb: 37, 99, 235; --bs-success-rgb: 18, 161, 80; --bs-danger-rgb: 217, 45, 58; --bs-info-rgb: 37, 99, 235;
+        --bs-light-rgb: 247, 249, 253; --bs-link-color: var(--azul-txt);
     }
 
-    body { background: var(--bg); padding-bottom: 90px; font-family: 'Montserrat', sans-serif; overflow-x: hidden; color: var(--dark); }
+    html { -webkit-text-size-adjust: 100%; }
+    body { background: var(--fondo); color: var(--texto); font-family: var(--fuente); font-size: 15px; line-height: 1.45; overflow-x: hidden; }
+    h1, h2, h3, h4, h5, h6 { color: var(--texto); letter-spacing: -.01em; }
+    .text-muted { color: var(--muted) !important; }
+    .text-primary { color: var(--azul-txt) !important; }
+    .text-success { color: var(--verde-txt) !important; }
+    .text-danger { color: var(--rojo-txt) !important; }
+    .bg-light { background-color: #f7f9fd !important; }
+    :focus-visible { outline: 3px solid #8fb0ff; outline-offset: 2px; }
+    .solo-movil { display: none !important; }
 
-    .header { background-color: var(--primary); color: white; padding: 15px 20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
-    #offline-indicator { background-color: var(--accent); color: white; text-align: center; padding: 5px; font-size: 0.8rem; font-weight: bold; display: none; }
-    .main-layout { display: flex; gap: 20px; align-items: flex-start; padding: 15px; }
+    /* ═══════════ Estructura: barra lateral + columna principal ═══════════ */
+    .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+    .side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 22px; padding: 22px 16px; background: linear-gradient(180deg, var(--navy), var(--navy-2)); color: #fff; overflow-y: auto; }
+    .marca { display: flex; align-items: center; gap: 12px; }
+    .marca-logo { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 12px; background: #fff; color: var(--navy); }
+    .marca-logo svg { width: 26px; height: 26px; }
+    .marca-txt { display: flex; flex-direction: column; line-height: 1.15; }
+    .marca-txt strong { font-size: 21px; letter-spacing: -.01em; }
+    .marca-txt strong span { color: #8fb0ff; }
+    .marca-txt small { font-size: 12px; opacity: .8; }
+    .side-nav { display: flex; flex-direction: column; gap: 6px; }
+    .side-pie { margin-top: auto; padding: 14px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 14px; background: rgba(255, 255, 255, .06); font-size: 12.5px; line-height: 1.4; color: #d4e0f8; }
+    .side-pie strong { display: block; color: #fff; font-size: 13.5px; }
+
+    /* Botones de navegación: mismos .nav-btn en barra lateral (escritorio) y barra inferior (móvil) */
+    .nav-btn { border: 0; background: none; font: inherit; cursor: pointer; }
+    .side .nav-btn { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 12px; color: #d4e0f8; font-weight: 500; text-align: left; }
+    .side .nav-btn i { width: 20px; text-align: center; font-size: 17px; }
+    .side .nav-btn:hover { background: rgba(255, 255, 255, .09); color: #fff; }
+    .side .nav-btn.active { background: var(--azul); color: #fff; box-shadow: 0 6px 16px rgba(37, 99, 235, .35); }
+
+    .main-col { min-width: 0; display: flex; flex-direction: column; }
+    .top { position: sticky; top: 0; z-index: 900; display: flex; align-items: center; gap: 14px; padding: 14px 32px; background: rgba(242, 245, 251, .92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde); }
+    .top-id { display: flex; flex-direction: column; min-width: 0; margin-right: auto; line-height: 1.2; }
+    .top-id h1 { margin: 0; font-size: 26px; font-weight: 700; }
+    .top-id small { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-brand { font-size: 19px; letter-spacing: -.01em; color: var(--navy); }
+    .top-brand span { color: var(--azul); }
+    .top-acc { display: flex; align-items: center; gap: 8px; }
+    .acc-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border: 1px solid var(--borde-campo); border-radius: 12px; background: #fff; color: var(--texto); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; cursor: pointer; }
+    .acc-btn:hover { background: var(--fondo); border-color: #b6c3de; color: var(--texto); }
+    .acc-btn i { font-size: 15px; color: var(--azul); }
+    .acc-nequi i { color: var(--verde); }
+    .acc-taxi i { color: var(--ambar); }
+    #offline-indicator { display: none; margin: 12px 32px 0; padding: 10px 14px; border-radius: 12px; background: var(--ambar-bg); color: var(--ambar-txt); text-align: center; font-size: 13.5px; font-weight: 700; }
+    .vista { flex: 1; width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px 32px 56px; }
+
+    /* ═══════════ Botones ═══════════ */
+    .btn { --bs-btn-border-radius: 12px; --bs-btn-font-weight: 600; --bs-btn-padding-x: 16px; --bs-btn-padding-y: 9px; --bs-btn-font-size: 15px; }
+    .btn-sm { --bs-btn-border-radius: 10px; --bs-btn-padding-x: 12px; --bs-btn-padding-y: 5px; --bs-btn-font-size: 13.5px; }
+    .btn-xs { --bs-btn-border-radius: 10px; --bs-btn-padding-x: 10px; --bs-btn-padding-y: 8px; --bs-btn-font-size: 13px; }
+    .btn-primary, .btn-info { --bs-btn-color: #fff; --bs-btn-bg: var(--azul); --bs-btn-border-color: var(--azul); --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--azul-osc); --bs-btn-hover-border-color: var(--azul-osc); --bs-btn-active-color: #fff; --bs-btn-active-bg: var(--azul-osc); --bs-btn-active-border-color: var(--azul-osc); --bs-btn-disabled-color: #fff; --bs-btn-disabled-bg: var(--azul); --bs-btn-disabled-border-color: var(--azul); }
+    .btn-dark { --bs-btn-bg: var(--navy); --bs-btn-border-color: var(--navy); --bs-btn-hover-bg: var(--navy-2); --bs-btn-hover-border-color: var(--navy-2); --bs-btn-active-bg: var(--navy-2); --bs-btn-active-border-color: var(--navy-2); }
+    .btn-success { --bs-btn-bg: var(--verde); --bs-btn-border-color: var(--verde); --bs-btn-hover-bg: #0e8a43; --bs-btn-hover-border-color: #0e8a43; --bs-btn-active-bg: #0e8a43; --bs-btn-active-border-color: #0e8a43; --bs-btn-disabled-bg: var(--verde); --bs-btn-disabled-border-color: var(--verde); }
+    .btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #b9232f; --bs-btn-hover-border-color: #b9232f; --bs-btn-active-bg: #b9232f; --bs-btn-active-border-color: #b9232f; --bs-btn-disabled-bg: var(--rojo); --bs-btn-disabled-border-color: var(--rojo); }
+    .btn-warning { --bs-btn-color: #3d2a00; --bs-btn-bg: var(--ambar); --bs-btn-border-color: var(--ambar); --bs-btn-hover-color: #3d2a00; --bs-btn-hover-bg: #d4930f; --bs-btn-hover-border-color: #d4930f; --bs-btn-active-bg: #d4930f; --bs-btn-active-border-color: #d4930f; }
+    .btn-light, .btn-secondary { --bs-btn-color: var(--texto); --bs-btn-bg: #fff; --bs-btn-border-color: var(--borde-campo); --bs-btn-hover-color: var(--texto); --bs-btn-hover-bg: var(--fondo); --bs-btn-hover-border-color: #b6c3de; --bs-btn-active-color: var(--texto); --bs-btn-active-bg: var(--fondo); --bs-btn-active-border-color: #b6c3de; }
+    .btn-outline-primary { --bs-btn-color: var(--azul-txt); --bs-btn-border-color: #c7d4ee; --bs-btn-hover-color: var(--azul-txt); --bs-btn-hover-bg: var(--azul-bg); --bs-btn-hover-border-color: #a9bfee; --bs-btn-active-color: var(--azul-txt); --bs-btn-active-bg: var(--azul-bg); --bs-btn-active-border-color: #a9bfee; }
+    .btn-outline-danger { --bs-btn-color: var(--rojo-txt); --bs-btn-border-color: #f1c5c9; --bs-btn-hover-color: var(--rojo-txt); --bs-btn-hover-bg: var(--rojo-bg); --bs-btn-hover-border-color: #e9a7ad; --bs-btn-active-color: var(--rojo-txt); --bs-btn-active-bg: var(--rojo-bg); --bs-btn-active-border-color: #e9a7ad; }
+    .btn-outline-dark, .btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: var(--borde-campo); --bs-btn-hover-color: var(--texto); --bs-btn-hover-bg: var(--fondo); --bs-btn-hover-border-color: #b6c3de; --bs-btn-active-color: var(--texto); --bs-btn-active-bg: var(--fondo); --bs-btn-active-border-color: #b6c3de; }
+
+    /* ═══════════ Formularios ═══════════ */
+    .form-control, .form-select { min-height: 44px; border-radius: 12px; border-color: var(--borde-campo); background-color: #fff; color: var(--texto); }
+    .form-control-sm, .form-select-sm { min-height: 38px; border-radius: 10px; }
+    textarea.form-control { min-height: 88px; }
+    .form-control::placeholder { color: #8391ad; }
+    .form-control:focus, .form-select:focus, .input-line:focus { border-color: var(--azul) !important; box-shadow: 0 0 0 3px #cfe0ff !important; outline: none; }
+    .form-control:disabled, .form-control[readonly] { background-color: #f1f4fa; }
+    .form-check-input { border-color: #b6c3de; }
+    .form-check-input:checked { background-color: var(--azul); border-color: var(--azul); }
+    label.small, .form-label { color: #2b3b5c; margin-bottom: 4px; }
+    .input-line { width: 100%; min-height: 38px; border: 1px solid var(--borde-campo); border-radius: 10px; background: #fff; text-align: center; font-weight: 700; color: var(--texto); }
+    .buscador { position: relative; margin-bottom: 16px; }
+    .buscador > i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .buscador .form-control { min-height: 48px; padding-left: 44px; border-color: var(--borde); border-radius: 14px; box-shadow: var(--sombra); font-weight: 500; }
+
+    /* ═══════════ Tarjetas e indicadores ═══════════ */
+    .card-k { background: var(--card); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); padding: 20px; margin-bottom: 16px; }
+    .card-k > h6 { font-size: 16px; margin-bottom: 14px; }
+    .card-k.border-start { border-width: 0 0 0 5px !important; box-shadow: 0 0 0 1px var(--borde), var(--sombra) !important; }
+    .sec-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 12px; }
+    .sec-cab h2 { margin: 0; font-size: 18px; font-weight: 700; }
+    .kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
+    .kpis-1 { grid-template-columns: minmax(0, 520px); }
+    .kpi { display: flex; align-items: center; gap: 16px; padding: 20px; border: 1px solid transparent; border-radius: var(--radio); box-shadow: var(--sombra); }
+    .kpi-ico { display: grid; place-items: center; flex: none; width: 54px; height: 54px; border-radius: 50%; color: #fff; font-size: 22px; }
+    .kpi-cuerpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+    .kpi-tit { font-size: 14px; color: #2b3b5c; }
+    .kpi-val { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 13px; color: var(--muted); }
+    .kpi-verde { background: #e8f7ee; border-color: #c9ebd8; } .kpi-verde .kpi-ico { background: var(--verde); }
+    .kpi-rojo { background: #fdecee; border-color: #f7cfd3; } .kpi-rojo .kpi-ico { background: var(--rojo); }
+    .kpi-navy { background: linear-gradient(135deg, var(--navy), #17409a); color: #fff; }
+    .kpi-navy .kpi-ico { background: rgba(255, 255, 255, .16); } .kpi-navy .kpi-tit { color: #d4e0f8; } .kpi-navy .kpi-sub { color: #b9c9ec; }
+    .vacio { padding: 44px 20px; text-align: center; color: var(--muted); }
+    .vacio-ico { display: inline-grid; place-items: center; width: 56px; height: 56px; margin-bottom: 10px; border-radius: 50%; background: var(--azul-bg); color: var(--azul-txt); font-size: 22px; }
+    .vacio p { margin: 0; }
+
+    /* Estados */
+    .chip { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+    .chip-vencido { background: var(--rojo-bg); color: var(--rojo-txt); }
+    .chip-hoy { background: var(--azul); color: #fff; }
+    .chip-proximo { background: var(--azul-bg); color: var(--azul-txt); }
+    .chip-neutro { background: #eef2fa; color: #3a4a6b; }
+    .avatar { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--azul-bg); color: var(--azul-txt); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+
+    /* ═══════════ Vender ═══════════ */
+    .main-layout { display: flex; gap: 20px; align-items: flex-start; }
     .list-column { flex: 1; min-width: 0; }
-    .panel-column { width: 350px; position: sticky; top: 10px; display: none; } 
+    .panel-column { width: 380px; position: sticky; top: 92px; display: none; max-height: calc(100vh - 112px); overflow-y: auto; border-radius: var(--radio); }
     @media (min-width: 992px) { .panel-column { display: block; } }
+    .pos-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+    .pos-acciones .btn { flex: 1 1 190px; }
+    .pos-row-lite { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; margin-bottom: 8px; background: #fff; border: 1px solid var(--borde); border-left: 5px solid transparent; border-radius: 14px; box-shadow: var(--sombra); cursor: pointer; transition: border-color .12s, background .12s; }
+    .pos-row-lite:hover { border-left-color: #8fb0ff; background: #f9fbff; }
+    .pos-row-lite.active { border-left-color: var(--azul); background: var(--azul-bg); }
+    .pos-row-lite .info { flex: 1; min-width: 0; }
+    .pos-row-lite .name { font-weight: 700; color: var(--texto); margin-bottom: 2px; }
+    .pos-row-lite .price { font-weight: 700; font-size: 17px; color: var(--azul-txt); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
-    .pos-row-lite { background: white; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
-    .pos-row-lite:hover { transform: translateX(3px); border-left-color: var(--cyan); }
-    .pos-row-lite.active { border-left-color: var(--accent); background: #eef2f7; border-right: 1px solid var(--accent); }
-    .pos-row-lite .info { flex: 1; min-width: 0; padding-right: 10px; }
-    .pos-row-lite .name { font-weight: 700; color: var(--primary); font-size: 0.95rem; margin-bottom: 2px; }
-    .pos-row-lite .price { font-weight: 700; font-size: 1.1rem; color: var(--accent); text-align: right; white-space: nowrap; }
-    
-    .catalog-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; } }
+    .cotizador-panel { background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px; box-shadow: var(--sombra); }
+    .cart-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .cart-cab h5 { margin: 0; font-size: 18px; font-weight: 700; }
+    .cart-cab-acc { display: flex; gap: 6px; }
+    .panel-column .btn-ocultar { display: none; }
+    #cart-items-list { max-height: 170px; overflow-y: auto; padding: 10px 12px; border: 1px dashed var(--borde-campo); border-radius: 12px; background: #fafcff; color: var(--muted); font-size: 14px; }
+    #cart-items-list .btn-sm { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; }
+    .cart-ajustes small { display: block; margin-bottom: 4px; font-size: 12px; color: var(--muted); }
+    .cart-total { padding: 14px 16px; margin-bottom: 14px; border: 1px solid #dfe7f6; border-radius: 14px; background: #f4f7fd; }
+    .cart-total .fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .cart-total #res-cont { font-size: 24px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+    .cart-total #row-cred { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #c5d2ea; }
+    .cart-total .fijo { margin-top: 10px; padding-top: 10px; border-top: 1px solid #dfe7f6; }
+    .cart-caja { padding: 12px; margin-bottom: 10px; border: 1px solid var(--borde); border-radius: 12px; background: #f9fbff; }
+    .cart-enlace { display: inline-block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--azul-txt); text-decoration: none; }
+    #btn-vender-main { --bs-btn-padding-y: 13px; --bs-btn-font-size: 16px; letter-spacing: .02em; }
 
-    .card-catalog { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: 0.2s; }
-    .card-catalog:hover { border-color: var(--cyan); box-shadow: 0 5px 15px rgba(99, 179, 237, 0.2); }
-    .cat-img-box { height: 120px; width: 100%; background: #f8f9fa; display: flex; align-items: center; justify-content: center; overflow: hidden; border-bottom: 1px solid #e2e8f0; position: relative; }
-    .cat-img-box img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-edit-float { position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.95); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; color: var(--primary); }
-    .cat-body { padding: 10px; flex: 1; display: flex; flex-direction: column; }
-    .cat-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 5px; color: var(--primary); height: 34px; overflow: hidden; }
-    .cat-price { color: var(--accent); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
-
-    .cotizador-panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); border-top: 4px solid var(--cyan); }
-    .input-line { border:none; border-bottom: 2px solid #e2e8f0; width:100%; text-align:center; font-weight:bold; outline:none; color: var(--primary); }
-
-    .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; background: white; z-index: 5000; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -5px 30px rgba(0,0,0,0.2); transform: translateY(110%); transition: transform 0.3s; max-height: 85vh; overflow-y: auto; border-top: 4px solid var(--accent); }
+    .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 5000; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 40px rgba(8, 20, 50, .25); transform: translateY(110%); transition: transform .3s; padding-bottom: env(safe-area-inset-bottom); }
     .mobile-panel.visible { transform: translateY(0); }
+    .mobile-panel .cotizador-panel { border: 0; border-radius: 0; box-shadow: none; padding: 18px 16px 22px; }
+    #btn-float-cart { position: fixed; right: 16px; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 4000; display: none; padding: 13px 20px; border: 0; border-radius: 999px; background: var(--azul); color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 10px 24px rgba(37, 99, 235, .4); }
 
-    .card-k { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: none; }
-    .card-balance { padding: 25px; color: var(--cyan); border-radius: 20px; text-align: center; background: linear-gradient(135deg, var(--primary), var(--accent)); box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 15px; }
-    .card-balance h1 { color: white; }
+    @media (min-width: 992px) { #btn-float-cart { display: none !important; } }
 
+    /* ═══════════ Catálogo ═══════════ */
+    .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px; margin-bottom: 16px; background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+    .barra .form-control { flex: 2 1 200px; width: auto; }
+    .barra .form-select { flex: 1 1 160px; width: auto; }
+    .catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; } }
+    .card-catalog { display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); transition: transform .15s, box-shadow .15s; }
+    .card-catalog:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(16, 40, 90, .1); }
+    .cat-img-box { position: relative; display: flex; align-items: center; justify-content: center; height: 130px; width: 100%; overflow: hidden; background: var(--azul-bg); border-bottom: 1px solid var(--borde); }
+    .cat-img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .cat-img-box > i { color: #b9cdf5 !important; }
+    .btn-edit-float { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, .95); color: var(--navy); box-shadow: 0 2px 6px rgba(16, 40, 90, .18); cursor: pointer; }
+    .cat-body { display: flex; flex-direction: column; flex: 1; padding: 12px; }
+    .cat-title { height: 38px; margin-bottom: 6px; overflow: hidden; font-weight: 700; font-size: 14px; line-height: 1.35; color: var(--texto); }
+    .cat-price { margin-bottom: 4px; font-weight: 700; font-size: 16px; color: var(--azul-txt); }
+    .card-catalog .btn-sm { --bs-btn-padding-y: 7px; }
+
+    /* ═══════════ Créditos (cartera) ═══════════ */
+    .cobros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .cobros > :not(.cobro) { grid-column: 1 / -1; }
+    .cobro { display: flex; flex-direction: column; gap: 14px; padding: 18px; background: #fff; border: 1px solid var(--borde); border-left: 6px solid #9db0d6; border-radius: var(--radio); box-shadow: var(--sombra); }
+    .cobro-vencido { border-left-color: var(--rojo); } .cobro-hoy, .cobro-proximo { border-left-color: var(--azul); }
+    .cobro-sup { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .celda-cli { display: flex; flex: 1 1 210px; align-items: center; gap: 12px; min-width: 0; }
+    .celda-cli > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+    .celda-cli strong { font-size: 16px; overflow-wrap: anywhere; }
+    .celda-cli small { color: var(--muted); overflow-wrap: anywhere; }
+    .cobro-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .cobro-cifras small { display: block; color: var(--muted); font-size: 12.5px; }
+    .cobro-cifras strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+    .cobro-acc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 12px; border-top: 1px solid var(--borde); }
+    .cobro { container-type: inline-size; }
+    @container (min-width: 560px) { .cobro-acc { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .cobro-acc .btn { white-space: nowrap; }
+    .btn-wa { --bs-btn-color: #fff; --bs-btn-bg: var(--verde); --bs-btn-border-color: var(--verde); --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #0e8a43; --bs-btn-hover-border-color: #0e8a43; --bs-btn-active-color: #fff; --bs-btn-active-bg: #0e8a43; --bs-btn-active-border-color: #0e8a43; }
+
+    /* ═══════════ Caja ═══════════ */
+    .caja-form { max-width: 760px; }
+    .segmento { gap: 2px; padding: 4px; margin-bottom: 16px; border-radius: 14px; background: #e6ecf7; }
+    .segmento .nav-link { padding: 10px 6px; border-radius: 10px; color: #2b3b5c; font-weight: 600; }
+    .segmento .nav-link.active { background: #fff; color: var(--azul-txt); box-shadow: 0 1px 4px rgba(16, 40, 90, .15); }
+    #hist-list > div { padding: 12px 0 !important; }
+    #hist-list > div:last-child { border-bottom: 0 !important; }
+    #hist-list strong { font-variant-numeric: tabular-nums; }
+
+    /* ═══════════ Navegación móvil ═══════════ */
+    .nav-btm { display: none; }
+
+    /* ═══════════ Modales, avisos y capas ═══════════ */
+    .modal-backdrop { --bs-backdrop-bg: #081432; --bs-backdrop-opacity: .5; }
+    .modal-content { border: 0; border-radius: 20px; box-shadow: 0 24px 64px rgba(8, 20, 50, .3); }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--borde); }
+    .modal-title { font-size: 17px; }
+    .modal-body { padding: 18px 20px 22px; }
+    #modalEditItem { z-index: 6000 !important; }
+    #modalLoginApp .modal-body i { color: var(--azul) !important; }
+    .swal2-popup { border-radius: 20px !important; font-family: var(--fuente) !important; }
+    .swal2-styled { border-radius: 12px !important; font-weight: 600 !important; }
+    .swal2-input { border-radius: 12px !important; font-size: 15px !important; }
+    #toast-container { position: fixed; top: 16px; right: 16px; z-index: 10000; max-width: calc(100vw - 32px); }
+    #toast-container .toast { border-radius: 14px; box-shadow: 0 12px 32px rgba(8, 20, 50, .3); font-weight: 600; }
+    .toast.bg-success { background-color: var(--verde) !important; }
+    .toast.bg-info { background-color: var(--navy) !important; }
+    .toast.bg-danger, .toast.bg-error { background-color: #b9232f !important; }
+    .toast.bg-warning { background-color: #8a5a00 !important; }
+    #loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: rgba(242, 245, 251, .96); }
+    #loader .marca-logo { width: 64px; height: 64px; margin-bottom: 14px; border-radius: 18px; background: var(--navy); color: #fff; }
+    #loader .marca-logo svg { width: 38px; height: 38px; }
+    #loader .spinner-border { color: var(--azul) !important; }
+    .file-upload-wrapper { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 180px; margin-bottom: 10px; overflow: hidden; border: 2px dashed var(--borde-campo); border-radius: 14px; background: #f7f9fd; }
+    .preview-img { position: absolute; z-index: 5; display: none; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .file-input-overlay { position: absolute; top: 0; left: 0; z-index: 100; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
     .scroll-menu { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; margin-bottom: 15px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
     .scroll-menu::-webkit-scrollbar { display: none; }
 
-    .nav-btm { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-between; padding: 8px 10px; border-top: 1px solid #e2e8f0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-    .nav-btn { background: none; border: none; color: #a0aec0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.7rem; flex: 1; transition: 0.2s; }
-    .nav-btn.active { color: var(--accent); transform: translateY(-2px); }
-    .nav-btn.active span { font-weight: 700; color: var(--primary); }
+    /* Banner instalador PWA */
+    .install-banner { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 9999; display: none; justify-content: space-between; align-items: center; gap: 12px; width: calc(100% - 28px); max-width: 420px; padding: 14px 16px; transform: translateX(-50%); border-radius: 16px; background: var(--navy); color: #fff; box-shadow: 0 16px 40px rgba(8, 20, 50, .4); }
+    .install-banner .text { font-size: 14px; font-weight: 600; line-height: 1.3; }
+    .install-banner .marca-logo { width: 40px; height: 40px; }
 
-    .file-upload-wrapper { position: relative; width: 100%; height: 180px; border: 2px dashed #cbd5e0; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #f8f9fa; overflow: hidden; margin-bottom: 10px; }
-    .preview-img { position: absolute; width: 100%; height: 100%; object-fit: contain; z-index: 5; display: none; background: white; }
-    .file-input-overlay { position: absolute; top:0; left:0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 100; }
-
-    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-    .btn-bi { background: rgba(255,255,255,0.15); border:1px solid rgba(255, 255, 255, 0.3); color:white; border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; text-decoration: none; }
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
-
-    .btn-primary, .btn-dark { background-color: var(--primary) !important; border-color: var(--primary) !important; color: white !important; }
-    .btn-primary:hover, .btn-dark:hover { background-color: var(--accent-hover) !important; border-color: var(--accent-hover) !important; color: white !important; }
-    .btn-info { background-color: var(--cyan) !important; border-color: var(--cyan) !important; color: white !important; font-weight: bold; }
-    .text-primary { color: var(--primary) !important; }
-    #btn-float-cart { background-color: var(--accent); color: white; border: none; }
-    .form-control:focus, .form-select:focus { box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3) !important; border-color: var(--cyan) !important; }
-    
-    #modalEditItem { z-index: 6000 !important; }
-    
-    /* BANNER INSTALADOR PWA */
-    .install-banner { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; background: var(--primary); color: white; border-radius: 15px; padding: 15px; z-index: 9999; display: none; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border: 2px solid var(--cyan); }
-    .install-banner .text { font-size: 0.9rem; font-weight: bold; line-height: 1.2; margin-left: 10px; }
-
-    /* MODAL RADIOGRAFÍA FINANCIERA (INYECCIÓN POS) */
-    .rad-box { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed var(--accent); }
-    .rad-label { color: #888; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 2px; display: block; font-weight:bold; }
-    .rad-val { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
-    .rad-secret { filter: blur(4px); cursor: pointer; transition: 0.2s; }
+    /* Radiografía financiera (modal) */
+    .rad-box { padding: 14px; margin-bottom: 14px; border: 1px solid var(--borde); border-radius: 14px; background: #f9fbff; }
+    .rad-label { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .rad-val { font-size: 18px; font-weight: 700; color: var(--navy); }
+    .rad-secret { filter: blur(4px); cursor: pointer; transition: .2s; }
     .rad-secret.revealed { filter: blur(0); }
+
+    /* ═══════════ Adaptación a pantallas ═══════════ */
+    @media (max-width: 1279px) {
+      .app { grid-template-columns: 84px minmax(0, 1fr); }
+      .side { align-items: center; padding: 20px 12px; }
+      .marca-txt, .side .nav-btn span, .side-pie { display: none; }
+      .side .nav-btn { justify-content: center; padding: 13px; }
+      .vista { padding: 22px 24px 48px; } .top { padding: 12px 24px; } #offline-indicator { margin: 12px 24px 0; }
+      .cobros { grid-template-columns: 1fr; }
+      .panel-column { width: 350px; }
+    }
+    @media (max-width: 991px) {
+      .app { grid-template-columns: 1fr; }
+      .side, .solo-escritorio { display: none !important; }
+      .solo-movil { display: revert !important; }
+      .top { gap: 10px; padding: 10px 14px; }
+      .top .marca-logo.solo-movil { display: grid !important; width: 38px; height: 38px; background: var(--navy); color: #fff; }
+      .top .marca-logo svg { width: 23px; height: 23px; }
+      .top-id small { font-size: 12px; }
+      .top-acc { gap: 2px; }
+      .acc-btn { flex-direction: column; justify-content: center; gap: 2px; min-width: 46px; min-height: 44px; padding: 4px 6px; border: 0; background: none; font-size: 10.5px; font-weight: 600; color: var(--muted); }
+      .acc-btn i { font-size: 17px; }
+      #offline-indicator { margin: 10px 14px 0; }
+      .vista { padding: 16px 14px calc(104px + env(safe-area-inset-bottom)); }
+      .kpis { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+      .kpis-1 { grid-template-columns: 1fr; }
+      .kpis-3 .kpi-navy { grid-column: 1 / -1; }
+      .kpis-3 .kpi:not(.kpi-navy) { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+      .kpis-3 .kpi:not(.kpi-navy) .kpi-ico { width: 42px; height: 42px; font-size: 18px; }
+      .kpis-3 .kpi:not(.kpi-navy) .kpi-val { font-size: 20px; }
+      .kpi { padding: 16px; } .kpi-val { font-size: 25px; }
+      .cobro { padding: 16px; }
+      .cobro-cifras strong { font-size: 15px; }
+      .nav-btm { position: fixed; z-index: 1000; left: 0; right: 0; bottom: 0; display: flex; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--borde); box-shadow: 0 -6px 24px rgba(16, 40, 90, .08); }
+      .nav-btm .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; padding: 8px 2px; border-radius: 12px; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+      .nav-btm .nav-btn i { font-size: 19px; }
+      .nav-btm .nav-btn.active { background: var(--azul-bg); color: var(--azul-txt); }
+      #toast-container { left: 12px; right: 12px; top: 12px; }
+    }
+    @media (max-width: 575px) {
+      /* Los modales suben desde abajo como hoja, igual que el carrito */
+      .modal:not(#modalLoginApp) { --bs-modal-margin: 0px; }
+      .modal:not(#modalLoginApp) .modal-dialog-centered { align-items: flex-end; }
+      .modal:not(#modalLoginApp) .modal-content { border-radius: 22px 22px 0 0; }
+      .modal:not(#modalLoginApp) .modal-body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+      .modal.fade:not(#modalLoginApp) .modal-dialog { transform: translateY(40px); }
+      .modal.show:not(#modalLoginApp) .modal-dialog { transform: none; }
+      .modal .input-group { flex-wrap: wrap; gap: 8px; }
+      .modal .input-group > * { flex: 1 1 100%; border-radius: 12px !important; margin-left: 0 !important; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   </style>
 </head>
 <body>
 
   <div class="install-banner" id="install-banner">
-    <div class="d-flex align-items-center">
-      <div style="font-size: 2.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🪐</div>
-      <div class="text">Instala Planet Shop como una App en tu celular.</div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="marca-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+      <div class="text">Instala Planet Shop como una app en tu celular.</div>
     </div>
-    <div class="d-flex flex-column gap-2" style="min-width: 80px;">
-      <button class="btn btn-sm btn-info fw-bold w-100 text-white shadow-sm" id="btn-install-app">Instalar</button>
-      <button class="btn btn-sm text-white opacity-75 w-100" id="btn-close-install" style="font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.2);">Cerrar</button>
+    <div class="d-flex flex-column gap-2" style="min-width: 84px;">
+      <button class="btn btn-sm btn-primary w-100" id="btn-install-app">Instalar</button>
+      <button class="btn btn-sm w-100 text-white" id="btn-close-install" style="border: 1px solid rgba(255,255,255,0.3);">Cerrar</button>
     </div>
   </div>
 
-  <div id="loader"><div class="spinner-border text-primary" role="status"></div><h6 class="mt-3 text-muted fw-bold">Conectando a Planet Shop...</h6></div>
+  <div id="loader">
+    <span class="marca-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+    <div class="spinner-border text-primary" role="status"></div>
+    <h6 class="mt-3 text-muted fw-bold">Conectando a Planet Shop...</h6>
+  </div>
   <div id="toast-container"></div>
 
-  <div class="header">
-    <div>
-        <h4 class="m-0 fw-bold" style="letter-spacing: 1px;">
-            <span style="color: var(--cyan);">Planet</span><span style="color: white;">.shop</span>
-        </h4>
-        <small class="opacity-75" id="user-display" style="color: var(--cyan);">Verificando Credenciales...</small>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="dashboard.html" class="btn btn-bi" style="background-color: var(--accent); border-color: var(--cyan);"><i class="fas fa-chart-line"></i> BI</a>
-        <a href="taxi.html" class="btn btn-bi fw-bold text-dark" style="background-color: #f6e05e; border-color: #d69e2e;"><i class="fas fa-taxi"></i> Taxi</a>
-        <button class="btn btn-bi" style="background-color: #38a169; border-color: #38a169;" onclick="window.compartirNequi()"><i class="fas fa-wallet"></i> Nequi</button>
-        <button class="btn btn-bi" onclick="window.abrirModalClientes()"><i class="fas fa-address-book"></i> Clientes</button>
-    </div>
-  </div>
-  
-  <div id="offline-indicator">⚠️ Modo Sin Conexión - Operando Localmente</div>
+  <div class="app">
+    <aside class="side" aria-label="Navegación principal">
+      <div class="marca">
+        <span class="marca-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+        <span class="marca-txt"><strong>Planet<span>.shop</span></strong><small>POS y gestión financiera</small></span>
+      </div>
+      <nav class="side-nav">
+        <button class="nav-btn active" data-view="pos" onclick="window.nav('pos',this)" title="Vender"><i class="fas fa-shopping-cart"></i><span>Vender</span></button>
+        <button class="nav-btn" data-view="inv" onclick="window.nav('inv',this)" title="Catálogo"><i class="fas fa-box-open"></i><span>Catálogo</span></button>
+        <button class="nav-btn" data-view="cartera" onclick="window.nav('cartera',this)" title="Créditos"><i class="fas fa-hand-holding-usd"></i><span>Créditos</span></button>
+        <button class="nav-btn" data-view="fin" onclick="window.nav('fin',this)" title="Caja"><i class="fas fa-chart-pie"></i><span>Caja</span></button>
+      </nav>
+      <div class="side-pie"><strong>Planet Shop POS</strong>Ventas, cartera y caja en un solo lugar.</div>
+    </aside>
 
-  <div class="container-fluid px-3">
-    <div id="view-pos" class="view-sec">
-      <div class="main-layout">
-        <div class="list-column">
-           <button class="btn btn-outline-primary w-100 mb-2 fw-bold" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open"></i> VER COTIZACIONES GUARDADAS</button>
-           <button class="btn w-100 mb-2 fw-bold" onclick="window.abrirModalItemManual()" style="background-color: var(--accent); color: white; border: none;"><i class="fas fa-plus"></i> AGREGAR ÍTEM MANUAL</button>
-           
-           <div class="bg-white p-2 rounded mb-3 shadow-sm d-flex align-items-center border">
-               <i class="fas fa-search text-muted ms-2 me-2"></i>
-               <input type="text" id="pos-search" class="form-control border-0 shadow-none" placeholder="Buscar producto en inventario..." onkeyup="window.renderPos()" style="font-weight:bold; color:var(--primary);">
-           </div>
-           
-           <div id="pos-placeholder" class="text-center text-muted py-5">
-               <i class="fas fa-shopping-cart fs-1 mb-2 opacity-50" style="color: var(--cyan);"></i>
-               <p>Busca o agrega ítems libres<br>para facturar.</p>
-           </div>
-           <div id="pos-list"></div>
+    <div class="main-col">
+      <header class="top">
+        <span class="marca-logo solo-movil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="5.5"/><ellipse cx="12" cy="12" rx="11" ry="3.4" transform="rotate(-24 12 12)"/></svg></span>
+        <div class="top-id">
+          <strong class="top-brand solo-movil">Planet<span>.shop</span></strong>
+          <h1 id="page-title" class="solo-escritorio">Vender</h1>
+          <small id="user-display">Verificando credenciales...</small>
         </div>
-        <div class="panel-column"><div id="desktop-cart-container" class="cotizador-panel-container"></div></div>
-      </div>
-    </div>
-
-    <div id="view-inv" class="view-sec" style="display:none; padding:15px;">
-      <div class="scroll-menu">
-        <input type="text" id="inv-search" class="form-control" placeholder="🔍 Buscar Referencia..." onkeyup="window.renderInv()" style="width: 150px;">
-        <select id="filter-prov" class="form-select" style="width: 150px; border-color: var(--cyan);" onchange="window.renderInv()"><option value="">Proveedores</option></select>
-        <button class="btn btn-primary" onclick="window.abrirModalNuevo()" style="white-space: nowrap;">+ CREAR PRODUCTO</button>
-        <button class="btn" onclick="window.abrirModalProv()" style="background-color:var(--accent); color:white; white-space: nowrap;"><i class="fas fa-users"></i> Proveedores</button>
-      </div>
-      <div id="inv-list" class="catalog-grid"></div>
-    </div>
-
-    <div id="view-cartera" class="view-sec" style="display:none; padding:15px;">
-        <div class="card-balance" style="background: linear-gradient(135deg, #c53030, #9b2c2c);">
-            <small class="opacity-75" style="color:white;">Cuentas por Cobrar (Total Deuda)</small>
-            <h1 class="fw-bold display-4 my-1" id="bal-cartera">...</h1>
+        <div class="top-acc">
+          <button class="acc-btn" onclick="window.abrirModalClientes()"><i class="fas fa-address-book"></i><span>Clientes</span></button>
+          <button class="acc-btn acc-nequi" onclick="window.compartirNequi()"><i class="fas fa-wallet"></i><span>Nequi</span></button>
+          <a href="dashboard.html" class="acc-btn"><i class="fas fa-chart-line"></i><span>BI</span></a>
+          <a href="taxi.html" class="acc-btn acc-taxi"><i class="fas fa-taxi"></i><span>Taxi</span></a>
         </div>
-        <h6 class="fw-bold text-muted mb-3">Cartera de Clientes Activa</h6>
-        <input type="text" id="cartera-search" class="form-control mb-3" placeholder="🔍 Buscar cliente o producto..." onkeyup="window.Finance.renderCartera()">
-        <div id="cartera-list"></div>
-    </div>
+      </header>
 
-    <div id="view-fin" class="view-sec" style="display:none; padding:15px;">
-      <div class="card-balance mb-3" style="background: linear-gradient(135deg, var(--primary), var(--accent));">
-          <small class="opacity-75" style="color: white;">Capital Real</small>
-          <h1 class="fw-bold display-4 my-1" id="bal-patrimonio" style="color: white;">...</h1>
-          <small class="text-white opacity-75" style="font-size:0.7rem;">Caja + Cuentas Cobrar + Inventario - Deudas</small>
-      </div>
-      
-      <div class="row g-2 mb-3">
-          <div class="col-6">
-              <div class="card-balance p-3 mb-0" style="background: white; border: 1px solid var(--accent);">
-                  <small class="text-muted fw-bold" style="color: var(--accent) !important;">Flujo de Caja</small>
-                  <h3 class="fw-bold m-0" id="bal-caja" style="color: var(--primary);">...</h3>
-              </div>
+      <div id="offline-indicator">⚠️ Modo sin conexión: operando localmente</div>
+
+      <main class="vista">
+        <div id="view-pos" class="view-sec" data-title="Vender">
+          <div class="main-layout">
+            <div class="list-column">
+               <div class="pos-acciones">
+                 <button class="btn btn-primary" onclick="window.abrirModalItemManual()"><i class="fas fa-plus me-1"></i> Agregar ítem manual</button>
+                 <button class="btn btn-light" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open me-1"></i> Cotizaciones guardadas</button>
+               </div>
+
+               <div class="buscador">
+                   <i class="fas fa-search"></i>
+                   <input type="text" id="pos-search" class="form-control" placeholder="Buscar producto en inventario..." onkeyup="window.renderPos()">
+               </div>
+
+               <div id="pos-placeholder" class="vacio">
+                   <span class="vacio-ico"><i class="fas fa-shopping-cart"></i></span>
+                   <p>Busca un producto o agrega un ítem manual<br>para empezar a facturar.</p>
+               </div>
+               <div id="pos-list"></div>
+            </div>
+            <div class="panel-column"><div id="desktop-cart-container" class="cotizador-panel-container"></div></div>
           </div>
-          <div class="col-6">
-              <div class="card-balance p-3 mb-0" style="background: #fff5f5; border: 1px solid #fc8181;">
-                  <small class="text-danger fw-bold">Obligaciones (Pasivos)</small>
-                  <h3 class="fw-bold text-danger m-0" id="bal-pasivos">...</h3>
-                  <button class="btn btn-outline-danger btn-sm mt-1 py-0 px-2" onclick="window.abrirModalPasivos()">Pagar</button>
-              </div>
+        </div>
+
+        <div id="view-inv" class="view-sec" data-title="Catálogo" style="display:none;">
+          <div class="barra">
+            <input type="text" id="inv-search" class="form-control" placeholder="Buscar referencia..." onkeyup="window.renderInv()">
+            <select id="filter-prov" class="form-select" onchange="window.renderInv()"><option value="">Proveedores</option></select>
+            <button class="btn btn-primary" onclick="window.abrirModalNuevo()"><i class="fas fa-plus me-1"></i> Crear producto</button>
+            <button class="btn btn-light" onclick="window.abrirModalProv()"><i class="fas fa-users me-1"></i> Proveedores</button>
           </div>
-      </div>
-      
-      <ul class="nav nav-pills nav-fill mb-3 bg-white rounded shadow-sm p-1">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#f-abono" style="color:var(--primary);">Recaudo</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-ingreso" style="color:var(--primary);">Ingreso</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-gasto" style="color:var(--primary);">Egreso</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist" style="color:var(--primary);">Historial</a></li>
-      </ul>
-      <div class="tab-content">
-         <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold">Abono a Deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-2"><button class="btn btn-success w-100" onclick="window.Finance.doAbono()">CONFIRMAR RECAUDO</button></div></div>
-         <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold" style="color: var(--primary);">Entrada Extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-2" placeholder="Monto"><button class="btn btn-primary w-100" onclick="window.Finance.doIngresoExtra()">REGISTRAR ENTRADA</button></div></div>
-         <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold">Salida de Dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Costo de Mercancía</option><option>Transporte/Fletes</option><option>Servicios/Suscripciones</option><option>Publicidad/Redes</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-2" placeholder="Vincular a Operación..."><button class="btn btn-danger w-100" onclick="window.Finance.doGasto()">REGISTRAR EGRESO</button></div></div>
-         <div class="tab-pane fade" id="f-hist">
-             <div class="card-k">
-                 <input type="text" id="hist-search" class="form-control mb-3" placeholder="🔍 Buscar movimiento..." onkeyup="window.Finance.renderFin()">
-                 <div id="hist-list"></div>
-             </div>
-         </div>
-      </div>
+          <div id="inv-list" class="catalog-grid"></div>
+        </div>
+
+        <div id="view-cartera" class="view-sec" data-title="Créditos" style="display:none;">
+            <div class="kpis kpis-1">
+              <div class="kpi kpi-rojo">
+                <span class="kpi-ico"><i class="fas fa-hand-holding-usd"></i></span>
+                <div class="kpi-cuerpo">
+                  <span class="kpi-tit">Cuentas por cobrar</span>
+                  <strong class="kpi-val" id="bal-cartera">...</strong>
+                  <span class="kpi-sub">Total de la cartera activa</span>
+                </div>
+              </div>
+            </div>
+            <div class="sec-cab"><h2>Cartera de clientes</h2></div>
+            <div class="buscador">
+                <i class="fas fa-search"></i>
+                <input type="text" id="cartera-search" class="form-control" placeholder="Buscar cliente o producto..." onkeyup="window.Finance.renderCartera()">
+            </div>
+            <div id="cartera-list" class="cobros"></div>
+        </div>
+
+        <div id="view-fin" class="view-sec" data-title="Caja" style="display:none;">
+          <div class="kpis kpis-3">
+            <div class="kpi kpi-navy">
+              <span class="kpi-ico"><i class="fas fa-landmark"></i></span>
+              <div class="kpi-cuerpo">
+                <span class="kpi-tit">Capital real</span>
+                <strong class="kpi-val" id="bal-patrimonio">...</strong>
+                <span class="kpi-sub">Caja + cuentas por cobrar + inventario − deudas</span>
+              </div>
+            </div>
+            <div class="kpi kpi-verde">
+              <span class="kpi-ico"><i class="fas fa-wallet"></i></span>
+              <div class="kpi-cuerpo">
+                <span class="kpi-tit">Flujo de caja</span>
+                <strong class="kpi-val" id="bal-caja">...</strong>
+              </div>
+            </div>
+            <div class="kpi kpi-rojo">
+              <span class="kpi-ico"><i class="fas fa-file-invoice-dollar"></i></span>
+              <div class="kpi-cuerpo">
+                <span class="kpi-tit">Obligaciones (pasivos)</span>
+                <strong class="kpi-val" id="bal-pasivos">...</strong>
+                <div><button class="btn btn-outline-danger btn-sm mt-1" onclick="window.abrirModalPasivos()">Pagar</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="caja-form">
+            <ul class="nav nav-pills nav-fill segmento">
+              <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#f-abono">Recaudo</a></li>
+              <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-ingreso">Ingreso</a></li>
+              <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-gasto">Egreso</a></li>
+              <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#f-hist">Historial</a></li>
+            </ul>
+            <div class="tab-content">
+               <div class="tab-pane fade show active" id="f-abono"><div class="card-k"><h6 class="text-success fw-bold"><i class="fas fa-hand-holding-usd me-1"></i> Abono a deuda</h6><select id="ab-cli" class="form-select mb-2"></select><input type="number" id="ab-monto" class="form-control mb-2" placeholder="Monto"><input type="date" id="ab-fecha" class="form-control mb-3"><button class="btn btn-success w-100" onclick="window.Finance.doAbono()">Confirmar recaudo</button></div></div>
+               <div class="tab-pane fade" id="f-ingreso"><div class="card-k"><h6 class="fw-bold"><i class="fas fa-arrow-down me-1"></i> Entrada extra</h6><input type="text" id="inc-desc" class="form-control mb-2" placeholder="Concepto"><select id="inc-cat" class="form-select mb-2"><option value="Venta Externa">Venta Externa</option><option value="Prestamo">Préstamo</option><option value="Inyeccion Capital">Aporte</option></select><input type="number" id="inc-monto" class="form-control mb-3" placeholder="Monto"><button class="btn btn-primary w-100" onclick="window.Finance.doIngresoExtra()">Registrar entrada</button></div></div>
+               <div class="tab-pane fade" id="f-gasto"><div class="card-k"><h6 class="text-danger fw-bold"><i class="fas fa-arrow-up me-1"></i> Salida de dinero</h6><input type="text" id="g-desc" class="form-control mb-2" placeholder="Concepto"><select id="g-cat" class="form-select mb-2"><option>Costo de Mercancía</option><option>Transporte/Fletes</option><option>Servicios/Suscripciones</option><option>Publicidad/Redes</option><option>Otros</option></select><input type="number" id="g-monto" class="form-control mb-2" placeholder="Monto"><input list="g-vinculo-list" id="g-vinculo" class="form-control mb-3" placeholder="Vincular a operación..."><button class="btn btn-danger w-100" onclick="window.Finance.doGasto()">Registrar egreso</button></div></div>
+               <div class="tab-pane fade" id="f-hist">
+                   <div class="card-k">
+                       <div class="buscador mb-2">
+                           <i class="fas fa-search"></i>
+                           <input type="text" id="hist-search" class="form-control" placeholder="Buscar movimiento..." onkeyup="window.Finance.renderFin()" style="box-shadow:none;">
+                       </div>
+                       <div id="hist-list"></div>
+                   </div>
+               </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
   <div id="mobile-cart" class="mobile-panel cotizador-panel-container"></div>
-  <button id="btn-float-cart" class="btn shadow" style="position:fixed; bottom:80px; right:20px; width:60px; height:60px; z-index:4000; display:none; font-size:1.5rem;" onclick="window.toggleMobileCart(true)" title="Ver Carrito">🛒</button>
+  <button id="btn-float-cart" class="btn" onclick="window.toggleMobileCart(true)" title="Ver carrito">🛒</button>
 
   <div class="nav-btm">
-    <button class="nav-btn active" onclick="window.nav('pos',this)"><i class="fas fa-shopping-cart" style="color:var(--accent);"></i><span>Vender</span></button>
-    <button class="nav-btn" onclick="window.nav('inv',this)"><i class="fas fa-box-open"></i><span>Catálogo</span></button>
-    <button class="nav-btn" onclick="window.nav('cartera',this)"><i class="fas fa-hand-holding-usd text-danger"></i><span class="text-danger">Créditos</span></button>
-    <button class="nav-btn" onclick="window.nav('fin',this)"><i class="fas fa-chart-pie"></i><span>Caja</span></button>
+    <button class="nav-btn active" data-view="pos" onclick="window.nav('pos',this)"><i class="fas fa-shopping-cart"></i><span>Vender</span></button>
+    <button class="nav-btn" data-view="inv" onclick="window.nav('inv',this)"><i class="fas fa-box-open"></i><span>Catálogo</span></button>
+    <button class="nav-btn" data-view="cartera" onclick="window.nav('cartera',this)"><i class="fas fa-hand-holding-usd"></i><span>Créditos</span></button>
+    <button class="nav-btn" data-view="fin" onclick="window.nav('fin',this)"><i class="fas fa-chart-pie"></i><span>Caja</span></button>
   </div>
 
   <template id="tpl-cart">
     <div class="cotizador-panel">
-       <div class="d-flex justify-content-between mb-2 align-items-center">
-         <h5 class="fw-bold m-0" style="color: var(--primary);">Resumen</h5>
-         <div>
-            <button class="btn btn-sm btn-light border fw-bold text-secondary me-1" onclick="window.toggleMobileCart(false)">🔽 Ocultar</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="window.clearCart()">🗑️ Vaciar</button>
+       <div class="cart-cab">
+         <h5>Resumen de venta</h5>
+         <div class="cart-cab-acc">
+            <button class="btn btn-sm btn-light btn-ocultar" onclick="window.toggleMobileCart(false)"><i class="fas fa-chevron-down"></i> Ocultar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="window.clearCart()"><i class="fas fa-trash-alt"></i> Vaciar</button>
          </div>
        </div>
-       <input id="c-concepto" class="form-control mb-2 fw-bold" placeholder="📝 Descripción manual..." style="display:none; border-left:4px solid var(--accent);">
-       
-       <div class="d-flex justify-content-between gap-2 mb-2"> 
+       <input id="c-concepto" class="form-control mb-2 fw-bold" placeholder="Descripción manual..." style="display:none;">
+
+       <div class="d-flex justify-content-between gap-2 mb-2">
          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="c-iva" onchange="window.calcCart()"><label class="form-check-label small fw-bold text-muted" for="c-iva">Aplicar IVA 19% global</label></div>
        </div>
 
-       <div id="cart-items-list" class="mb-3 mt-2" style="max-height:150px; overflow-y:auto;">Vacío...</div>
-       
-       <div class="row g-2 mb-3">
+       <div id="cart-items-list" class="mb-3 mt-2">Vacío...</div>
+
+       <div class="row g-2 mb-3 cart-ajustes">
          <div class="col-3 text-center"><small>Margen %</small><input id="c-util" type="number" class="input-line" value="30" oninput="window.calcCart()"></div>
          <div class="col-3 text-center"><small>Desc. %</small><input id="c-desc" type="number" class="input-line text-danger" value="0" oninput="window.calcCart()"></div>
-         <div class="col-3 text-center"><small>Tasa Int.%</small><input id="c-int" type="number" class="input-line" value="5" oninput="window.calcCart()"></div>
+         <div class="col-3 text-center"><small>Tasa int. %</small><input id="c-int" type="number" class="input-line" value="5" oninput="window.calcCart()"></div>
          <div class="col-3 text-center"><small>Plazo (M)</small><input id="c-cuotas" type="number" class="input-line" value="1" oninput="window.calcCart()"></div>
        </div>
-       <input type="date" id="c-fecha" class="form-control mb-3" style="border-color: var(--cyan);" onchange="window.updatePrimerPago()">
-       
-       <div class="alert alert-light border text-center py-2 mb-3" style="border-color: var(--accent) !important; background-color: #f8f9fa;">
-          <div class="d-flex justify-content-between align-items-center"><span>Total:</span><div class="text-end"><strong id="res-cont" class="fs-5" style="color: var(--primary);">$0</strong></div></div>
-          <div id="row-cred" style="display:none; border-top:1px dashed var(--accent); margin-top:5px; padding-top:5px;"><div class="d-flex justify-content-between"><span>Inicial:</span><strong id="res-ini">$0</strong></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--accent);">Saldo:</span><strong id="res-cuota-val">$0</strong><small id="res-cuota-txt">/ mes</small></div></div>
-          <div class="mt-2 text-end" style="border-top: 1px dotted #ccc; padding-top:5px;"><small class="text-muted">Precio Fijo (Anular intereses)</small><input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end" style="border-color: var(--accent);" placeholder="💲 Precio Cerrado" oninput="window.calcCart()"></div>
+       <input type="date" id="c-fecha" class="form-control mb-3" onchange="window.updatePrimerPago()">
+
+       <div class="cart-total">
+          <div class="fila"><span class="fw-bold">Total</span><div class="text-end"><strong id="res-cont">$0</strong></div></div>
+          <div id="row-cred" style="display:none;"><div class="d-flex justify-content-between"><span>Inicial:</span><strong id="res-ini">$0</strong></div><div class="d-flex justify-content-between mt-1"><span style="color:var(--azul-txt);">Saldo:</span><strong id="res-cuota-val">$0</strong><small id="res-cuota-txt">/ mes</small></div></div>
+          <div class="fijo text-end"><small class="text-muted">Precio fijo (anula intereses)</small><input id="c-target" type="number" class="form-control form-control-sm fw-bold text-end mt-1" placeholder="💲 Precio cerrado" oninput="window.calcCart()"></div>
        </div>
-       
+
        <input id="c-cliente" class="form-control mb-2" placeholder="Cliente" list="list-clientes-rapido">
        <datalist id="list-clientes-rapido"></datalist>
-       
-       <div class="text-end mb-2"><a href="#" onclick="window.toggleDatosFormales(); return false;" class="small text-muted" style="text-decoration: none;">⚙️ Añadir datos formales (NIT, Tel)</a></div>
-       <div id="box-datos-formales" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0;">
+
+       <div class="text-end"><a href="#" onclick="window.toggleDatosFormales(); return false;" class="cart-enlace"><i class="fas fa-cog"></i> Añadir datos formales (NIT, Tel)</a></div>
+       <div id="box-datos-formales" class="cart-caja" style="display:none;">
           <input id="c-nit" class="form-control form-control-sm mb-2" placeholder="NIT / Cédula">
           <input id="c-tel" class="form-control form-control-sm" placeholder="Teléfono / WhatsApp">
        </div>
 
        <select id="c-metodo" class="form-select mb-2" onchange="window.toggleIni(this)"><option value="Contado">Contado</option><option value="Crédito">Crédito</option></select>
-       <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono Inicial Personalizado" disabled style="display:none;">
-       
-       <div id="box-credito-detalles" style="display:none; background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:10px; border:1px solid #e2e8f0; border-left: 4px solid var(--primary);">
+       <input id="c-inicial" type="number" class="form-control mb-3" placeholder="Abono inicial personalizado" disabled style="display:none;">
+
+       <div id="box-credito-detalles" class="cart-caja" style="display:none;">
            <div class="row g-2">
                <div class="col-6">
-                   <label class="small fw-bold" style="color: var(--primary);">Frecuencia Pago</label>
-                   <select id="c-frecuencia" class="form-select form-select-sm border-primary" onchange="window.updatePrimerPago()">
+                   <label class="small fw-bold">Frecuencia de pago</label>
+                   <select id="c-frecuencia" class="form-select form-select-sm" onchange="window.updatePrimerPago()">
                        <option value="Mensual">Mensual</option>
                        <option value="Quincenal">Quincenal (15 Días)</option>
                    </select>
                </div>
                <div class="col-6">
-                   <label class="small fw-bold text-success">Fecha 1er Pago</label>
-                   <input type="date" id="c-primer-pago" class="form-control form-control-sm border-success fw-bold">
+                   <label class="small fw-bold text-success">Fecha 1er pago</label>
+                   <input type="date" id="c-primer-pago" class="form-control form-control-sm fw-bold">
                </div>
            </div>
        </div>
 
-       <div id="box-vip" class="form-check form-switch mb-3 border p-2 rounded" style="background-color: #fffdf9; border-color: var(--accent) !important; display: none;">
+       <div id="box-vip" class="form-check form-switch cart-caja" style="display: none; padding-left: 3em;">
            <input class="form-check-input" type="checkbox" id="c-eximir" onchange="window.calcCart()">
-           <label class="form-check-label small fw-bold" for="c-eximir" style="color: var(--accent-hover);">⭐ Eximir Cuota Inicial (Migración / Confianza)</label>
+           <label class="form-check-label small fw-bold" for="c-eximir">⭐ Eximir cuota inicial (migración / confianza)</label>
        </div>
 
        <div class="d-flex gap-2 mb-2">
-           <button class="btn btn-outline-primary flex-fill fw-bold" onclick="window.guardarCotizacionActual()">💾 COTIZAR</button>
-           <button class="btn btn-dark flex-fill fw-bold text-white" onclick="window.generarCotizacionPDF()" title="Generar PDF">📄 PDF</button>
-           <button class="btn btn-success flex-fill fw-bold" onclick="window.shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button>
+           <button class="btn btn-outline-primary flex-fill" onclick="window.guardarCotizacionActual()"><i class="fas fa-save"></i> Cotizar</button>
+           <button class="btn btn-dark flex-fill" onclick="window.generarCotizacionPDF()" title="Generar PDF"><i class="fas fa-file-pdf"></i> PDF</button>
+           <button class="btn btn-wa flex-fill" onclick="window.shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button>
        </div>
-       <button id="btn-vender-main" class="btn w-100 fw-bold py-2 text-white" onclick="window.finalizarVenta()" style="background-color:var(--accent); border:none;">✅ FACTURAR</button>
+       <button id="btn-vender-main" class="btn btn-primary w-100 fw-bold" onclick="window.finalizarVenta()"><i class="fas fa-check-circle me-1"></i> FACTURAR</button>
     </div>
   </template>
 

@@ -27,6 +27,10 @@ export function nav(v, btn){
     if(view) view.style.display='block';
     document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
     if(btn) btn.classList.add('active');
+    // La barra lateral (escritorio) y la barra inferior (móvil) comparten estado activo
+    document.querySelectorAll('.nav-btn[data-view="' + v + '"]').forEach(e => e.classList.add('active'));
+    var titulo = document.getElementById('page-title');
+    if(titulo && view && view.dataset.title) titulo.innerText = view.dataset.title;
     localStorage.setItem('planet_view', v);
 }
 

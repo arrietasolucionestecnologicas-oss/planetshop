@@ -61,7 +61,7 @@ window.renderClientes = renderClientes;
 window.guardarClienteManual = guardarClienteManual;
 
 // Anclas internas de soporte cruzado y consolidación del Namespace Finance
-window.POS = { abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
+window.POS = { toggleCart, abrirEditorItem, toggleItemIva, changeQty, agregarAlCarritoDesdeInv, cargarCotizacion, eliminarCotizacion, shareProductNative };
 window.Inventory = { openEdit, editarProv };
 window.Finance = { enviarEstadoCuentaAvanzadoWA, abrirModalRefinanciar, castigarDeuda, anularVenta, abrirEditMov, guardarEdicionMovimiento, abrirRadiografia, revelarSecretos, renderFin, renderCartera, enviarResumenPagosWA, doAbono, doIngresoExtra, doGasto };
 window.CRM = { editarCliente, eliminarCliente, iniciarMigracionDeuda };

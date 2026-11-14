@@ -4,8 +4,8 @@
   "description": "Sistema POS y Gestión Financiera A.S.T.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#1a365d",
+  "background_color": "#f2f5fb",
+  "theme_color": "#0d2a63",
   "icons": [
     {
       "src": "icon-192.png",

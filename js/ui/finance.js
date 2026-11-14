@@ -31,24 +31,55 @@ export function renderCartera() {
         return;
     }
 
-    filtrados.forEach(d => { 
-        c.innerHTML += `
-        <div class="card-k card-debt border-start border-danger border-4">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h6 style="color:var(--primary); font-weight:bold;">${d.cliente}</h6>
-                    <small class="text-muted">${d.idVenta} | ${d.producto}</small>
+    var html = '';
+    filtrados.forEach(d => {
+        var st = estadoCobro(d);
+        var cuotas = parseInt(d.cuotas) || 1;
+        var plan = cuotas > 1 ? `${cuotas} cuotas · ${d.frecuencia || 'Mensual'}` : 'Pago único';
+        html += `
+        <article class="cobro cobro-${st.cls}">
+            <div class="cobro-sup">
+                <div class="celda-cli">
+                    <span class="avatar">${iniciales(d.cliente)}</span>
+                    <span><strong>${d.cliente}</strong><small>${d.idVenta} · ${d.producto}</small></span>
                 </div>
-                <div class="text-end text-danger fw-bold fs-5">${COP.format(d.saldo)}</div>
+                <span class="chip chip-${st.cls}">${st.txt}</span>
             </div>
-            <div class="mt-2 d-flex gap-2 flex-wrap justify-content-end border-top pt-2">
-                <button class="btn btn-xs btn-outline-dark flex-fill fw-bold" onclick="window.Finance.abrirRadiografia('${d.idVenta}')" title="Ver Radiografía Financiera"><i class="fas fa-microscope"></i> Detalles</button>
-                <button class="btn btn-xs flex-fill text-white" style="background:#38a169; border:none;" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de Cuenta</button>
-                <button class="btn btn-xs btn-outline-primary flex-fill" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})">🔄 Refinanciar</button> 
-                <button class="btn btn-xs btn-outline-danger flex-fill" onclick="window.Finance.castigarDeuda('${d.idVenta}')">☠️ Castigar</button>
+            <div class="cobro-cifras">
+                <div><small>Saldo</small><strong class="text-danger">${COP.format(d.saldo)}</strong></div>
+                <div><small>Cuota</small><strong>${COP.format(d.valCuota || 0)}</strong></div>
+                <div><small>Plan</small><strong>${plan}</strong></div>
             </div>
-        </div>`; 
+            <div class="cobro-acc">
+                <button class="btn btn-xs btn-outline-dark" onclick="window.Finance.abrirRadiografia('${d.idVenta}')" title="Ver Radiografía Financiera"><i class="fas fa-microscope"></i> Detalles</button>
+                <button class="btn btn-xs btn-wa" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de cuenta</button>
+                <button class="btn btn-xs btn-outline-primary" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})"><i class="fas fa-sync-alt"></i> Refinanciar</button>
+                <button class="btn btn-xs btn-outline-danger" onclick="window.Finance.castigarDeuda('${d.idVenta}')"><i class="fas fa-skull"></i> Castigar</button>
+            </div>
+        </article>`;
     });
+    c.innerHTML = html;
+}
+
+// Solo presentación: iniciales para el avatar de la tarjeta de cartera
+function iniciales(nombre) {
+    var partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return '?';
+    return (partes[0][0] + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+}
+
+// Solo presentación: etiqueta de la fecha de cobro. No altera saldos ni fechas.
+function estadoCobro(d) {
+    var f = d.fechaLimiteRaw ? new Date(d.fechaLimiteRaw) : null;
+    if (!f || isNaN(f.getTime())) return { cls: 'neutro', txt: d.fechaLimite ? 'Cobro: ' + d.fechaLimite : 'Sin fecha de cobro' };
+    var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    var dia = new Date(f.getFullYear(), f.getMonth(), f.getDate());
+    var dif = Math.round((dia - hoy) / 86400000);
+    var fecha = d.fechaLimite || dia.toLocaleDateString('es-CO');
+    if (dif < 0) return { cls: 'vencido', txt: 'Venció el ' + fecha };
+    if (dif === 0) return { cls: 'hoy', txt: 'Cobrar hoy' };
+    if (dif <= 7) return { cls: 'proximo', txt: 'Cobro: ' + fecha };
+    return { cls: 'neutro', txt: 'Cobro: ' + fecha };
 }
 
 export function abrirRadiografia(idVenta) {
@@ -294,6 +325,8 @@ export function renderFin() {
     var invCosto = State.data.inv.reduce((a, b) => a + (b.costo || 0), 0);
     var cajaActual = (State.data.metricas && State.data.metricas.saldo) ? State.data.metricas.saldo : 0;
     var pasivos = State.data.pasivos.reduce((a, b) => a + (b.saldo || 0), 0);
+    var elPasivos = document.getElementById('bal-pasivos');
+    if (elPasivos) elPasivos.innerText = COP.format(pasivos);
     var elPatrimonio = document.getElementById('bal-patrimonio');
     if (elPatrimonio) elPatrimonio.innerText = COP.format(cajaActual + cuentasCobrar + invCosto - pasivos);
 }
