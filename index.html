@@ -163,7 +163,8 @@
     .cotizador-panel { background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px; box-shadow: var(--sombra); }
     .cart-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
     .cart-cab h5 { margin: 0; font-size: 18px; font-weight: 700; }
-    .cart-cab-acc { display: flex; gap: 6px; }
+    .cart-cab-acc { display: flex; flex: none; gap: 6px; }
+    .cart-cab-acc .btn { white-space: nowrap; }
     .panel-column .btn-ocultar { display: none; }
     #cart-items-list { max-height: 170px; overflow-y: auto; padding: 10px 12px; border: 1px dashed var(--borde-campo); border-radius: 12px; background: #fafcff; color: var(--muted); font-size: 14px; }
     #cart-items-list .btn-sm { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; min-height: 30px; }
@@ -176,6 +177,9 @@
     .cart-caja { padding: 12px; margin-bottom: 10px; border: 1px solid var(--borde); border-radius: 12px; background: #f9fbff; }
     .cart-enlace { display: inline-block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--azul-txt); text-decoration: none; }
     #btn-vender-main { --bs-btn-padding-y: 13px; --bs-btn-font-size: 16px; letter-spacing: .02em; }
+    /* Pie fijo: el botón de facturar queda siempre a la vista aunque el resumen sea largo */
+    .cart-pie { position: sticky; bottom: 0; z-index: 2; margin: 10px -20px -20px; padding: 12px 20px 16px; background: #fff; border-top: 1px solid var(--borde); border-radius: 0 0 var(--radio) var(--radio); }
+    .mobile-panel .cart-pie { margin: 10px -16px -22px; padding: 12px 16px 14px; border-radius: 0; }
 
     .mobile-panel { position: fixed; bottom: 0; left: 0; width: 100%; z-index: 5000; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 40px rgba(8, 20, 50, .25); transform: translateY(110%); transition: transform .3s; padding-bottom: env(safe-area-inset-bottom); }
     .mobile-panel.visible { transform: translateY(0); }
@@ -297,17 +301,39 @@
       .kpis { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
       .kpis-1 { grid-template-columns: 1fr; }
       .kpis-3 .kpi-navy { grid-column: 1 / -1; }
-      .kpis-3 .kpi:not(.kpi-navy) { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
-      .kpis-3 .kpi:not(.kpi-navy) .kpi-ico { width: 42px; height: 42px; font-size: 18px; }
-      .kpis-3 .kpi:not(.kpi-navy) .kpi-val { font-size: 20px; }
-      .kpi { padding: 16px; } .kpi-val { font-size: 25px; }
-      .cobro { padding: 16px; }
-      .cobro-cifras strong { font-size: 15px; }
+      /* Indicadores compactos: lo importante (formularios y listas) sube en la pantalla */
+      .kpi { gap: 12px; padding: 12px 14px; } .kpi-ico { width: 42px; height: 42px; font-size: 18px; } .kpi-val { font-size: 23px; } .kpi-tit { font-size: 13px; } .kpi-sub { font-size: 12px; }
+      .kpis-3 .kpi:not(.kpi-navy) { position: relative; padding: 10px 12px; }
+      .kpis-3 .kpi:not(.kpi-navy) .kpi-ico { display: none; }
+      .kpis-3 .kpi:not(.kpi-navy) .kpi-val { font-size: 18px; }
+      .kpis-3 .kpi-rojo .btn { position: absolute; top: 8px; right: 8px; margin: 0 !important; --bs-btn-padding-y: 1px; --bs-btn-padding-x: 9px; --bs-btn-font-size: 12px; background: #fff; }
+      /* Vender y Catálogo: controles en filas compartidas */
+      .pos-acciones { flex-wrap: nowrap; gap: 8px; } .pos-acciones .btn { flex: 1 1 0; --bs-btn-padding-x: 8px; white-space: nowrap; }
+      .barra { gap: 8px; padding: 12px; } .barra .form-control { flex: 3 1 150px; min-width: 0; } .barra .form-select { flex: 2 1 110px; min-width: 0; } .barra .btn { flex: 1 1 0; --bs-btn-padding-x: 8px; white-space: nowrap; }
+      /* Créditos: tarjeta compacta para ver más deudas por pantalla */
+      .cobro { gap: 10px; padding: 14px; }
+      .cobro-sup .avatar { width: 36px; height: 36px; }
+      .cobro-cifras { gap: 8px; } .cobro-cifras strong { font-size: 15px; }
+      .cobro-cifras small.solo-movil { display: block !important; font-size: 11.5px; white-space: nowrap; }
+      #view-cartera .sec-cab { display: none; }
+      #view-cartera .kpis { margin-bottom: 10px; } #view-cartera .buscador { margin-bottom: 10px; }
+      .cobros { gap: 10px; }
+      .cobro-fecha-vencido strong, .cobro-fecha-vencido small { color: var(--rojo-txt); }
+      .cobro-fecha-hoy strong, .cobro-fecha-proximo strong { color: var(--azul-txt); }
+      .cobro-acc { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-top: 10px; }
+      .cobro-acc .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 48px; --bs-btn-padding-x: 2px; --bs-btn-padding-y: 6px; --bs-btn-font-size: 11.5px; }
+      .cobro-acc .btn i { font-size: 15px; }
       .nav-btm { position: fixed; z-index: 1000; left: 0; right: 0; bottom: 0; display: flex; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--borde); box-shadow: 0 -6px 24px rgba(16, 40, 90, .08); }
       .nav-btm .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; padding: 8px 2px; border-radius: 12px; color: var(--muted); font-size: 11.5px; font-weight: 600; }
       .nav-btm .nav-btn i { font-size: 19px; }
       .nav-btm .nav-btn.active { background: var(--azul-bg); color: var(--azul-txt); }
       #toast-container { left: 12px; right: 12px; top: 12px; }
+    }
+    @media (max-width: 400px) {
+      .top { gap: 8px; padding: 10px 12px; }
+      .top-brand { font-size: 17px; }
+      .top-acc { gap: 0; } .acc-btn { min-width: 42px; padding: 4px 2px; font-size: 10px; }
+      .cart-tit-largo { display: none; }
     }
     @media (max-width: 575px) {
       /* Los modales suben desde abajo como hoja, igual que el carrito */
@@ -381,8 +407,8 @@
           <div class="main-layout">
             <div class="list-column">
                <div class="pos-acciones">
-                 <button class="btn btn-primary" onclick="window.abrirModalItemManual()"><i class="fas fa-plus me-1"></i> Agregar ítem manual</button>
-                 <button class="btn btn-light" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open me-1"></i> Cotizaciones guardadas</button>
+                 <button class="btn btn-primary" onclick="window.abrirModalItemManual()"><i class="fas fa-plus me-1"></i> <span class="solo-escritorio">Agregar ítem manual</span><span class="solo-movil">Ítem manual</span></button>
+                 <button class="btn btn-light" onclick="window.abrirModalCotizaciones()"><i class="fas fa-folder-open me-1"></i> Cotizaciones<span class="solo-escritorio"> guardadas</span></button>
                </div>
 
                <div class="buscador">
@@ -449,7 +475,7 @@
             <div class="kpi kpi-rojo">
               <span class="kpi-ico"><i class="fas fa-file-invoice-dollar"></i></span>
               <div class="kpi-cuerpo">
-                <span class="kpi-tit">Obligaciones (pasivos)</span>
+                <span class="kpi-tit">Obligaciones<span class="solo-escritorio"> (pasivos)</span></span>
                 <strong class="kpi-val" id="bal-pasivos">...</strong>
                 <div><button class="btn btn-outline-danger btn-sm mt-1" onclick="window.abrirModalPasivos()">Pagar</button></div>
               </div>
@@ -496,7 +522,7 @@
   <template id="tpl-cart">
     <div class="cotizador-panel">
        <div class="cart-cab">
-         <h5>Resumen de venta</h5>
+         <h5>Resumen<span class="cart-tit-largo"> de venta</span></h5>
          <div class="cart-cab-acc">
             <button class="btn btn-sm btn-light btn-ocultar" onclick="window.toggleMobileCart(false)"><i class="fas fa-chevron-down"></i> Ocultar</button>
             <button class="btn btn-sm btn-outline-danger" onclick="window.clearCart()"><i class="fas fa-trash-alt"></i> Vaciar</button>
@@ -562,7 +588,7 @@
            <button class="btn btn-dark flex-fill" onclick="window.generarCotizacionPDF()" title="Generar PDF"><i class="fas fa-file-pdf"></i> PDF</button>
            <button class="btn btn-wa flex-fill" onclick="window.shareQuote()"><i class="fab fa-whatsapp"></i> WSP</button>
        </div>
-       <button id="btn-vender-main" class="btn btn-primary w-100 fw-bold" onclick="window.finalizarVenta()"><i class="fas fa-check-circle me-1"></i> FACTURAR</button>
+       <div class="cart-pie"><button id="btn-vender-main" class="btn btn-primary w-100 fw-bold" onclick="window.finalizarVenta()"><i class="fas fa-check-circle me-1"></i> FACTURAR</button></div>
     </div>
   </template>
 

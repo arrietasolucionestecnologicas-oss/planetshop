@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planet-shop-v3.6'; // 🚀 BUMP de versión para forzar limpieza global en todos los dispositivos
+const CACHE_NAME = 'planet-shop-v3.7'; // 🚀 BUMP de versión para forzar limpieza global en todos los dispositivos
 
 const STATIC_ASSETS = [
     './',

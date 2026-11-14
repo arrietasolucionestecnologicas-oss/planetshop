@@ -43,18 +43,19 @@ export function renderCartera() {
                     <span class="avatar">${iniciales(d.cliente)}</span>
                     <span><strong>${d.cliente}</strong><small>${d.idVenta} · ${d.producto}</small></span>
                 </div>
-                <span class="chip chip-${st.cls}">${st.txt}</span>
+                <span class="chip chip-${st.cls} solo-escritorio">${st.txt}</span>
             </div>
             <div class="cobro-cifras">
                 <div><small>Saldo</small><strong class="text-danger">${COP.format(d.saldo)}</strong></div>
-                <div><small>Cuota</small><strong>${COP.format(d.valCuota || 0)}</strong></div>
-                <div><small>Plan</small><strong>${plan}</strong></div>
+                <div><small>Cuota</small><strong>${COP.format(d.valCuota || 0)}</strong><small class="solo-movil">${plan}</small></div>
+                <div class="solo-escritorio"><small>Plan</small><strong>${plan}</strong></div>
+                <div class="solo-movil cobro-fecha cobro-fecha-${st.cls}"><small>${st.etq}</small><strong>${st.fecha}</strong></div>
             </div>
             <div class="cobro-acc">
-                <button class="btn btn-xs btn-outline-dark" onclick="window.Finance.abrirRadiografia('${d.idVenta}')" title="Ver Radiografía Financiera"><i class="fas fa-microscope"></i> Detalles</button>
-                <button class="btn btn-xs btn-wa" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> Estado de cuenta</button>
-                <button class="btn btn-xs btn-outline-primary" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})"><i class="fas fa-sync-alt"></i> Refinanciar</button>
-                <button class="btn btn-xs btn-outline-danger" onclick="window.Finance.castigarDeuda('${d.idVenta}')"><i class="fas fa-skull"></i> Castigar</button>
+                <button class="btn btn-xs btn-outline-dark" onclick="window.Finance.abrirRadiografia('${d.idVenta}')" title="Ver Radiografía Financiera"><i class="fas fa-microscope"></i> <span>Detalles</span></button>
+                <button class="btn btn-xs btn-wa" onclick="window.Finance.enviarEstadoCuentaAvanzadoWA('${d.idVenta}')"><i class="fab fa-whatsapp"></i> <span>Estado<span class="solo-escritorio"> de cuenta</span></span></button>
+                <button class="btn btn-xs btn-outline-primary" onclick="window.Finance.abrirModalRefinanciar('${d.idVenta}','${d.cliente}',${d.saldo})"><i class="fas fa-sync-alt"></i> <span>Refinanciar</span></button>
+                <button class="btn btn-xs btn-outline-danger" onclick="window.Finance.castigarDeuda('${d.idVenta}')"><i class="fas fa-skull"></i> <span>Castigar</span></button>
             </div>
         </article>`;
     });
@@ -71,15 +72,15 @@ function iniciales(nombre) {
 // Solo presentación: etiqueta de la fecha de cobro. No altera saldos ni fechas.
 function estadoCobro(d) {
     var f = d.fechaLimiteRaw ? new Date(d.fechaLimiteRaw) : null;
-    if (!f || isNaN(f.getTime())) return { cls: 'neutro', txt: d.fechaLimite ? 'Cobro: ' + d.fechaLimite : 'Sin fecha de cobro' };
+    if (!f || isNaN(f.getTime())) return { cls: 'neutro', txt: d.fechaLimite ? 'Cobro: ' + d.fechaLimite : 'Sin fecha de cobro', etq: 'Cobro', fecha: d.fechaLimite || 'Sin fecha' };
     var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
     var dia = new Date(f.getFullYear(), f.getMonth(), f.getDate());
     var dif = Math.round((dia - hoy) / 86400000);
     var fecha = d.fechaLimite || dia.toLocaleDateString('es-CO');
-    if (dif < 0) return { cls: 'vencido', txt: 'Venció el ' + fecha };
-    if (dif === 0) return { cls: 'hoy', txt: 'Cobrar hoy' };
-    if (dif <= 7) return { cls: 'proximo', txt: 'Cobro: ' + fecha };
-    return { cls: 'neutro', txt: 'Cobro: ' + fecha };
+    if (dif < 0) return { cls: 'vencido', txt: 'Venció el ' + fecha, etq: 'Venció', fecha: fecha };
+    if (dif === 0) return { cls: 'hoy', txt: 'Cobrar hoy', etq: 'Cobro', fecha: 'Hoy' };
+    if (dif <= 7) return { cls: 'proximo', txt: 'Cobro: ' + fecha, etq: 'Próx. cobro', fecha: fecha };
+    return { cls: 'neutro', txt: 'Cobro: ' + fecha, etq: 'Próx. cobro', fecha: fecha };
 }
 
 export function abrirRadiografia(idVenta) {
